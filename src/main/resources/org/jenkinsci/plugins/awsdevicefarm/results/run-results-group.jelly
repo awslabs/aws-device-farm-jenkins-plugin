@@ -1,0 +1,37 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt" xmlns:r="/org/jenkinsci/plugins/awsdevicefarm/results">
+  <st:attribute name="results" use="required" />
+  <link rel="stylesheet" href="/plugin/aws-device-farm/font-awesome/css/font-awesome.min.css"/>
+  <style type="text/css">
+    @import url("/static/44e48ac2/plugin/aws-device-farm/default.css")
+  </style>
+  <table class="pane sortable" style="table-layout:fixed; word-break: break-all; word-wrap: break-word;">
+    <tr>
+      <td class="pane-header">Name</td>
+      <td class="pane-header" style="text-align:center; width:85px;">Report</td>
+    </tr>
+    <j:if test="${attrs.results != null}">
+      <j:forEach var="result" items="${attrs.results}">
+        <j:set var="name" value="${result.name}" />
+        <j:set var="desc" value="${result.description}" />
+        <j:if test="${result.results != null}">
+          <j:forEach var="test" items="${result.results}" >
+            <tr>
+              <j:set var="testName" value="${h.escape(test.name)}" />
+              <j:set var="testMessage" value="${h.escape(test.message)}" />
+              <j:set var="fullName" value="${name + testName}" />
+              <td class="pane" style="white-space: normal;">
+                ${name} (${desc}) - ${testName}
+                <span class="message">
+                  ${testMessage}
+                </span>
+              </td>
+              <td style="vertical-align: middle;" class="run-report">
+                <a href="${test.webUrl}" class="label" target="_blank">Test Report <i class="fa arrow-right"></i></a>
+              </td>
+            </tr>
+          </j:forEach>
+        </j:if>
+      </j:forEach>
+    </j:if>
+  </table>
+</j:jelly>

@@ -1,0 +1,22 @@
+*.class
+
+# Package Files #
+*.jar
+*.war
+*.ear
+work/*
+target/*
+.settings/*
+.classpath
+.project
+
+# Vagrant
+.vagrant
+vagrant_ansible_inventory_*
+
+# IntelliJ
+.idea
+*.iml
+
+# OS X
+.DS_Store

@@ -1,0 +1,8 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <j:if test="${from.shouldDisplayGraph()}">
+    <h3>Project Result Trends</h3>
+    <a href="${from.urlName}">
+      <img id="passfailgraph" src="${from.urlName}/graph" />
+    </a>
+  </j:if>
+</j:jelly>

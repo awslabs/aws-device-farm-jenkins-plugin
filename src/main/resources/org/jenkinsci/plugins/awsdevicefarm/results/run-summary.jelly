@@ -1,0 +1,33 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt" xmlns:r="/org/jenkinsci/plugins/awsdevicefarm/results">
+  <st:attribute name="result" use="required" />
+  <link rel="stylesheet" href="/plugin/aws-device-farm/font-awesome/css/font-awesome.min.css"/>
+  <style type="text/css">
+    @import url("/plugin/aws-device-farm/default.css")
+  </style>
+  <j:set var="result" value="${attrs.result}" />
+  <j:set var="prev" value="${result.previousResult}" />
+  <j:if test="${result != null}">
+    <j:set var="passCount" value="${result.passCount}" />
+    <j:set var="warnCount" value="${result.warnCount}" />
+    <j:set var="failCount" value="${result.failCount}" />
+    <j:set var="totalCount" value="${result.totalCount}" />
+    <table class="run-summary-table">
+      <tr>
+        <th>Status</th>
+        <th>Build Number</th>
+        <th>Pass/Warn/Skip/Fail/Error/Stop</th>
+        <th>Web Report</th>
+      </tr>
+      <tr>
+        <td align="center" class="run-status"><strong>${attrs.result.status}</strong></td>
+        <td align="center" class="build-number"><a href="."><strong>#${attrs.result.buildNumber}</strong></a></td>
+        <td align="left">
+          <r:run-summary-scoreboard result="${result}" />
+        </td>
+        <td style="vertical-align: middle;" class="run-report">
+          <a style="color:white; text-decoration:none;" href="${attrs.result.reportUrl}" class="run-report" target="_blank">Full Report</a>
+        </td>
+      </tr>
+    </table>
+  </j:if>
+</j:jelly>

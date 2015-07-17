@@ -1,0 +1,85 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+
+  <f:validateButton title="refresh" method="refresh" progress="Checking..." inline="true" />
+
+  <f:entry title="Project" field="projectName" description="[Required] Select your AWS Device Farm project.">
+    <f:select style="width:100%; padding-right:5px; margin-right:5px" inline="true" />
+  </f:entry>
+
+  <f:entry title="Device Pool" field="devicePoolName" description="[Required] Select your AWS Device Farm device pool.">
+    <f:select style="width:100%" inline="true"/>
+  </f:entry>
+
+  <f:entry title="Application" field="appArtifact" description="[Required] Pattern to find newly built application.">
+    <f:textbox />
+  </f:entry>
+
+  <f:entry>
+    <f:checkbox name="storeResults" title="Store test results locally." checked="${instance.storeResults}"/>
+  </f:entry>
+
+  <f:section title="Choose test to run">
+    <f:radioBlock name="testToRun" value="BUILTIN_FUZZ" checked="${instance.isTestType('BUILTIN_FUZZ')}" title="Built-in Fuzz" inline="true">
+      <f:nested>
+        <f:entry title="Event Count" field="eventCount" description="[Optional] Number of fuzz events.">
+          <f:textbox/>
+        </f:entry>
+        <f:entry title="Event Throttle" field="eventThrottle" description="[Optional] Number for event throttle.">
+          <f:textbox/>
+        </f:entry>
+        <f:entry title="Seed" field="seed" description="[Optional] Seed to use for randomizing events.">
+          <f:textbox/>
+        </f:entry>
+      </f:nested>
+    </f:radioBlock>
+
+    <f:radioBlock name="testToRun" value="APPIUM_JAVA_JUNIT" checked="${instance.isTestType('APPIUM_JAVA_JUNIT')}" title="Appium Java JUnit" inline="true">
+      <f:nested>
+        <f:entry title="Tests" field="appiumJavaJUnitTest" description="[Required] Pattern to find Java JUnit tests.">
+          <f:textbox />
+        </f:entry>
+      </f:nested>
+    </f:radioBlock>
+
+    <f:radioBlock name="testToRun" value="APPIUM_JAVA_TESTNG" checked="${instance.isTestType('APPIUM_JAVA_TESTNG')}" title="Appium Java TestNG" inline="true">
+      <f:nested>
+        <f:entry title="Tests" field="appiumJavaTestNGTest" description="[Required] Pattern to find Java TestNG tests.">
+          <f:textbox />
+        </f:entry>
+      </f:nested>
+    </f:radioBlock>
+
+    <f:radioBlock name="testToRun" value="CALABASH" checked="${instance.isTestType('CALABASH')}" title="Calabash" inline="true">
+      <f:nested>
+        <f:entry title="Features" field="calabashFeatures" description="[Required] Pattern to find features.zip.">
+          <f:textbox />
+        </f:entry>
+        <f:entry title="Tags" field="calabashTags" description="[Optional] Tags to pass into Calabash.">
+          <f:textbox />
+        </f:entry>
+      </f:nested>
+    </f:radioBlock>
+
+    <f:radioBlock name="testToRun" value="INSTRUMENTATION" checked="${instance.isTestType('INSTRUMENTATION')}" title="Instrumentation" inline="true">
+      <f:nested>
+        <f:entry title="Tests" field="junitArtifact" description="[Required] Pattern to find instrumentation tests.">
+          <f:textbox />
+        </f:entry>
+        <f:entry title="Filter" field="junitFilter" description="[Optional] Filter specific TestCase/TestSuite to run.">
+          <f:textbox />
+        </f:entry>
+      </f:nested>
+    </f:radioBlock>
+
+    <f:radioBlock name="testToRun" value="UIAUTOMATOR" checked="${instance.isTestType('UIAUTOMATOR')}" title="Android UI Automator" inline="true">
+     <f:nested>
+       <f:entry title="Tests" field="uiautomatorArtifact" description="[Required] Pattern to find UI Automator tests.">
+         <f:textbox />
+       </f:entry>
+       <f:entry title="Filter" field="uiautomatorFilter" description="[Optional] Filter specific TestCase/TestSuite to run.">
+         <f:textbox />
+       </f:entry>
+     </f:nested>
+    </f:radioBlock>
+  </f:section>
+</j:jelly>

@@ -1,0 +1,49 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt" xmlns:r="/org/jenkinsci/plugins/awsdevicefarm/results">
+  <st:attribute name="result" use="required" />
+  <style type="text/css">
+    .bar {
+      width: 100%;
+      height: 1em;
+      background-color: #083250;
+    }
+    .pass-bar {
+      height: 1em;
+      background-color: #093;
+      float: left;
+    }
+    .warn-bar {
+      height: 1em;
+      background-color: #e07700;
+      float: left;
+    }
+    .fail-bar {
+      height: 1em;
+      background-color: #c00;
+      float: left;
+    }
+  </style>
+  <div>
+    <j:set var="totalCount" value="${attrs.result.totalCount}" />
+    <j:if test="${totalCount > 0}">
+      <j:set var="passCount" value="${attrs.result.passCount}" />
+      <j:set var="warnCount" value="${attrs.result.warnCount}" />
+      <j:set var="failCount" value="${attrs.result.failCount}" />
+      <j:set var="prev" value="${attrs.result.previousResult}" />
+
+      <div class="bar">
+        <j:set var="passBarWidth" value="${passCount * 100 / totalCount}%;" />
+        <j:set var="warnBarWidth" value="${warnCount * 100 / totalCount}%;" />
+        <j:set var="failBarWidth" value="${failCount * 100 / totalCount}%;" />
+        <div class="pass-bar" style="width: ${passBarWidth};"></div>
+        <div class="warn-bar" style="width: ${warnBarWidth};"></div>
+        <div class="fail-bar" style="width: ${failBarWidth};"></div>
+      </div>
+      <div align="right">
+        Tests (${totalCount})
+        <j:if test="${prev != null}">
+          ${h.getDiffString(totalCount - prev.totalCount)}
+        </j:if>
+      </div>
+    </j:if>
+  </div>
+</j:jelly>

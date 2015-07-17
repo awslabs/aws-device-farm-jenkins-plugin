@@ -1,0 +1,42 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:r="/org/jenkinsci/plugins/awsdevicefarm/results">
+  <link rel="stylesheet" href="/plugin/aws-device-farm/font-awesome/css/font-awesome.min.css"/>
+  <style type="text/css">
+    @import url("/plugin/aws-device-farm/default.css")
+  </style>
+  <div class="trend-graph">
+    <h4>Recent Result Trends</h4>
+    <img src="graph" />
+  </div>
+  <div style="clear: both;"></div>
+  <j:set var="prev" value="${it.previousResult}" />
+  <j:set var="passes" value="${it.passByDevice}" />
+  <j:set var="warnings" value="${it.warnByDevice}" />
+  <j:set var="failures" value="${it.failByDevice}" />
+  <j:if test="${passes != null}">
+    <h2>
+      Passes
+      <j:if test="${prev != null}">
+        (${h.getDiffString(it.passCount - prev.passCount)})
+      </j:if>
+    </h2>
+    <r:run-results-group results="${passes}" />
+  </j:if>
+  <j:if test="${warnings != null}">
+    <h2>
+      Warnings
+      <j:if test="${prev != null}">
+        (${h.getDiffString(it.warnCount - prev.warnCount)})
+      </j:if>
+    </h2>
+    <r:run-results-group results="${warnings}" />
+  </j:if>
+  <j:if test="${failures != null}">
+    <h2>
+      Failures
+      <j:if test="${prev != null}">
+        (${h.getDiffString(it.failCount - prev.failCount)})
+      </j:if>
+    </h2>
+    <r:run-results-group results="${failures}" />
+  </j:if>
+</j:jelly>

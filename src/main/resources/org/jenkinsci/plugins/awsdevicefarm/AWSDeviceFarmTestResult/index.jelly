@@ -1,0 +1,20 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:r="/org/jenkinsci/plugins/awsdevicefarm/results">
+  <link rel="stylesheet" href="/plugin/aws-device-farm/font-awesome/css/font-awesome.min.css"/>
+  <style type="text/css">
+    @import url("/plugin/aws-device-farm/default.css")
+  </style>
+  <l:layout title="${it.owner} ${it.displayName}">
+    <st:include page="sidepanel.jelly" />
+    <l:main-panel>
+      <h1>AWS Device Farm Results (#${it.runId})</h1>
+      <r:bar result="${it}" />
+      <r:run-summary result="${it}" />
+      <table style="margin-top: 1em; margin-left: 0em;">
+        <j:forEach var="action" items="${it.testActions}">
+          <st:include page="summary.jelly" from="${action}" optional="true" it="${action}" />
+        </j:forEach>
+      </table>
+      <st:include page="body.jelly" />
+    </l:main-panel>
+  </l:layout>
+</j:jelly>

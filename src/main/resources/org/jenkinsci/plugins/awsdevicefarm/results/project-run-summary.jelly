@@ -1,0 +1,46 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt" xmlns:r="/org/jenkinsci/plugins/awsdevicefarm/results">
+  <st:attribute name="result" use="required" />
+  <link rel="stylesheet" href="/plugin/aws-device-farm/font-awesome/css/font-awesome.min.css"/>
+  <style type="text/css">
+    @import url("/plugin/aws-device-farm/default.css")
+  </style>
+    <j:set var="count" value="${attrs.result.totalCount}" />
+      <tr>
+        <td align="center" class="run-status"><strong>${attrs.result.status}</strong></td>
+        <td align="center" class="build-number"><a href="${attrs.result.buildNumber}/"><strong>#${attrs.result.buildNumber}</strong></a></td>
+        <td align="left">
+          <table class="summary-table">
+            <tr>
+              <td align="center" class="pass-count">
+                <strong class="count-text">${attrs.result.passCount}</strong>
+                <i class="fa fa-check-circle"/>
+              </td>
+              <td align="center" class="warn-count">
+                <strong class="count-text">${attrs.result.warnCount}</strong>
+                <i class="fa fa-exclamation-triangle"/>
+              </td>
+              <td align="center" class="skip-count">
+                <strong class="count-text">${attrs.result.skipCount}</strong>
+                <i class="fa fa-ban"/>
+              </td>
+              <td align="center" class="fail-count">
+                <strong class="count-text">${attrs.result.failCount}</strong>
+                <i class="fa fa-exclamation-circle"/>
+              </td>
+              <td align="center" class="error-count">
+                <strong class="count-text">${attrs.result.errorCount}</strong>
+                <i class="fa fa-exclamation"/>
+              </td>
+              <td align="center" class="stop-count">
+                <strong class="count-text">${attrs.result.stopCount}</strong>
+                <i class="fa fa-stop"/>
+              </td>
+            </tr>
+          </table>
+        </td>
+        <td style="vertical-align: middle;" class="run-report">
+          <a style="color:white; text-decoration:none;" href="${attrs.result.reportUrl}" class="label" target="_blank">Full Report</a>
+        </td>
+      </tr>
+
+</j:jelly>

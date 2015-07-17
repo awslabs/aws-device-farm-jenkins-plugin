@@ -1,0 +1,13 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:r="/org/jenkinsci/plugins/awsdevicefarm/results">
+  <style type="text/css">
+    .project-summary-table {
+      border-collapse: separate;
+      border-spacing: 5;
+    }
+  </style>
+  <t:summary icon="/plugin/aws-device-farm/service-icon.svg">
+    <j:if test="${it.result != null}">
+      <r:run-summary result="${it.result}" />
+    </j:if>
+  </t:summary>
+</j:jelly>

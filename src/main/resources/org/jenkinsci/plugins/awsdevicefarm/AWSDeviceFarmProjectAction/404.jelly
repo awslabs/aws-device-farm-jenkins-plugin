@@ -1,0 +1,10 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
+  <l:layout>
+    <st:include it="${it.project}" page="sidepanel.jelly"/>
+    <l:main-panel>
+      <h1>AWS Device Farm Results</h1>
+      <h2>No results available!</h2>
+      <h3>Enable AWS Device Farm plugin to capture results</h3>
+    </l:main-panel>
+  </l:layout>
+</j:jelly>
