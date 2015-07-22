@@ -12,7 +12,7 @@ public enum AWSDeviceFarmUploadType {
     APPIUM_JAVA_JUNIT("APPIUM_JAVA_JUNIT_TEST_PACKAGE"),    // Test
     CALABASH ("CALABASH_TEST_PACKAGE"),                     // Test
     INSTRUMENTATION ("INSTRUMENTATION_TEST_PACKAGE"),       // Test
-    UIAUTOMATOR ("UIAUTOMATOR_TEST_PACKAGE"),               // Test
+    UIAUTOMATOR ("UIAUTOMATOR_TEST_PACKAGE");               // Test
 
     private final String type;
     // Lookup table For getting enum by value.
