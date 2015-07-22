@@ -12,7 +12,7 @@
   <packaging>hpi</packaging>
   
   <name>aws-device-farm</name>
-  <url>http://wiki.jenkins-ci.org/display/JENKINS/AWS+Device+Farm+Plugin</url>
+  <url>https://wiki.jenkins-ci.org/display/JENKINS/AWS+Device+Farm+Plugin</url>
   <description>AWS Device Farm Jenkins Plugin</description>
   
   <dependencies>
@@ -33,10 +33,18 @@
   </licenses>
   
   <scm>
-    <connection>scm:git:ssh://github.com/awslabs/aws-device-farm-jenkins-plugin.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/awslabs/aws-device-farm-jenkins-plugin.git</developerConnection>
-    <url>https://github.com/awslabs/aws-device-farm-jenkins-plugin</url>
+    <connection>scm:git:ssh://github.com/jenkinsci/aws-device-farm-plugin.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com:jenkinsci/aws-device-farm-plugin.git</developerConnection>
+    <url>https://github.com/jenkinsci/aws-device-farm-plugin</url>
   </scm>
+
+  <developers>
+    <developer>
+      <id>ahawker</id>
+      <name>Andrew Hawker</name>
+      <email>ahawker@amazon.com</email>
+    </developer>
+  </developers>
   
   <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
   <repositories>
