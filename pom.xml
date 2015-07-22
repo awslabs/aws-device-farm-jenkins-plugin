@@ -77,4 +77,16 @@
     -->
     <maven-hpi-plugin.version>1.96</maven-hpi-plugin.version>
   </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <additionalparam>-Xdoclint:none</additionalparam>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
