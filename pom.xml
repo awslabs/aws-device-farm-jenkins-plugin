@@ -34,7 +34,7 @@
   
   <scm>
     <connection>scm:git:ssh://github.com/jenkinsci/aws-device-farm-plugin.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com:jenkinsci/aws-device-farm-plugin.git</developerConnection>
+    <developerConnection>scm:git:ssh://git@github.com/jenkinsci/aws-device-farm-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/aws-device-farm-plugin</url>
   </scm>
 
