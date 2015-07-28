@@ -8,7 +8,7 @@
 
   <groupId>org.jenkins-ci.plugins</groupId>
   <artifactId>aws-device-farm</artifactId>
-  <version>1.3-SNAPSHOT</version>
+  <version>1.4-SNAPSHOT</version>
   <packaging>hpi</packaging>
   
   <name>aws-device-farm</name>
@@ -36,6 +36,7 @@
     <connection>scm:git:ssh://github.com/jenkinsci/aws-device-farm-plugin.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/jenkinsci/aws-device-farm-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/aws-device-farm-plugin</url>
+    <tag>HEAD</tag>
   </scm>
 
   <developers>
@@ -86,6 +87,18 @@
         <configuration>
           <additionalparam>-Xdoclint:none</additionalparam>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>2.5.1</version>
+        <dependencies>
+          <dependency>
+            <groupId>org.apache.maven.scm</groupId>
+            <artifactId>maven-scm-provider-gitexe</artifactId>
+            <version>1.9.2</version>
+          </dependency>
+        </dependencies>
       </plugin>
     </plugins>
   </build>

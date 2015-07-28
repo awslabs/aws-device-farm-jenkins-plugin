@@ -15,4 +15,4 @@ debug: install
 	mvn hpi:run
 
 release:
-	mvn release:clean release:prepare release:perform
+	mvn -Darguments="-DskipTests" release:clean release:prepare release:perform
