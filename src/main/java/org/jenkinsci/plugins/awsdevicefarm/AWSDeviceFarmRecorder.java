@@ -409,8 +409,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
                 Upload upload = adf.uploadTest(project, test);
 
                 Map<String, String> parameters = new HashMap<String, String>();
-                if(calabashTags !=null && !calabashTags.isEmpty())
-                {
+                if(calabashTags != null && !calabashTags.isEmpty()){
                 	parameters.put("tags", calabashTags);
                 }
                 testToSchedule = new ScheduleRunTest()
