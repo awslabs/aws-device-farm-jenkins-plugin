@@ -73,6 +73,12 @@ public class AWSDeviceFarmRecorder extends Recorder {
     // UIAutomator
     public String uiautomatorArtifact;
     public String uiautomatorFilter;
+    
+    // uiautomation
+    public String uiautomationArtifact;
+
+    // XCTest
+    public String xctestArtifact;
 
     //// Fields not populated by the JSON binder.
     public PrintStream log;
@@ -95,6 +101,8 @@ public class AWSDeviceFarmRecorder extends Recorder {
      * @param junitFilter The filter to apply to the Instrumentation JUnit tests.
      * @param uiautomatorArtifact The path to the UI Automator tests to be run.
      * @param uiautomatorFilter
+     * @param uiautomationArtifact The path to the UI Automation tests to be run.
+     * @param xctestArtifact The path to the XCTest tests to be run.
      */
     @DataBoundConstructor
     @SuppressWarnings("unused")
@@ -113,7 +121,9 @@ public class AWSDeviceFarmRecorder extends Recorder {
                                  String junitArtifact,
                                  String junitFilter,
                                  String uiautomatorArtifact,
-                                 String uiautomatorFilter) {
+                                 String uiautomatorFilter,
+                                 String uiautomationArtifact,
+                                 String xctestArtifact) {
         this.projectName = projectName;
         this.devicePoolName = devicePoolName;
         this.appArtifact = appArtifact;
@@ -130,6 +140,8 @@ public class AWSDeviceFarmRecorder extends Recorder {
         this.junitFilter = junitFilter;
         this.uiautomatorArtifact = uiautomatorArtifact;
         this.uiautomatorFilter = uiautomatorFilter;
+        this.uiautomationArtifact = uiautomationArtifact;
+        this.xctestArtifact = xctestArtifact;
 
         // This is a hack because I have to get the service icon locally, but it's copy-righted. So I pull it when I need it.
         Path pluginIconPath = Paths.get(System.getenv("HOME"), "plugins", "aws-device-farm", "service-icon.svg").toAbsolutePath();
@@ -447,6 +459,33 @@ public class AWSDeviceFarmRecorder extends Recorder {
                         .withTestPackageArn(upload.getArn());
                 break;
             }
+            
+            case UIAUTOMATION: {
+                UIAutomationTest test = new UIAutomationTest.Builder()
+                        .withTests(uiautomationArtifact)
+                        .build();
+
+                Upload upload = adf.uploadTest(project, test);
+
+                testToSchedule = new ScheduleRunTest()
+                        .withType(testType)
+                        .withTestPackageArn(upload.getArn());
+                break;
+            }
+
+            case XCTEST: {
+                XCTestTest test = new XCTestTest.Builder()
+                        .withTests(xctestArtifact)
+                        .build();
+
+                Upload upload = adf.uploadTest(project, test);
+
+                testToSchedule = new ScheduleRunTest()
+                        .withType(testType)
+                        .withTestPackageArn(upload.getArn());
+                break;
+             }
+
         }
 
         return testToSchedule;
@@ -483,7 +522,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
             return false;
         }
         // [Required]: At least one test.
-        if (stringToTestType(testToRun) == null) {
+        if (testToRun == null || stringToTestType(testToRun) == null) {
             writeToLog("A test type must be set.");
             return false;
         }
@@ -563,6 +602,24 @@ public class AWSDeviceFarmRecorder extends Recorder {
             case UIAUTOMATOR: {
                 if (uiautomatorArtifact == null || uiautomatorArtifact.isEmpty()) {
                     writeToLog("UI Automator tests artifact must be set.");
+                    return false;
+                }
+
+                break;
+            }
+            
+            case UIAUTOMATION: {
+                if (uiautomationArtifact == null || uiautomationArtifact.isEmpty()) {
+                    writeToLog("UI Automation tests artifact must be set.");
+                    return false;
+                }
+
+                break;
+            }
+            
+            case XCTEST: {
+                if (xctestArtifact == null || xctestArtifact.isEmpty()) {
+                    writeToLog("XC tests artifact must be set.");
                     return false;
                 }
 

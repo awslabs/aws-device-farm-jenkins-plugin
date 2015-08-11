@@ -201,6 +201,8 @@ public class AWSDeviceFarm {
         AWSDeviceFarmUploadType type;
         if (appArtifact.toLowerCase().endsWith("apk")) {
             type = AWSDeviceFarmUploadType.ANDROID_APP;
+        } else if (appArtifact.toLowerCase().endsWith("ipa") || appArtifact.toLowerCase().endsWith("zip")) {
+            type = AWSDeviceFarmUploadType.IOS_APP;
         }
         else {
             throw new AWSDeviceFarmException(String.format("Unknown app artifact to upload: %s", appArtifact));
@@ -243,6 +245,30 @@ public class AWSDeviceFarm {
      */
     public Upload uploadTest(Project project, UIAutomatorTest test) throws IOException, AWSDeviceFarmException {
         return upload(project, test.getTests(), AWSDeviceFarmUploadType.UIAUTOMATOR);
+    }
+    
+    /**
+     * Upload a test to Device Farm.
+     * @param project The Device Farm project to upload to.
+     * @param test Test object containing relevant test information.
+     * @return The Device Farm Upload object.
+     * @throws IOException
+     * @throws AWSDeviceFarmException
+     */
+    public Upload uploadTest(Project project, UIAutomationTest test) throws IOException, AWSDeviceFarmException {
+        return upload(project, test.getTests(), AWSDeviceFarmUploadType.UIAUTOMATION);
+    }
+    
+    /**
+     * Upload a test to Device Farm.
+     * @param project The Device Farm project to upload to.
+     * @param test Test object containing relevant test information.
+     * @return The Device Farm Upload object.
+     * @throws IOException
+     * @throws AWSDeviceFarmException
+     */
+    public Upload uploadTest(Project project, XCTestTest test) throws IOException, AWSDeviceFarmException {
+        return upload(project, test.getTests(), AWSDeviceFarmUploadType.XCTEST);
     }
 
     /**
