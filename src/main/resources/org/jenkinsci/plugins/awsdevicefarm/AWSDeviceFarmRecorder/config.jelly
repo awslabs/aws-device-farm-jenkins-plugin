@@ -81,5 +81,21 @@
        </f:entry>
      </f:nested>
     </f:radioBlock>
+    
+    <f:radioBlock name="testToRun" value="UIAUTOMATION" checked="${instance.isTestType('UIAUTOMATION')}" title="iOS UI Automation" inline="true">
+     <f:nested>
+       <f:entry title="Tests" field="uiautomationArtifact" description="[Required] Pattern to find UI Automation tests.">
+         <f:textbox />
+       </f:entry>
+     </f:nested>
+    </f:radioBlock>
+
+    <f:radioBlock name="testToRun" value="XCTEST" checked="${instance.isTestType('XCTEST')}" title="XCTest" inline="true">
+      <f:nested>
+        <f:entry title="Tests" field="xctestArtifact" description="[Required] Pattern to find XCTest tests.">
+          <f:textbox />
+        </f:entry>
+      </f:nested>
+    </f:radioBlock>
   </f:section>
 </j:jelly>

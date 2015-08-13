@@ -8,11 +8,14 @@ import java.util.Map;
  */
 public enum AWSDeviceFarmUploadType {
     ANDROID_APP ("ANDROID_APP"),                            // App
+    IOS_APP ("IOS_APP"),                                    // App
     APPIUM_JAVA_TESTNG("APPIUM_JAVA_TESTNG_TEST_PACKAGE"),  // Test
     APPIUM_JAVA_JUNIT("APPIUM_JAVA_JUNIT_TEST_PACKAGE"),    // Test
     CALABASH ("CALABASH_TEST_PACKAGE"),                     // Test
     INSTRUMENTATION ("INSTRUMENTATION_TEST_PACKAGE"),       // Test
-    UIAUTOMATOR ("UIAUTOMATOR_TEST_PACKAGE");               // Test
+    UIAUTOMATOR ("UIAUTOMATOR_TEST_PACKAGE"),               // Test
+    UIAUTOMATION ("UIAUTOMATION_TEST_PACKAGE"),             // Test
+    XCTEST ("XCTEST_TEST_PACKAGE");                         // Test
 
     private final String type;
     // Lookup table For getting enum by value.
