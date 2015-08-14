@@ -488,7 +488,35 @@ public class AWSDeviceFarm {
         return api.listSuites(request);
     }
 
+    public int getUnmeteredDevices(String os) {
+        AccountSettings accountSettings = getAccountSettings();
+        if (accountSettings == null) {
+            return 0;
+        } else if (os.equalsIgnoreCase("ANDROID")) {
+            return getAccountSettings().getUnmeteredDevices().get("ANDROID");
+        } else if (os.equalsIgnoreCase("IOS")) {
+            return getAccountSettings().getUnmeteredDevices().get("IOS");
+        } else {
+            return 0;
+        }
+    }
 
+    public String getOs(String appArtifact) {
+        if (appArtifact.toLowerCase().endsWith("apk")) {
+            return "Android";
+        } else {
+            return "IOS";
+        }
+    }
+
+    public AccountSettings getAccountSettings() {
+        try {
+            GetAccountSettingsRequest request = new GetAccountSettingsRequest();
+            return api.getAccountSettings(request).getAccountSettings();
+        } catch (NotFoundException e) {
+            return null;
+        }
+    }
 
     //// Helper Methods
 
