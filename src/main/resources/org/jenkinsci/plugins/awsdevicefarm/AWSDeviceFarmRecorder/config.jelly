@@ -15,6 +15,10 @@
   </f:entry>
 
   <f:entry>
+    <f:checkbox name="isRunUnmetered" field="isRunUnmetered" title="Run on Unmetered Devices." checked="${instance.isRunUnmetered}" inline="true" />
+  </f:entry>
+  
+  <f:entry>
     <f:checkbox name="storeResults" title="Store test results locally." checked="${instance.storeResults}"/>
   </f:entry>
 
