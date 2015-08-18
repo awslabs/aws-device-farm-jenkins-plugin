@@ -50,6 +50,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
     // Radio Button Selection
     public String testToRun;
     public Boolean storeResults;
+    public Boolean isRunUnmetered;
 
     // Built-in Fuzz
     public String eventCount;
@@ -111,6 +112,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
                                  String appArtifact,
                                  String testToRun,
                                  Boolean storeResults,
+                                 Boolean isRunUnmetered,
                                  String eventCount,
                                  String eventThrottle,
                                  String seed,
@@ -129,6 +131,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
         this.appArtifact = appArtifact;
         this.testToRun = testToRun;
         this.storeResults = storeResults;
+        this.isRunUnmetered = isRunUnmetered;
         this.eventCount = eventCount;
         this.eventThrottle = eventThrottle;
         this.seed = seed;
@@ -238,6 +241,16 @@ public class AWSDeviceFarmRecorder extends Recorder {
                 projectName = projectNameParameter;
             }
 
+            // check for Unmetered Devices on Account
+            if (isRunUnmetered) {
+                String os = adf.getOs(appArtifact);
+                int unmeteredDeviceCount = adf.getUnmeteredDevices(os);
+                if (unmeteredDeviceCount <= 0) {
+                    throw new AWSDeviceFarmException(String.format("Your account does not have unmetered %s devices. Please change "
+                            + "your build settings to run on metered devices.", os));
+                }
+            }
+
             // Get AWS Device Farm project from user provided name.
             writeToLog(String.format("Using Project '%s'", projectName));
             Project project = adf.getProject(projectName);
@@ -266,7 +279,8 @@ public class AWSDeviceFarmRecorder extends Recorder {
             // Schedule test run.
             TestType testType = TestType.fromValue(testToSchedule.getType());
             writeToLog(String.format("Scheduling '%s' run '%s'", testType, appName));
-            ScheduleRunResult run = adf.scheduleRun(project.getArn(), appName, appArn, devicePool.getArn(), testToSchedule, null);
+            ScheduleRunConfiguration configuration = getScheduleRunConfiguration(isRunUnmetered);
+            ScheduleRunResult run = adf.scheduleRun(project.getArn(), appName, appArn, devicePool.getArn(), testToSchedule, configuration);
 
             String runArn = run.getRun().getArn();
             try {
@@ -324,6 +338,34 @@ public class AWSDeviceFarmRecorder extends Recorder {
         }
 
         return true;
+    }
+
+    private ScheduleRunConfiguration getScheduleRunConfiguration(Boolean isRunUnmetered) {
+        ScheduleRunConfiguration configuration = new ScheduleRunConfiguration();
+        if (isRunUnmetered != null && isRunUnmetered) {
+            configuration.setBillingMethod(BillingMethod.UNMETERED);
+        } else {
+            configuration.setBillingMethod(BillingMethod.METERED);
+        }
+
+        // set a bunch of other default values as Device Farm expect these
+        configuration.setAuxiliaryApps(new ArrayList<String>());
+        configuration.setExtraDataPackageArn(null);
+        configuration.setLocale("en_US");
+
+        Location location = new Location();
+        location.setLatitude(47.6204);
+        location.setLongitude(-122.3491);
+        configuration.setLocation(location);
+
+        Radios radio = new Radios();
+        radio.setBluetooth(true);
+        radio.setGps(true);
+        radio.setNfc(true);
+        radio.setWifi(true);
+        configuration.setRadios(radio);
+
+        return configuration;
     }
 
     private Map<String, FilePath> getSuites(AWSDeviceFarm adf, ScheduleRunResult run, Map<String, FilePath> jobs) throws IOException, InterruptedException {
@@ -421,8 +463,8 @@ public class AWSDeviceFarmRecorder extends Recorder {
                 Upload upload = adf.uploadTest(project, test);
 
                 Map<String, String> parameters = new HashMap<String, String>();
-                if(calabashTags != null && !calabashTags.isEmpty()){
-                	parameters.put("tags", calabashTags);
+                if (calabashTags != null && !calabashTags.isEmpty()) {
+                    parameters.put("tags", calabashTags);
                 }
                 testToSchedule = new ScheduleRunTest()
                         .withType(testType)
@@ -796,11 +838,12 @@ public class AWSDeviceFarmRecorder extends Recorder {
             return FormValidation.ok();
         }
 
-    	/**
-    	 * Validate the user selected project.
-    	 * @param projectName The currently selected project name.
-    	 * @return Whether or not the form was ok.
-    	 */
+        /**
+         * Validate the user selected project.
+         * @param projectName
+         * The currently selected project name.
+         * @return Whether or not the form was ok.
+         */
         @SuppressWarnings("unused")
         public FormValidation doCheckProjectName(@QueryParameter String projectName) {
             if (projectName == null || projectName.isEmpty()) {
@@ -896,6 +939,25 @@ public class AWSDeviceFarmRecorder extends Recorder {
         public FormValidation doCheckUiautomatorArtifact(@QueryParameter String uiautomatorArtifact) {
             if (uiautomatorArtifact == null || uiautomatorArtifact.isEmpty()) {
                 return FormValidation.error("Required");
+            }
+            return FormValidation.ok();
+        }
+        
+        /**
+         * Validate if user account has unmetered devices
+         * 
+         * @param isRunUnmetered
+         * @param appArtifact
+         * @return
+         */
+        @SuppressWarnings("unused")
+        public FormValidation doCheckIsRunUnmetered(@QueryParameter Boolean isRunUnmetered, @QueryParameter String appArtifact) {
+            if (isRunUnmetered) {
+                AWSDeviceFarm adf = getAWSDeviceFarm();
+                String os = adf.getOs(appArtifact);
+                if (adf.getUnmeteredDevices(os) <= 0) {
+                    return FormValidation.error(String.format("Your account does not have unmetered %s devices.", os));
+                }
             }
             return FormValidation.ok();
         }
