@@ -242,7 +242,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
             }
 
             // check for Unmetered Devices on Account
-            if (isRunUnmetered) {
+            if (isRunUnmetered != null && isRunUnmetered) {
                 String os = adf.getOs(appArtifact);
                 int unmeteredDeviceCount = adf.getUnmeteredDevices(os);
                 if (unmeteredDeviceCount <= 0) {
@@ -952,9 +952,14 @@ public class AWSDeviceFarmRecorder extends Recorder {
          */
         @SuppressWarnings("unused")
         public FormValidation doCheckIsRunUnmetered(@QueryParameter Boolean isRunUnmetered, @QueryParameter String appArtifact) {
-            if (isRunUnmetered) {
+            if (isRunUnmetered != null && isRunUnmetered) {
                 AWSDeviceFarm adf = getAWSDeviceFarm();
-                String os = adf.getOs(appArtifact);
+                String os = null;
+                try {
+                    os = adf.getOs(appArtifact);
+                } catch(AWSDeviceFarmException e) {
+                    return FormValidation.error(e.getMessage());
+                }
                 if (adf.getUnmeteredDevices(os) <= 0) {
                     return FormValidation.error(String.format("Your account does not have unmetered %s devices.", os));
                 }

@@ -501,11 +501,13 @@ public class AWSDeviceFarm {
         }
     }
 
-    public String getOs(String appArtifact) {
+    public String getOs(String appArtifact) throws AWSDeviceFarmException  {
         if (appArtifact.toLowerCase().endsWith("apk")) {
             return "Android";
-        } else {
+        } else if (appArtifact.toLowerCase().endsWith("ipa")) {
             return "IOS";
+        } else {
+            throw new AWSDeviceFarmException(String.format("Unknown app artifact to upload: %s", appArtifact));
         }
     }
 
