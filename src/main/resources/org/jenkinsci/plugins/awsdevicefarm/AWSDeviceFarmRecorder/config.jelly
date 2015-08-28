@@ -23,6 +23,17 @@
   </f:entry>
 
   <f:section title="Choose test to run">
+    <f:radioBlock name="testToRun" value="BUILTIN_EXPLORER" checked="${instance.isTestType('BUILTIN_EXPLORER')}" title="Android Built-in Explorer" inline="true">
+      <f:nested>
+        <f:entry title="Username" field="username" description="A username to use if the Explorer encounters a login form. If not supplied, no username will be inserted.">
+          <f:textbox/>
+        </f:entry>
+        <f:entry title="Password" field="password" description="A password to use if the Explorer encounters a login form. If not supplied, no password will be inserted.">
+          <f:password/>
+        </f:entry>
+      </f:nested>
+    </f:radioBlock>
+    
     <f:radioBlock name="testToRun" value="BUILTIN_FUZZ" checked="${instance.isTestType('BUILTIN_FUZZ')}" title="Built-in Fuzz" inline="true">
       <f:nested>
         <f:entry title="Event Count" field="eventCount" description="[Optional] Number of fuzz events.">

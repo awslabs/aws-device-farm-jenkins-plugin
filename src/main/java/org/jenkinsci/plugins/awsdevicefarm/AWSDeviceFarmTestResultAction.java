@@ -5,6 +5,7 @@ import java.io.PrintStream;
 import com.amazonaws.services.devicefarm.model.GetRunResult;
 import com.amazonaws.services.devicefarm.model.Run;
 import com.amazonaws.services.devicefarm.model.ScheduleRunResult;
+
 import hudson.model.AbstractBuild;
 import hudson.model.Result;
 import hudson.tasks.test.AbstractTestResultAction;
@@ -49,7 +50,7 @@ public class AWSDeviceFarmTestResultAction extends AbstractTestResultAction<AWSD
      * to populate/inform the UI of test results/progress.
      * @param runResult
      */
-    public void waitForRunCompletion(AWSDeviceFarm adf, ScheduleRunResult runResult) {
+    public void waitForRunCompletion(AWSDeviceFarm adf, ScheduleRunResult runResult) throws InterruptedException {
         while (true) {
             GetRunResult latestRunResult = adf.describeRun(runResult.getRun().getArn());
             Run run = latestRunResult.getRun();
@@ -59,6 +60,7 @@ public class AWSDeviceFarmTestResultAction extends AbstractTestResultAction<AWSD
                 writeToLog(String.format("Run %s status %s", run.getName(), run.getStatus()));
             }
             else {
+                writeToLog(String.format("Run %s status %s", run.getName(), run.getStatus()));
                 break;
             }
 
@@ -66,7 +68,8 @@ public class AWSDeviceFarmTestResultAction extends AbstractTestResultAction<AWSD
                 Thread.sleep(DefaultUpdateInterval);
             }
             catch(InterruptedException ex) {
-                break;
+                writeToLog(String.format("Thread interrupted while waiting for the Run to complete"));
+                throw ex;
             }
         }
     }

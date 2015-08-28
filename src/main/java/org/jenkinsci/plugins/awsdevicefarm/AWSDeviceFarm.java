@@ -197,7 +197,7 @@ public class AWSDeviceFarm {
      * @throws IOException
      * @throws AWSDeviceFarmException
      */
-    public Upload uploadApp(Project project, String appArtifact) throws IOException, AWSDeviceFarmException {
+    public Upload uploadApp(Project project, String appArtifact) throws InterruptedException, IOException, AWSDeviceFarmException {
         AWSDeviceFarmUploadType type;
         if (appArtifact.toLowerCase().endsWith("apk")) {
             type = AWSDeviceFarmUploadType.ANDROID_APP;
@@ -219,7 +219,7 @@ public class AWSDeviceFarm {
      * @throws IOException
      * @throws AWSDeviceFarmException
      */
-    public Upload uploadTest(Project project, InstrumentationTest test) throws IOException, AWSDeviceFarmException {
+    public Upload uploadTest(Project project, InstrumentationTest test) throws InterruptedException, IOException, AWSDeviceFarmException {
         return upload(project, test.getArtifact(), AWSDeviceFarmUploadType.INSTRUMENTATION);
     }
 
@@ -231,7 +231,7 @@ public class AWSDeviceFarm {
      * @throws IOException
      * @throws AWSDeviceFarmException
      */
-    public Upload uploadTest(Project project, CalabashTest test) throws IOException, AWSDeviceFarmException {
+    public Upload uploadTest(Project project, CalabashTest test) throws InterruptedException, IOException, AWSDeviceFarmException {
         return upload(project, test.getFeatures(), AWSDeviceFarmUploadType.CALABASH);
     }
 
@@ -243,7 +243,7 @@ public class AWSDeviceFarm {
      * @throws IOException
      * @throws AWSDeviceFarmException
      */
-    public Upload uploadTest(Project project, UIAutomatorTest test) throws IOException, AWSDeviceFarmException {
+    public Upload uploadTest(Project project, UIAutomatorTest test) throws InterruptedException, IOException, AWSDeviceFarmException {
         return upload(project, test.getTests(), AWSDeviceFarmUploadType.UIAUTOMATOR);
     }
     
@@ -255,7 +255,7 @@ public class AWSDeviceFarm {
      * @throws IOException
      * @throws AWSDeviceFarmException
      */
-    public Upload uploadTest(Project project, UIAutomationTest test) throws IOException, AWSDeviceFarmException {
+    public Upload uploadTest(Project project, UIAutomationTest test) throws InterruptedException, IOException, AWSDeviceFarmException {
         return upload(project, test.getTests(), AWSDeviceFarmUploadType.UIAUTOMATION);
     }
     
@@ -267,7 +267,7 @@ public class AWSDeviceFarm {
      * @throws IOException
      * @throws AWSDeviceFarmException
      */
-    public Upload uploadTest(Project project, XCTestTest test) throws IOException, AWSDeviceFarmException {
+    public Upload uploadTest(Project project, XCTestTest test) throws InterruptedException, IOException, AWSDeviceFarmException {
         return upload(project, test.getTests(), AWSDeviceFarmUploadType.XCTEST);
     }
 
@@ -279,7 +279,7 @@ public class AWSDeviceFarm {
      * @throws IOException
      * @throws AWSDeviceFarmException
      */
-    public Upload uploadTest(Project project, AppiumJavaTestNGTest test) throws IOException, AWSDeviceFarmException {
+    public Upload uploadTest(Project project, AppiumJavaTestNGTest test) throws InterruptedException, IOException, AWSDeviceFarmException {
         return upload(project, test.getTests(), AWSDeviceFarmUploadType.APPIUM_JAVA_TESTNG);
     }
 
@@ -291,7 +291,7 @@ public class AWSDeviceFarm {
      * @throws IOException
      * @throws AWSDeviceFarmException
      */
-    public Upload uploadTest(Project project, AppiumJavaJUnitTest test) throws IOException, AWSDeviceFarmException {
+    public Upload uploadTest(Project project, AppiumJavaJUnitTest test) throws InterruptedException, IOException, AWSDeviceFarmException {
         return upload(project, test.getTests(), AWSDeviceFarmUploadType.APPIUM_JAVA_JUNIT);
     }
 
@@ -304,7 +304,7 @@ public class AWSDeviceFarm {
      * @throws IOException
      * @throws AWSDeviceFarmException
      */
-    private Upload upload(Project project, String artifact, AWSDeviceFarmUploadType uploadType) throws IOException, AWSDeviceFarmException {
+    private Upload upload(Project project, String artifact, AWSDeviceFarmUploadType uploadType) throws InterruptedException, IOException, AWSDeviceFarmException {
         if (artifact == null || artifact.isEmpty()) {
             throw new AWSDeviceFarmException("Must have an artifact path.");
         }
@@ -326,7 +326,7 @@ public class AWSDeviceFarm {
      * @throws IOException
      * @throws AWSDeviceFarmException
      */
-    private Upload upload(File file, Project project, AWSDeviceFarmUploadType uploadType) throws IOException, AWSDeviceFarmException {
+    private Upload upload(File file, Project project, AWSDeviceFarmUploadType uploadType) throws InterruptedException, IOException, AWSDeviceFarmException {
         return upload(file, project, uploadType, true);
     }
 
@@ -340,7 +340,7 @@ public class AWSDeviceFarm {
      * @throws IOException
      * @throws AWSDeviceFarmException
      */
-    private Upload upload(File file, Project project, AWSDeviceFarmUploadType uploadType, Boolean synchronous) throws IOException, AWSDeviceFarmException {
+    private Upload upload(File file, Project project, AWSDeviceFarmUploadType uploadType, Boolean synchronous) throws InterruptedException, IOException, AWSDeviceFarmException {
         CreateUploadRequest appUploadRequest = new CreateUploadRequest()
                 .withName(file.getName())
                 .withProjectArn(project.getArn())
@@ -369,6 +369,7 @@ public class AWSDeviceFarm {
                 String status = describeUploadResult.getUpload().getStatus();
 
                 if ("SUCCEEDED".equalsIgnoreCase(status)) {
+                    writeToLog(String.format("Upload %s succeeded", file.getName()));
                     break;
                 }
                 else if ("FAILED".equalsIgnoreCase(status)) {
@@ -380,7 +381,8 @@ public class AWSDeviceFarm {
                         Thread.sleep(5000);
                     }
                     catch (InterruptedException e) {
-                        break;
+                        writeToLog(String.format("Thread interrupted while waiting for the upload to complete"));
+                        throw e;
                     }
                 }
             }
