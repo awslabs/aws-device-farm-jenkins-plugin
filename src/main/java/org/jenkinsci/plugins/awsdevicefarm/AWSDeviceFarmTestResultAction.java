@@ -55,15 +55,10 @@ public class AWSDeviceFarmTestResultAction extends AbstractTestResultAction<AWSD
             GetRunResult latestRunResult = adf.describeRun(runResult.getRun().getArn());
             Run run = latestRunResult.getRun();
             result = new AWSDeviceFarmTestResult(owner, run);
-
-            if (!result.isCompleted()) {
-                writeToLog(String.format("Run %s status %s", run.getName(), run.getStatus()));
-            }
-            else {
-                writeToLog(String.format("Run %s status %s", run.getName(), run.getStatus()));
+            writeToLog(String.format("Run %s status %s", run.getName(), run.getStatus()));
+            if (result.isCompleted()) {
                 break;
             }
-
             try {
                 Thread.sleep(DefaultUpdateInterval);
             }

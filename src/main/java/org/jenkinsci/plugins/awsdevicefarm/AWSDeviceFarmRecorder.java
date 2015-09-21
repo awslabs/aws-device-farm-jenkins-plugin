@@ -382,11 +382,9 @@ public class AWSDeviceFarmRecorder extends Recorder {
         Map<String, FilePath> suites = new HashMap<String, FilePath>();
         String runArn = run.getRun().getArn();
         String components[] = runArn.split(":");
-        // constructing job arn for each job 
+        // constructing job ARN for each job using the run ARN
         components[5] = "job";
-        for(String jobArn:jobs.keySet())
-        {
-            writeToLog(String.format("Jobarn: %s", jobArn));
+        for(String jobArn:jobs.keySet()) {
             components[6] = jobArn;
             String fullJobArn = StringUtils.join(components,":");
             ListSuitesResult result = adf.listSuites(fullJobArn);
