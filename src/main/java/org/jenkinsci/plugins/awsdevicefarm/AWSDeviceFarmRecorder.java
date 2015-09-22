@@ -26,6 +26,7 @@ import hudson.util.FormValidation;
 import hudson.util.IOUtils;
 import hudson.util.ListBoxModel;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.awsdevicefarm.test.*;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -56,6 +57,10 @@ public class AWSDeviceFarmRecorder extends Recorder {
     public String eventCount;
     public String eventThrottle;
     public String seed;
+
+    // Built-in Explorer
+    public String username;
+    public String password;
 
     // Appium Java JUnit
     public String appiumJavaJUnitTest;
@@ -94,6 +99,8 @@ public class AWSDeviceFarmRecorder extends Recorder {
      * @param eventCount The number of fuzz events to run.
      * @param eventThrottle The the fuzz event throttle count.
      * @param seed The initial seed of fuzz events.
+     * @param username username to use if explorer encounters a login form.
+     * @param password password to use if explorer encounters a login form.
      * @param appiumJavaJUnitTest
      * @param appiumJavaTestNGTest
      * @param calabashFeatures The path to the Calabash tests to be run.
@@ -116,6 +123,8 @@ public class AWSDeviceFarmRecorder extends Recorder {
                                  String eventCount,
                                  String eventThrottle,
                                  String seed,
+                                 String username,
+                                 String password,
                                  String appiumJavaJUnitTest,
                                  String appiumJavaTestNGTest,
                                  String calabashFeatures,
@@ -135,6 +144,8 @@ public class AWSDeviceFarmRecorder extends Recorder {
         this.eventCount = eventCount;
         this.eventThrottle = eventThrottle;
         this.seed = seed;
+        this.username = username;
+        this.password = password;
         this.appiumJavaJUnitTest = appiumJavaJUnitTest;
         this.appiumJavaTestNGTest = appiumJavaTestNGTest;
         this.calabashFeatures = calabashFeatures;
@@ -325,7 +336,6 @@ public class AWSDeviceFarmRecorder extends Recorder {
                         artifactFilePath.write().write(IOUtils.toByteArray(url.openStream()));
                     }
                 }
-
                 writeToLog(String.format("Results archive saved in %s", artifactsDir.getName()));
             }
 
@@ -370,14 +380,20 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
     private Map<String, FilePath> getSuites(AWSDeviceFarm adf, ScheduleRunResult run, Map<String, FilePath> jobs) throws IOException, InterruptedException {
         Map<String, FilePath> suites = new HashMap<String, FilePath>();
-        ListSuitesResult result = adf.listSuites(run.getRun().getArn());
-        for (Suite suite : result.getSuites()) {
-            String arn = suite.getArn().split(":")[6];
-            String jobArn = arn.substring(0, arn.lastIndexOf("/"));
-            suites.put(arn, new FilePath(jobs.get(jobArn), suite.getName()));
-            suites.get(arn).mkdirs();
+        String runArn = run.getRun().getArn();
+        String components[] = runArn.split(":");
+        // constructing job ARN for each job using the run ARN
+        components[5] = "job";
+        for(String jobArn:jobs.keySet()) {
+            components[6] = jobArn;
+            String fullJobArn = StringUtils.join(components,":");
+            ListSuitesResult result = adf.listSuites(fullJobArn);
+            for (Suite suite : result.getSuites()) {
+                String arn = suite.getArn().split(":")[6];
+                suites.put(arn, new FilePath(jobs.get(jobArn), suite.getName()));
+                suites.get(arn).mkdirs();
+            }
         }
-
         return suites;
     }
 
@@ -389,7 +405,6 @@ public class AWSDeviceFarmRecorder extends Recorder {
             jobs.put(arn, new FilePath(resultsDir, job.getName()));
             jobs.get(arn).mkdirs();
         }
-
         return jobs;
     }
 
@@ -402,7 +417,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
      * @throws IOException
      * @throws AWSDeviceFarmException
      */
-    private ScheduleRunTest getScheduleRunTest(EnvVars env, AWSDeviceFarm adf, Project project) throws IOException, AWSDeviceFarmException {
+    private ScheduleRunTest getScheduleRunTest(EnvVars env, AWSDeviceFarm adf, Project project) throws InterruptedException, IOException, AWSDeviceFarmException {
         ScheduleRunTest testToSchedule = null;
         TestType testType = stringToTestType(testToRun);
 
@@ -420,6 +435,23 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
                 if (seed != null && !seed.isEmpty()) {
                     parameters.put("seed", seed);
+                }
+
+                testToSchedule = new ScheduleRunTest()
+                        .withType(testType)
+                        .withParameters(parameters);
+                break;
+            }
+
+            case BUILTIN_EXPLORER: {
+                Map<String, String> parameters = new HashMap<String, String>();
+
+                if (username != null && !username.isEmpty()) {
+                    parameters.put("username", username);
+                }
+
+                if (password != null && !password.isEmpty()) {
+                    parameters.put("password", password);
                 }
 
                 testToSchedule = new ScheduleRunTest()
@@ -595,6 +627,10 @@ public class AWSDeviceFarmRecorder extends Recorder {
                     }
                 }
 
+                break;
+            }
+            
+            case BUILTIN_EXPLORER : {
                 break;
             }
 
