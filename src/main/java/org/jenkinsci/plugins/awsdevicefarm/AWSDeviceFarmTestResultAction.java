@@ -40,8 +40,8 @@ public class AWSDeviceFarmTestResultAction extends AbstractTestResultAction<AWSD
      * Returns the Jenkins result which matches the result of this AWS Device Farm run.
      * @return
      */
-    public Result getBuildResult() {
-        return getResult().getBuildResult();
+    public Result getBuildResult(Boolean ignoreRunError) {
+        return getResult().getBuildResult(ignoreRunError);
     }
 
     /**

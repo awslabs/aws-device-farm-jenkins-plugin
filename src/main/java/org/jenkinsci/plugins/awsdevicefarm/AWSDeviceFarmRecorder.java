@@ -89,6 +89,9 @@ public class AWSDeviceFarmRecorder extends Recorder {
     //// Fields not populated by the JSON binder.
     public PrintStream log;
 
+    // ignore device farm run errors
+    public Boolean ignoreRunError;
+
     /**
      * The Device Farm recorder class for running post-build steps on Jenkins.
      * @param projectName The name of the Device Farm project.
@@ -134,7 +137,8 @@ public class AWSDeviceFarmRecorder extends Recorder {
                                  String uiautomatorArtifact,
                                  String uiautomatorFilter,
                                  String uiautomationArtifact,
-                                 String xctestArtifact) {
+                                 String xctestArtifact,
+                                 Boolean ignoreRunError ) {
         this.projectName = projectName;
         this.devicePoolName = devicePoolName;
         this.appArtifact = appArtifact;
@@ -156,6 +160,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
         this.uiautomatorFilter = uiautomatorFilter;
         this.uiautomationArtifact = uiautomationArtifact;
         this.xctestArtifact = xctestArtifact;
+        this.ignoreRunError = ignoreRunError;
 
         // This is a hack because I have to get the service icon locally, but it's copy-righted. So I pull it when I need it.
         Path pluginIconPath = Paths.get(System.getenv("HOME"), "plugins", "aws-device-farm", "service-icon.svg").toAbsolutePath();
@@ -340,7 +345,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
             }
 
             // Set Jenkins build result based on AWS Device Farm test result.
-            build.setResult(action.getBuildResult());
+            build.setResult(action.getBuildResult(ignoreRunError));
         }
         catch (AWSDeviceFarmException e) {
             writeToLog(e.getMessage());

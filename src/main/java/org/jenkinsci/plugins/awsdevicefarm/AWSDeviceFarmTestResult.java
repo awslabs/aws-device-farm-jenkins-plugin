@@ -6,13 +6,17 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Collections;
 import java.io.IOException;
+
+import com.amazonaws.services.devicefarm.model.ExecutionResult;
 import com.amazonaws.services.devicefarm.model.Run;
+
 import hudson.model.AbstractBuild;
 import hudson.model.Result;
 import hudson.tasks.test.TestResult;
 import hudson.tasks.test.TestObject;
 import hudson.util.ChartUtil;
 import hudson.util.Graph;
+
 import org.apache.commons.lang.WordUtils;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -27,12 +31,12 @@ import org.kohsuke.stapler.StaplerResponse;
  */
 public class AWSDeviceFarmTestResult extends TestResult {
 
-    private static final HashMap<String, Result> resultMap = new HashMap<String, Result>();
+    private static final HashMap<ExecutionResult, Result> resultMap = new HashMap<ExecutionResult, Result>();
     private static final int DefaultTrendGraphSize = 3;
 
     private String id = "";
     private String status = "";
-    private String result = "";
+    private ExecutionResult result;
 
     private int passCount = 0;
     private int warnCount = 0;
@@ -55,7 +59,7 @@ public class AWSDeviceFarmTestResult extends TestResult {
         if (run != null) {
             this.id = AWSDeviceFarmUtils.getRunIdFromArn(run.getArn());
             this.status = run.getStatus();
-            this.result = run.getResult();
+            this.result = ExecutionResult.fromValue(run.getResult());
             this.passCount = run.getCounters().getPassed();
             this.warnCount = run.getCounters().getWarned();
             this.failCount = run.getCounters().getFailed();
@@ -80,11 +84,12 @@ public class AWSDeviceFarmTestResult extends TestResult {
      * Map Device Farm results to Jenkins results.
      */
     static {
-        resultMap.put("PASSED", Result.SUCCESS);
-        resultMap.put("WARNED", Result.UNSTABLE);
-        resultMap.put("FAILED", Result.FAILURE);
-        resultMap.put("SKIPPED", Result.FAILURE);
-        resultMap.put("ERRORED", Result.FAILURE);
+        resultMap.put(ExecutionResult.PASSED, Result.SUCCESS);
+        resultMap.put(ExecutionResult.WARNED, Result.UNSTABLE);
+        resultMap.put(ExecutionResult.FAILED, Result.FAILURE);
+        resultMap.put(ExecutionResult.SKIPPED, Result.FAILURE);
+        resultMap.put(ExecutionResult.ERRORED, Result.FAILURE);
+        resultMap.put(ExecutionResult.STOPPED, Result.FAILURE);
     }
 
     /**
@@ -218,7 +223,22 @@ public class AWSDeviceFarmTestResult extends TestResult {
      * Return a Jenkins build result which matches the result status from AWS Device Farm.
      * @return
      */
-    public Result getBuildResult() {
+    public Result getBuildResult(Boolean ignoreRunError) {
+        if (ignoreRunError != null && ignoreRunError && ExecutionResult.ERRORED.equals(result)) {
+            if (totalCount == skipCount) {
+                result = ExecutionResult.SKIPPED;
+            } else if (stopCount > 0) {
+                result = ExecutionResult.STOPPED;
+            } else if (errorCount > 0) {
+                result = ExecutionResult.ERRORED;
+            } else if (failCount > 0) {
+                result = ExecutionResult.FAILED;
+            } else if (warnCount > 0) {
+                result = ExecutionResult.WARNED;
+            } else {
+                result = ExecutionResult.PASSED;
+            }
+        }
         return resultMap.get(result);
     }
 
