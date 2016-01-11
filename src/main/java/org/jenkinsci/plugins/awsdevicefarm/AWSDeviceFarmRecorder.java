@@ -161,22 +161,6 @@ public class AWSDeviceFarmRecorder extends Recorder {
         this.uiautomationArtifact = uiautomationArtifact;
         this.xctestArtifact = xctestArtifact;
         this.ignoreRunError = ignoreRunError;
-
-        // This is a hack because I have to get the service icon locally, but it's copy-righted. So I pull it when I need it.
-        Path pluginIconPath = Paths.get(System.getenv("HOME"), "plugins", "aws-device-farm", "service-icon.svg").toAbsolutePath();
-        File pluginIcon = new File(pluginIconPath.toString());
-        if (!(pluginIcon.exists() && !pluginIcon.isDirectory())) {
-            System.out.println("Downloading service icon!");
-            try {
-                FileUtils.copyURLToFile(new URL("http://g-ecx.images-amazon.com/images/G/01/aws-device-farm/service-icon.svg"), pluginIcon);
-            }
-            catch (MalformedURLException e) {
-                writeToLog("Failed to get service icon from CDN.");
-            }
-            catch (IOException e) {
-                writeToLog("Failed to get service icon from CDN.");
-            }
-        }
     }
 
     /**
@@ -208,6 +192,24 @@ public class AWSDeviceFarmRecorder extends Recorder {
      */
     @Override
     public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+        log = listener.getLogger();
+        
+        // This is a hack because I have to get the service icon locally, but it's copy-righted. So I pull it when I need it.
+        Path pluginIconPath = Paths.get(System.getenv("HOME"), "plugins", "aws-device-farm", "service-icon.svg").toAbsolutePath();
+        File pluginIcon = new File(pluginIconPath.toString());
+        if (!(pluginIcon.exists() && !pluginIcon.isDirectory())) {
+            System.out.println("Downloading service icon!");
+            try {
+                FileUtils.copyURLToFile(new URL("http://g-ecx.images-amazon.com/images/G/01/aws-device-farm/service-icon.svg"), pluginIcon);
+            }
+            catch (MalformedURLException e) {
+                writeToLog("Failed to get service icon from CDN.");
+            }
+            catch (IOException e) {
+                writeToLog("Failed to get service icon from CDN.");
+            }
+        }
+        
         // Check if the build result set from a previous build step.
         // A null build result indicates that the build is still ongoing and we're
         // likely being run as a build step by the "Any Build Step Plugin".
@@ -218,8 +220,6 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
         EnvVars env =  build.getEnvironment(listener);
         Map<String, String> parameters = build.getBuildVariables();
-
-        log = listener.getLogger();
 
         // Artifacts location for this build on master.
         FilePath artifactsDir = new FilePath(build.getArtifactsDir());
