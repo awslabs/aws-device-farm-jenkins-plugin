@@ -6,6 +6,7 @@ package org.jenkinsci.plugins.awsdevicefarm.test;
 public final class CalabashTest {
     private final String features;
     private final String tags;
+    private final String profile;
 
     /**
      * Static builder class.
@@ -13,6 +14,7 @@ public final class CalabashTest {
     public static class Builder {
         private String features;
         private String tags;
+        private String profile;
 
         /**
          * Features setter.
@@ -33,6 +35,16 @@ public final class CalabashTest {
             this.tags = tags;
             return this;
         }
+        
+        /**
+         * Profile setter.
+         * @param profile The profile to use.
+         * @return The builder object.
+         */
+        public Builder withProfile(String profile) {
+            this.profile = profile;
+            return this;
+        }
 
         /**
          * Build method
@@ -48,6 +60,7 @@ public final class CalabashTest {
     private CalabashTest(Builder builder) {
         this.features = builder.features;
         this.tags = builder.tags;
+        this.profile = builder.profile;
     }
 
     /**
@@ -64,5 +77,13 @@ public final class CalabashTest {
      */
     public String getTags() {
         return this.tags;
+    }
+    
+    /**
+     * profile getter.
+     * @return The profile to use.
+     */
+    public String getProfile() {
+        return this.profile;
     }
 }

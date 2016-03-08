@@ -67,6 +67,14 @@
         </f:entry>
       </f:nested>
     </f:radioBlock>
+    
+     <f:radioBlock name="testToRun" value="APPIUM_PYTHON" checked="${instance.isTestType('APPIUM_PYTHON')}" title="Appium Python" inline="true">
+      <f:nested>
+        <f:entry title="Tests" field="appiumPythonTest" description="[Required] Pattern to find Python tests.">
+          <f:textbox />
+        </f:entry>
+      </f:nested>
+    </f:radioBlock>
 
     <f:radioBlock name="testToRun" value="CALABASH" checked="${instance.isTestType('CALABASH')}" title="Calabash" inline="true">
       <f:nested>
@@ -74,6 +82,9 @@
           <f:textbox />
         </f:entry>
         <f:entry title="Tags" field="calabashTags" description="[Optional] Tags to pass into Calabash.">
+          <f:textbox />
+        </f:entry>
+        <f:entry title="Profile" field="calabashProfile" description="[Optional] Profile to pass into Calabash.">
           <f:textbox />
         </f:entry>
       </f:nested>

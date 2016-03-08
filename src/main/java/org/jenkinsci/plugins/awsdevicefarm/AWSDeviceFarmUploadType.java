@@ -11,6 +11,7 @@ public enum AWSDeviceFarmUploadType {
     IOS_APP ("IOS_APP"),                                    // App
     APPIUM_JAVA_TESTNG("APPIUM_JAVA_TESTNG_TEST_PACKAGE"),  // Test
     APPIUM_JAVA_JUNIT("APPIUM_JAVA_JUNIT_TEST_PACKAGE"),    // Test
+    APPIUM_PYTHON("APPIUM_PYTHON_TEST_PACKAGE"),  // Test
     CALABASH ("CALABASH_TEST_PACKAGE"),                     // Test
     INSTRUMENTATION ("INSTRUMENTATION_TEST_PACKAGE"),       // Test
     UIAUTOMATOR ("UIAUTOMATOR_TEST_PACKAGE"),               // Test
