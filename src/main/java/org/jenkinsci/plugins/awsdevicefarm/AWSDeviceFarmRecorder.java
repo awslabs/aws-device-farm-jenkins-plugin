@@ -94,6 +94,9 @@ public class AWSDeviceFarmRecorder extends Recorder {
     // XCTest
     public String xctestArtifact;
 
+    // XCTest
+    public String xctestUiArtifact;
+
     //// Fields not populated by the JSON binder.
     public PrintStream log;
 
@@ -124,6 +127,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
      * @param uiautomatorFilter
      * @param uiautomationArtifact The path to the UI Automation tests to be run.
      * @param xctestArtifact The path to the XCTest tests to be run.
+     * @param xctestUiArtifact The path to the XCTest UI tests to be run.
      */
     @DataBoundConstructor
     @SuppressWarnings("unused")
@@ -150,6 +154,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
                                  String uiautomatorFilter,
                                  String uiautomationArtifact,
                                  String xctestArtifact,
+                                 String xctestUiArtifact,
                                  Boolean ignoreRunError ) {
         this.projectName = projectName;
         this.devicePoolName = devicePoolName;
@@ -174,6 +179,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
         this.uiautomatorFilter = uiautomatorFilter;
         this.uiautomationArtifact = uiautomationArtifact;
         this.xctestArtifact = xctestArtifact;
+        this.xctestUiArtifact = xctestUiArtifact;
         this.ignoreRunError = ignoreRunError;
 
         // This is a hack because I have to get the service icon locally, but it's copy-righted. So I pull it when I need it.
@@ -599,6 +605,19 @@ public class AWSDeviceFarmRecorder extends Recorder {
                         .withTestPackageArn(upload.getArn());
                 break;
              }
+            
+            case XCTEST_UI: {
+            	XCTestUITest test = new XCTestUITest.Builder()
+                        .withTests(xctestUiArtifact)
+                        .build();
+
+                Upload upload = adf.uploadTest(project, test);
+
+                testToSchedule = new ScheduleRunTest()
+                        .withType(testType)
+                        .withTestPackageArn(upload.getArn());
+                break;
+             }
 
         }
 
@@ -747,6 +766,15 @@ public class AWSDeviceFarmRecorder extends Recorder {
             case XCTEST: {
                 if (xctestArtifact == null || xctestArtifact.isEmpty()) {
                     writeToLog("XC tests artifact must be set.");
+                    return false;
+                }
+
+                break;
+            }
+            
+            case XCTEST_UI: {
+                if (xctestUiArtifact == null || xctestUiArtifact.isEmpty()) {
+                    writeToLog("XC UI tests artifact must be set.");
                     return false;
                 }
 

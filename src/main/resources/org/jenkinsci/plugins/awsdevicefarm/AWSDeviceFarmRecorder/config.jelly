@@ -127,5 +127,14 @@
         </f:entry>
       </f:nested>
     </f:radioBlock>
+    
+    <f:radioBlock name="testToRun" value="XCTEST_UI" checked="${instance.isTestType('XCTEST_UI')}" title="XCTest UI" inline="true">
+      <f:nested>
+        <f:entry title="Tests" field="xctestUiArtifact" description="[Required] Pattern to find XCTest UI tests.">
+          <f:textbox />
+        </f:entry>
+      </f:nested>
+    </f:radioBlock>
+    
   </f:section>
 </j:jelly>

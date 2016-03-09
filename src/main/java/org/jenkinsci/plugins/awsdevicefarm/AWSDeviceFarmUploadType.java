@@ -16,7 +16,8 @@ public enum AWSDeviceFarmUploadType {
     INSTRUMENTATION ("INSTRUMENTATION_TEST_PACKAGE"),       // Test
     UIAUTOMATOR ("UIAUTOMATOR_TEST_PACKAGE"),               // Test
     UIAUTOMATION ("UIAUTOMATION_TEST_PACKAGE"),             // Test
-    XCTEST ("XCTEST_TEST_PACKAGE");                         // Test
+    XCTEST ("XCTEST_TEST_PACKAGE"),                         // Test
+    XCTEST_UI("XCTEST_UI_TEST_PACKAGE");                    // Test
 
     private final String type;
     // Lookup table For getting enum by value.
