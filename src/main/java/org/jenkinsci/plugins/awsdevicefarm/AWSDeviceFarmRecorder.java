@@ -94,7 +94,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
     // XCTest
     public String xctestArtifact;
 
-    // XCTest
+    // XCTest UI
     public String xctestUiArtifact;
 
     //// Fields not populated by the JSON binder.
@@ -774,7 +774,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
             
             case XCTEST_UI: {
                 if (xctestUiArtifact == null || xctestUiArtifact.isEmpty()) {
-                    writeToLog("XC UI tests artifact must be set.");
+                    writeToLog("XCTest UI tests artifact must be set.");
                     return false;
                 }
 
@@ -1065,6 +1065,32 @@ public class AWSDeviceFarmRecorder extends Recorder {
         @SuppressWarnings("unused")
         public FormValidation doCheckUiautomatorArtifact(@QueryParameter String uiautomatorArtifact) {
             if (uiautomatorArtifact == null || uiautomatorArtifact.isEmpty()) {
+                return FormValidation.error("Required");
+            }
+            return FormValidation.ok();
+        }
+        
+        /**
+         * Validate the user entered artifact for XCTest.
+         * @param xctestArtifact The String of the XCTest artifact.
+         * @return Whether or not the form was ok.
+         */
+        @SuppressWarnings("unused")
+        public FormValidation doCheckXctestArtifact(@QueryParameter String xctestArtifact) {
+            if (xctestArtifact == null || xctestArtifact.isEmpty()) {
+                return FormValidation.error("Required");
+            }
+            return FormValidation.ok();
+        }
+        
+        /**
+         * Validate the user entered artifact for XCTest UI.
+         * @param xctestUiArtifact The String of the XCTest UI artifact.
+         * @return Whether or not the form was ok.
+         */
+        @SuppressWarnings("unused")
+        public FormValidation doCheckXctestUiArtifact(@QueryParameter String xctestUiArtifact) {
+            if (xctestUiArtifact == null || xctestUiArtifact.isEmpty()) {
                 return FormValidation.error("Required");
             }
             return FormValidation.ok();
