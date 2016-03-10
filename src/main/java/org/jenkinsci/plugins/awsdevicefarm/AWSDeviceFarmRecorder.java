@@ -7,8 +7,10 @@ import java.net.URLConnection;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.devicefarm.model.*;
+
 import hudson.model.Result;
 import hudson.EnvVars;
 import hudson.Extension;
@@ -25,12 +27,14 @@ import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import hudson.util.IOUtils;
 import hudson.util.ListBoxModel;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.awsdevicefarm.test.*;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+
 import net.sf.json.JSONObject;
 
 /**
@@ -67,10 +71,14 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
     // Appium Java TestNG
     public String appiumJavaTestNGTest;
+    
+    // Appium Python
+    public String appiumPythonTest;
 
     // Calabash
     public String calabashFeatures;
     public String calabashTags;
+    public String calabashProfile;
 
     // Instrumentation
     public String junitArtifact;
@@ -85,6 +93,9 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
     // XCTest
     public String xctestArtifact;
+
+    // XCTest UI
+    public String xctestUiArtifact;
 
     //// Fields not populated by the JSON binder.
     public PrintStream log;
@@ -106,14 +117,17 @@ public class AWSDeviceFarmRecorder extends Recorder {
      * @param password password to use if explorer encounters a login form.
      * @param appiumJavaJUnitTest
      * @param appiumJavaTestNGTest
+     * @param appiumPythonTest
      * @param calabashFeatures The path to the Calabash tests to be run.
      * @param calabashTags Calabash tags to attach to the test.
+     * @param calabashProfile Calabash Profile to attach to the test.
      * @param junitArtifact The path to the Instrumentation JUnit tests.
      * @param junitFilter The filter to apply to the Instrumentation JUnit tests.
      * @param uiautomatorArtifact The path to the UI Automator tests to be run.
      * @param uiautomatorFilter
      * @param uiautomationArtifact The path to the UI Automation tests to be run.
      * @param xctestArtifact The path to the XCTest tests to be run.
+     * @param xctestUiArtifact The path to the XCTest UI tests to be run.
      */
     @DataBoundConstructor
     @SuppressWarnings("unused")
@@ -130,14 +144,17 @@ public class AWSDeviceFarmRecorder extends Recorder {
                                  String password,
                                  String appiumJavaJUnitTest,
                                  String appiumJavaTestNGTest,
+                                 String appiumPythonTest,
                                  String calabashFeatures,
                                  String calabashTags,
+                                 String calabashProfile,
                                  String junitArtifact,
                                  String junitFilter,
                                  String uiautomatorArtifact,
                                  String uiautomatorFilter,
                                  String uiautomationArtifact,
                                  String xctestArtifact,
+                                 String xctestUiArtifact,
                                  Boolean ignoreRunError ) {
         this.projectName = projectName;
         this.devicePoolName = devicePoolName;
@@ -152,14 +169,17 @@ public class AWSDeviceFarmRecorder extends Recorder {
         this.password = password;
         this.appiumJavaJUnitTest = appiumJavaJUnitTest;
         this.appiumJavaTestNGTest = appiumJavaTestNGTest;
+        this.appiumPythonTest = appiumPythonTest;
         this.calabashFeatures = calabashFeatures;
         this.calabashTags = calabashTags;
+        this.calabashProfile = calabashProfile;
         this.junitArtifact = junitArtifact;
         this.junitFilter = junitFilter;
         this.uiautomatorArtifact = uiautomatorArtifact;
         this.uiautomatorFilter = uiautomatorFilter;
         this.uiautomationArtifact = uiautomationArtifact;
         this.xctestArtifact = xctestArtifact;
+        this.xctestUiArtifact = xctestUiArtifact;
         this.ignoreRunError = ignoreRunError;
 
         // This is a hack because I have to get the service icon locally, but it's copy-righted. So I pull it when I need it.
@@ -171,10 +191,10 @@ public class AWSDeviceFarmRecorder extends Recorder {
                 FileUtils.copyURLToFile(new URL("http://g-ecx.images-amazon.com/images/G/01/aws-device-farm/service-icon.svg"), pluginIcon);
             }
             catch (MalformedURLException e) {
-                writeToLog("Failed to get service icon from CDN.");
+                e.printStackTrace();
             }
             catch (IOException e) {
-                writeToLog("Failed to get service icon from CDN.");
+            	 e.printStackTrace();
             }
         }
     }
@@ -490,18 +510,35 @@ public class AWSDeviceFarmRecorder extends Recorder {
                         .withTestPackageArn(upload.getArn());
                 break;
             }
+            
+            case APPIUM_PYTHON: {
+            	AppiumPythonTest test = new AppiumPythonTest.Builder()
+                        .withTests(env.expand(appiumPythonTest))
+                        .build();
 
+                Upload upload = adf.uploadTest(project, test);
+
+                testToSchedule = new ScheduleRunTest()
+                        .withType(testType)
+                        .withTestPackageArn(upload.getArn());
+                break;
+            }
+            
             case CALABASH: {
                 CalabashTest test = new CalabashTest.Builder()
                         .withFeatures(env.expand(calabashFeatures))
                         .withTags(calabashTags)
+                        .withProfile(calabashProfile)
                         .build();
 
                 Upload upload = adf.uploadTest(project, test);
 
                 Map<String, String> parameters = new HashMap<String, String>();
-                if (calabashTags != null && !calabashTags.isEmpty()) {
-                    parameters.put("tags", calabashTags);
+                if (test.getTags() != null && !test.getTags().isEmpty()) {
+                    parameters.put("tags", test.getTags());
+                }
+                if (test.getProfile() != null && !test.getProfile().isEmpty()) {
+                    parameters.put("profile", test.getProfile());
                 }
                 testToSchedule = new ScheduleRunTest()
                         .withType(testType)
@@ -513,29 +550,33 @@ public class AWSDeviceFarmRecorder extends Recorder {
             case INSTRUMENTATION: {
                 InstrumentationTest test = new InstrumentationTest.Builder()
                         .withArtifact(env.expand(junitArtifact))
-                        .withFilter(env.expand(junitFilter))
+                        .withFilter(junitFilter)
                         .build();
 
                 Upload upload = adf.uploadTest(project, test);
-
+                
                 testToSchedule = new ScheduleRunTest()
                         .withType(testType)
                         .withTestPackageArn(upload.getArn())
-                        .withParameters(new HashMap<String, String>());
+                        .withParameters(new HashMap<String, String>())
+                        .withFilter(test.getFilter());
                 break;
             }
 
             case UIAUTOMATOR: {
                 UIAutomatorTest test = new UIAutomatorTest.Builder()
-                        .withTests(uiautomatorArtifact)
+                        .withTests(env.expand(uiautomatorArtifact))
                         .withFilter(uiautomatorFilter)
                         .build();
 
                 Upload upload = adf.uploadTest(project, test);
-
+                
                 testToSchedule = new ScheduleRunTest()
                         .withType(testType)
-                        .withTestPackageArn(upload.getArn());
+                        .withTestPackageArn(upload.getArn())
+                        .withParameters(new HashMap<String, String>())
+                        .withFilter(test.getFilter());
+             
                 break;
             }
             
@@ -555,6 +596,19 @@ public class AWSDeviceFarmRecorder extends Recorder {
             case XCTEST: {
                 XCTestTest test = new XCTestTest.Builder()
                         .withTests(xctestArtifact)
+                        .build();
+
+                Upload upload = adf.uploadTest(project, test);
+
+                testToSchedule = new ScheduleRunTest()
+                        .withType(testType)
+                        .withTestPackageArn(upload.getArn());
+                break;
+             }
+            
+            case XCTEST_UI: {
+            	XCTestUITest test = new XCTestUITest.Builder()
+                        .withTests(xctestUiArtifact)
                         .build();
 
                 Upload upload = adf.uploadTest(project, test);
@@ -656,6 +710,15 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
                 break;
             }
+            
+            case APPIUM_PYTHON: {
+                if (appiumPythonTest == null || appiumPythonTest.isEmpty()) {
+                    writeToLog("Appium Python test must be set.");
+                    return false;
+                }
+
+                break;
+            }
 
             case CALABASH: {
                 // [Required]: Features Path
@@ -703,6 +766,15 @@ public class AWSDeviceFarmRecorder extends Recorder {
             case XCTEST: {
                 if (xctestArtifact == null || xctestArtifact.isEmpty()) {
                     writeToLog("XC tests artifact must be set.");
+                    return false;
+                }
+
+                break;
+            }
+            
+            case XCTEST_UI: {
+                if (xctestUiArtifact == null || xctestUiArtifact.isEmpty()) {
+                    writeToLog("XCTest UI tests artifact must be set.");
                     return false;
                 }
 
@@ -944,6 +1016,20 @@ public class AWSDeviceFarmRecorder extends Recorder {
             }
             return FormValidation.ok();
         }
+        
+        /**
+         * Validate the user entered artifact for Appium Python test content.
+         * @param appiumPythonTest The path to the test file.
+         * @return Whether or not the form was ok.
+         */
+        @SuppressWarnings("unused")
+        public FormValidation doCheckAppiumPythonTest(@QueryParameter String appiumPythonTest) {
+            if (appiumPythonTest == null || appiumPythonTest.isEmpty()) {
+                return FormValidation.error("Required!");
+            }
+            return FormValidation.ok();
+        }
+
 
         /**
          * Validate the user entered file path to local Calabash features.
@@ -979,6 +1065,32 @@ public class AWSDeviceFarmRecorder extends Recorder {
         @SuppressWarnings("unused")
         public FormValidation doCheckUiautomatorArtifact(@QueryParameter String uiautomatorArtifact) {
             if (uiautomatorArtifact == null || uiautomatorArtifact.isEmpty()) {
+                return FormValidation.error("Required");
+            }
+            return FormValidation.ok();
+        }
+        
+        /**
+         * Validate the user entered artifact for XCTest.
+         * @param xctestArtifact The String of the XCTest artifact.
+         * @return Whether or not the form was ok.
+         */
+        @SuppressWarnings("unused")
+        public FormValidation doCheckXctestArtifact(@QueryParameter String xctestArtifact) {
+            if (xctestArtifact == null || xctestArtifact.isEmpty()) {
+                return FormValidation.error("Required");
+            }
+            return FormValidation.ok();
+        }
+        
+        /**
+         * Validate the user entered artifact for XCTest UI.
+         * @param xctestUiArtifact The String of the XCTest UI artifact.
+         * @return Whether or not the form was ok.
+         */
+        @SuppressWarnings("unused")
+        public FormValidation doCheckXctestUiArtifact(@QueryParameter String xctestUiArtifact) {
+            if (xctestUiArtifact == null || xctestUiArtifact.isEmpty()) {
                 return FormValidation.error("Required");
             }
             return FormValidation.ok();

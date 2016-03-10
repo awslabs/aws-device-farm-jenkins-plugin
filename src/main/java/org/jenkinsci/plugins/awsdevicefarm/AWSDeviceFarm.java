@@ -270,6 +270,18 @@ public class AWSDeviceFarm {
     public Upload uploadTest(Project project, XCTestTest test) throws InterruptedException, IOException, AWSDeviceFarmException {
         return upload(project, test.getTests(), AWSDeviceFarmUploadType.XCTEST);
     }
+    
+    /**
+     * Upload a test to Device Farm.
+     * @param project The Device Farm project to upload to.
+     * @param test Test object containing relevant test information.
+     * @return The Device Farm Upload object.
+     * @throws IOException
+     * @throws AWSDeviceFarmException
+     */
+    public Upload uploadTest(Project project, XCTestUITest test) throws InterruptedException, IOException, AWSDeviceFarmException {
+        return upload(project, test.getTests(), AWSDeviceFarmUploadType.XCTEST_UI);
+    }
 
     /**
      * Upload a test to Device Farm.
@@ -293,6 +305,18 @@ public class AWSDeviceFarm {
      */
     public Upload uploadTest(Project project, AppiumJavaJUnitTest test) throws InterruptedException, IOException, AWSDeviceFarmException {
         return upload(project, test.getTests(), AWSDeviceFarmUploadType.APPIUM_JAVA_JUNIT);
+    }
+    
+    /**
+     * Upload a test to Device Farm.
+     * @param project The Device Farm project to upload to.
+     * @param test Test object containing relevant test information.
+     * @return The Device Farm Upload object.
+     * @throws IOException
+     * @throws AWSDeviceFarmException
+     */
+    public Upload uploadTest(Project project, AppiumPythonTest test) throws InterruptedException, IOException, AWSDeviceFarmException {
+        return upload(project, test.getTests(), AWSDeviceFarmUploadType.APPIUM_PYTHON);
     }
 
     /**
