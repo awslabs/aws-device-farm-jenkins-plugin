@@ -50,6 +50,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
     public String projectName;
     public String devicePoolName;
     public String appArtifact;
+    public String runName;
 
     //// config.jelly fields
     // Radio Button Selection
@@ -108,6 +109,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
      * @param projectName The name of the Device Farm project.
      * @param devicePoolName The name of the Device Farm device pool.
      * @param appArtifact The path to the app to be tested.
+     * @param runName The name of the run.
      * @param testToRun The type of test to be run.
      * @param storeResults Download the results to a local archive.
      * @param eventCount The number of fuzz events to run.
@@ -134,6 +136,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
     public AWSDeviceFarmRecorder(String projectName,
                                  String devicePoolName,
                                  String appArtifact,
+                                 String runName,
                                  String testToRun,
                                  Boolean storeResults,
                                  Boolean isRunUnmetered,
@@ -159,6 +162,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
         this.projectName = projectName;
         this.devicePoolName = devicePoolName;
         this.appArtifact = appArtifact;
+        this.runName = runName;
         this.testToRun = testToRun;
         this.storeResults = storeResults;
         this.isRunUnmetered = isRunUnmetered;
@@ -238,7 +242,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
         EnvVars env =  build.getEnvironment(listener);
         Map<String, String> parameters = build.getBuildVariables();
-
+        
         log = listener.getLogger();
 
         // Artifacts location for this build on master.
@@ -282,7 +286,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
                 String os = adf.getOs(appArtifact);
                 int unmeteredDeviceCount = adf.getUnmeteredDevices(os);
                 if (unmeteredDeviceCount <= 0) {
-                    throw new AWSDeviceFarmException(String.format("Your account does not have unmetered %s devices. Please change "
+                    throw new AWSDeviceFarmException(String.format("Your account does not have unmetered %s device slots. Please change "
                             + "your build settings to run on metered devices.", os));
                 }
             }
@@ -306,17 +310,22 @@ public class AWSDeviceFarmRecorder extends Recorder {
             writeToLog(String.format("Using App '%s'", env.expand(appArtifact)));
             Upload appUpload = adf.uploadApp(project, appArtifact);
             String appArn = appUpload.getArn();
-            String appName = String.format("%s (Jenkins)", appUpload.getName());
-
+            String deviceFarmRunName = null;
+            if (StringUtils.isBlank(runName)) {
+            	deviceFarmRunName = String.format("%s", env.get("BUILD_TAG"));
+            } else {
+            	deviceFarmRunName = String.format("%s", env.expand(runName));
+			}
+            
             // Upload test content.
             writeToLog("Getting test to schedule.");
             ScheduleRunTest testToSchedule = getScheduleRunTest(env, adf, project);
 
             // Schedule test run.
             TestType testType = TestType.fromValue(testToSchedule.getType());
-            writeToLog(String.format("Scheduling '%s' run '%s'", testType, appName));
+            writeToLog(String.format("Scheduling '%s' run '%s'", testType, deviceFarmRunName));
             ScheduleRunConfiguration configuration = getScheduleRunConfiguration(isRunUnmetered);
-            ScheduleRunResult run = adf.scheduleRun(project.getArn(), appName, appArn, devicePool.getArn(), testToSchedule, configuration);
+            ScheduleRunResult run = adf.scheduleRun(project.getArn(), deviceFarmRunName, appArn, devicePool.getArn(), testToSchedule, configuration);
 
             String runArn = run.getRun().getArn();
             try {
@@ -345,6 +354,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
                 Map<String, FilePath> jobs = getJobs(adf, run, resultsDir);
                 Map<String, FilePath> suites = getSuites(adf, run, jobs);
+                Map<String, FilePath> tests = getTests(adf, run, suites);
 
                 writeToLog("Downloading AWS Device Farm results archive...");
                 // Iterating over all values in the Enum.
@@ -352,11 +362,10 @@ public class AWSDeviceFarmRecorder extends Recorder {
                     ListArtifactsResult result = adf.listArtifacts(run.getRun().getArn(), category);
                     for (Artifact artifact : result.getArtifacts()) {
                         String arn = artifact.getArn().split(":")[6];
-                        String semiSuiteArn = arn.substring(0, arn.lastIndexOf("/"));
-                        String suiteArn = semiSuiteArn.substring(0, semiSuiteArn.lastIndexOf("/"));
+                        String testArn = arn.substring(0, arn.lastIndexOf("/"));
                         String id = arn.substring(arn.lastIndexOf("/") + 1);
                         String extension = artifact.getExtension().replaceFirst("^\\.", "");
-                        FilePath artifactFilePath = new FilePath(suites.get(suiteArn), String.format("%s-%s.%s", artifact.getName(), id, extension));
+                        FilePath artifactFilePath = new FilePath(tests.get(testArn), String.format("%s-%s.%s", artifact.getName(), id, extension));
                         URL url = new URL(artifact.getUrl());
                         artifactFilePath.write().write(IOUtils.toByteArray(url.openStream()));
                     }
@@ -421,13 +430,34 @@ public class AWSDeviceFarmRecorder extends Recorder {
         }
         return suites;
     }
+    
+    private Map<String, FilePath> getTests(AWSDeviceFarm adf, ScheduleRunResult run, Map<String, FilePath> suites) throws IOException, InterruptedException {
+        Map<String, FilePath> tests = new HashMap<String, FilePath>();
+        String runArn = run.getRun().getArn();
+        String components[] = runArn.split(":");
+        // constructing suite ARN for each job using the run ARN
+        components[5] = "suite";
+        for(String suiteArn:suites.keySet()) {
+            components[6] = suiteArn;
+            String fullsuiteArn = StringUtils.join(components,":");
+            ListTestsResult result = adf.listTests(fullsuiteArn);
+            for (Test test : result.getTests()) {
+                String arn = test.getArn().split(":")[6];
+                tests.put(arn, new FilePath(suites.get(suiteArn), test.getName()));
+                tests.get(arn).mkdirs();
+            }
+        }
+        return tests;
+    }
 
     private Map<String, FilePath> getJobs(AWSDeviceFarm adf, ScheduleRunResult run, FilePath resultsDir) throws IOException, InterruptedException {
         Map<String, FilePath> jobs = new HashMap<String, FilePath>();
         ListJobsResult result = adf.listJobs(run.getRun().getArn());
         for (Job job : result.getJobs()) {
             String arn = job.getArn().split(":")[6];
-            jobs.put(arn, new FilePath(resultsDir, job.getName()));
+            String jobId = arn.substring(arn.lastIndexOf("/") + 1);
+            // Two jobs can have same name
+            jobs.put(arn, new FilePath(resultsDir, job.getName() + "-" + jobId));
             jobs.get(arn).mkdirs();
         }
         return jobs;
@@ -1114,7 +1144,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
                     return FormValidation.error(e.getMessage());
                 }
                 if (adf.getUnmeteredDevices(os) <= 0) {
-                    return FormValidation.error(String.format("Your account does not have unmetered %s devices.", os));
+                    return FormValidation.error(String.format("Your account does not have unmetered %s device slots.", os));
                 }
             }
             return FormValidation.ok();
