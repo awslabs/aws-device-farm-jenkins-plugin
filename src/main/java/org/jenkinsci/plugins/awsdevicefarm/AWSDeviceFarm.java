@@ -513,10 +513,9 @@ public class AWSDeviceFarm {
 
         return api.listSuites(request);
     }
-    
+
     public ListTestsResult listTests(String suiteArn) {
-        ListTestsRequest request = new ListTestsRequest()
-                .withArn(suiteArn);
+        ListTestsRequest request = new ListTestsRequest().withArn(suiteArn);
 
         return api.listTests(request);
     }

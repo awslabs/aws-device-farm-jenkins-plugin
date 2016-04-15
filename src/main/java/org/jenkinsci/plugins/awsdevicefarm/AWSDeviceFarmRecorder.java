@@ -240,9 +240,9 @@ public class AWSDeviceFarmRecorder extends Recorder {
             return false;
         }
 
-        EnvVars env =  build.getEnvironment(listener);
+        EnvVars env = build.getEnvironment(listener);
         Map<String, String> parameters = build.getBuildVariables();
-        
+
         log = listener.getLogger();
 
         // Artifacts location for this build on master.
@@ -312,11 +312,11 @@ public class AWSDeviceFarmRecorder extends Recorder {
             String appArn = appUpload.getArn();
             String deviceFarmRunName = null;
             if (StringUtils.isBlank(runName)) {
-            	deviceFarmRunName = String.format("%s", env.get("BUILD_TAG"));
+                deviceFarmRunName = String.format("%s", env.get("BUILD_TAG"));
             } else {
-            	deviceFarmRunName = String.format("%s", env.expand(runName));
-			}
-            
+                deviceFarmRunName = String.format("%s", env.expand(runName));
+            }
+
             // Upload test content.
             writeToLog("Getting test to schedule.");
             ScheduleRunTest testToSchedule = getScheduleRunTest(env, adf, project);
@@ -430,16 +430,16 @@ public class AWSDeviceFarmRecorder extends Recorder {
         }
         return suites;
     }
-    
+
     private Map<String, FilePath> getTests(AWSDeviceFarm adf, ScheduleRunResult run, Map<String, FilePath> suites) throws IOException, InterruptedException {
         Map<String, FilePath> tests = new HashMap<String, FilePath>();
         String runArn = run.getRun().getArn();
         String components[] = runArn.split(":");
         // constructing suite ARN for each job using the run ARN
         components[5] = "suite";
-        for(String suiteArn:suites.keySet()) {
+        for (String suiteArn : suites.keySet()) {
             components[6] = suiteArn;
-            String fullsuiteArn = StringUtils.join(components,":");
+            String fullsuiteArn = StringUtils.join(components, ":");
             ListTestsResult result = adf.listTests(fullsuiteArn);
             for (Test test : result.getTests()) {
                 String arn = test.getArn().split(":")[6];
@@ -456,8 +456,12 @@ public class AWSDeviceFarmRecorder extends Recorder {
         for (Job job : result.getJobs()) {
             String arn = job.getArn().split(":")[6];
             String jobId = arn.substring(arn.lastIndexOf("/") + 1);
-            // Two jobs can have same name
-            jobs.put(arn, new FilePath(resultsDir, job.getName() + "-" + jobId));
+            // Two jobs can have same name. Appending Os version information to job name
+            String osVersion = null;
+            if (job.getDevice() != null) {
+                osVersion = job.getDevice().getOs();
+            }
+            jobs.put(arn, new FilePath(resultsDir, job.getName() + "-" + osVersion != null ? osVersion : jobId));
             jobs.get(arn).mkdirs();
         }
         return jobs;
