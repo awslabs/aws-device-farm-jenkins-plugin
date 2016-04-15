@@ -461,7 +461,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
             if (job.getDevice() != null) {
                 osVersion = job.getDevice().getOs();
             }
-            jobs.put(arn, new FilePath(resultsDir, job.getName() + "-" + osVersion != null ? osVersion : jobId));
+            jobs.put(arn, new FilePath(resultsDir, job.getName() + "-" + (osVersion != null ? osVersion : jobId)));
             jobs.get(arn).mkdirs();
         }
         return jobs;
