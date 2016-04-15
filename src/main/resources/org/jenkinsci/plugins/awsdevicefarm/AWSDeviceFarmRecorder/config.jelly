@@ -13,9 +13,13 @@
   <f:entry title="Application" field="appArtifact" description="[Required] Pattern to find newly built application.">
     <f:textbox />
   </f:entry>
+  
+  <f:entry title="Run Name" field="runName" description="[Optional] Name of your AWS Device Farm Run. Defaults to Environment variable BUILD_TAG.">
+    <f:textbox default="$${BUILD_TAG}" />
+  </f:entry>
 
   <f:entry>
-    <f:checkbox name="isRunUnmetered" field="isRunUnmetered" title="Run on Unmetered Devices." checked="${instance.isRunUnmetered}" inline="true" />
+    <f:checkbox name="isRunUnmetered" field="isRunUnmetered" title="Run on Unmetered Device Slots." checked="${instance.isRunUnmetered}" inline="true" />
   </f:entry>
   
   <f:entry>

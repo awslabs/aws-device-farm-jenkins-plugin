@@ -507,11 +507,17 @@ public class AWSDeviceFarm {
         return api.listJobs(request);
     }
 
-    public ListSuitesResult listSuites(String runArn) {
+    public ListSuitesResult listSuites(String jobArn) {
         ListSuitesRequest request = new ListSuitesRequest()
-                .withArn(runArn);
+                .withArn(jobArn);
 
         return api.listSuites(request);
+    }
+
+    public ListTestsResult listTests(String suiteArn) {
+        ListTestsRequest request = new ListTestsRequest().withArn(suiteArn);
+
+        return api.listTests(request);
     }
 
     public int getUnmeteredDevices(String os) {
