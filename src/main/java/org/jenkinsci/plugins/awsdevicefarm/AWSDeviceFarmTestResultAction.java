@@ -29,7 +29,7 @@ public class AWSDeviceFarmTestResultAction extends AbstractTestResultAction<AWSD
     private PrintStream log;
     private AWSDeviceFarmTestResult result;
 
-    public AWSDeviceFarmTestResultAction(AbstractBuild<?, ?> owner, AWSDeviceFarmTestResult result, PrintStream log) {
+    public AWSDeviceFarmTestResultAction(hudson.model.Run<?, ?> owner, AWSDeviceFarmTestResult result, PrintStream log) {
 
         super(owner);
         this.log = log;
