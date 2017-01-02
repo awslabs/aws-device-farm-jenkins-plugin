@@ -8,6 +8,7 @@ import com.amazonaws.services.devicefarm.model.*;
 import hudson.EnvVars;
 import hudson.FilePath;
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.FileEntity;
@@ -60,6 +61,11 @@ public class AWSDeviceFarm {
         }
 
         ClientConfiguration clientConfiguration = new ClientConfiguration().withUserAgent("AWS Device Farm - Jenkins v1.0");
+        if (getProxyHostOnEnv() != null && getProxyPortOnEnv() != 0) {
+            clientConfiguration.setProxyHost(getProxyHostOnEnv());
+            clientConfiguration.setProxyPort(getProxyPortOnEnv());
+        }
+
         api = new AWSDeviceFarmClient(creds, clientConfiguration);
         api.setServiceNameIntern("devicefarm");
     }
@@ -246,7 +252,7 @@ public class AWSDeviceFarm {
     public Upload uploadTest(Project project, UIAutomatorTest test) throws InterruptedException, IOException, AWSDeviceFarmException {
         return upload(project, test.getTests(), AWSDeviceFarmUploadType.UIAUTOMATOR);
     }
-    
+
     /**
      * Upload a test to Device Farm.
      * @param project The Device Farm project to upload to.
@@ -258,7 +264,7 @@ public class AWSDeviceFarm {
     public Upload uploadTest(Project project, UIAutomationTest test) throws InterruptedException, IOException, AWSDeviceFarmException {
         return upload(project, test.getTests(), AWSDeviceFarmUploadType.UIAUTOMATION);
     }
-    
+
     /**
      * Upload a test to Device Farm.
      * @param project The Device Farm project to upload to.
@@ -372,7 +378,15 @@ public class AWSDeviceFarm {
                 .withType(uploadType.toString());
         Upload upload = api.createUpload(appUploadRequest).getUpload();
 
-        CloseableHttpClient httpClient = HttpClients.createDefault();
+        CloseableHttpClient httpClient;
+        if (getProxyHostOnEnv() != null && getProxyPortOnEnv() != 0) {
+            httpClient = HttpClients.custom()
+                .useSystemProperties()
+                .setProxy(new HttpHost(getProxyHostOnEnv(), getProxyPortOnEnv()))
+                .build();
+        } else {
+            httpClient = HttpClients.createDefault();
+        }
         HttpPut httpPut = new HttpPut(upload.getUrl());
         httpPut.setHeader("Content-Type", upload.getContentType());
 
@@ -563,4 +577,24 @@ public class AWSDeviceFarm {
             log.println(String.format("[AWSDeviceFarm] %s", message));
         }
     }
+
+    private String getProxyHostOnEnv() {
+        String host = System.getProperty("https.proxyHost");
+        if (host != null && host.trim().length() > 0) {
+            return host;
+        }
+        return null;
+    }
+
+    private int getProxyPortOnEnv() {
+        String port = System.getProperty("https.proxyPort");
+        try {
+            return Integer.parseInt(port);
+        } catch(NumberFormatException ex) {
+            //do nothing
+        }
+        return 0;
+    }
+
+
 }
