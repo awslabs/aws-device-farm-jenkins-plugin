@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.ArrayList;
 import hudson.Functions;
 import hudson.model.AbstractBuild;
+import hudson.model.Run;
 import hudson.util.Graph;
 import hudson.util.Area;
 import hudson.util.ShiftedCategoryAxis;
@@ -104,7 +105,7 @@ public class AWSDeviceFarmGraph extends Graph {
         List<NumberOnlyBuildLabel> cols = new ArrayList<NumberOnlyBuildLabel>();
 
         for (AWSDeviceFarmTestResult result : results) {
-            AbstractBuild<?, ?> build = result.getOwner();
+            Run<?, ?> build = result.getOwner();
     
             // Create label for this result using its Jenkins build number.
             NumberOnlyBuildLabel label = new NumberOnlyBuildLabel(build);
@@ -142,7 +143,7 @@ public class AWSDeviceFarmGraph extends Graph {
 
         for (AWSDeviceFarmTestResult result : results) {
             // Create label for this result using its Jenkins build number.
-            AbstractBuild<?, ?> build = result.getOwner();
+            Run<?, ?> build = result.getOwner();
             NumberOnlyBuildLabel label = new NumberOnlyBuildLabel(build);
 
             // Attach duration value for all results in our trend.
