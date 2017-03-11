@@ -14,6 +14,13 @@
 //
 package org.jenkinsci.plugins.awsdevicefarm;
 
+import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
+
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.devicefarm.model.Artifact;
 import com.amazonaws.services.devicefarm.model.ArtifactCategory;
@@ -43,6 +50,7 @@ import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.BuildListener;
 import hudson.model.Result;
+import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
@@ -51,6 +59,9 @@ import hudson.util.FormValidation;
 import hudson.util.IOUtils;
 import hudson.util.ListBoxModel;
 import net.sf.json.JSONObject;
+import javax.annotation.Nonnull;
+import jenkins.tasks.SimpleBuildStep;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.awsdevicefarm.test.AppiumJavaJUnitTest;
@@ -88,8 +99,8 @@ import java.util.Map;
 /**
  * Post-build step for running tests on AWS Device Farm.
  */
-public class AWSDeviceFarmRecorder extends Recorder {
-
+@SuppressWarnings("unused")
+public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     ////// All of these fields have to be public so that they can be read (via reflection) by Jenkins. Probably not the
     ////// greatest thing in the world given that this is *allegedly* supposed to be an immutable class.
 
@@ -389,31 +400,31 @@ public class AWSDeviceFarmRecorder extends Recorder {
      * @throws InterruptedException
      */
     @Override
-    public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+    public void perform(@Nonnull hudson.model.Run<?, ?> build, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws IOException, InterruptedException {
         // Check if the build result set from a previous build step.
         // A null build result indicates that the build is still ongoing and we're
         // likely being run as a build step by the "Any Build Step Plugin".
         Result buildResult = build.getResult();
         if (buildResult != null && buildResult.isWorseOrEqualTo(Result.FAILURE)) {
-            return false;
+            listener.error("Still building");
         }
 
         EnvVars env = build.getEnvironment(listener);
-        Map<String, String> parameters = build.getBuildVariables();
+        Map<String, String> parameters = build.getEnvironment(listener);
 
         final PrintStream log = listener.getLogger();
 
         // Artifacts location for this build on master.
         FilePath artifactsDir = new FilePath(build.getArtifactsDir());
 
-        // Workspace (potentially remote if using slave).
-        FilePath workspace = build.getWorkspace();
+        // Run root location for this build on master.
+        FilePath root = new FilePath(build.getRootDir());
 
         // Validate user selection & input values.
         boolean isValid = validateConfiguration(log) && validateTestConfiguration(log);
         if (!isValid) {
             writeToLog(log, "Invalid configuration.");
-            return false;
+            return;
         }
 
         // Create & configure the AWSDeviceFarm client.
@@ -422,6 +433,11 @@ public class AWSDeviceFarmRecorder extends Recorder {
                 .withWorkspace(workspace)
                 .withArtifactsDir(artifactsDir)
                 .withEnv(env);
+
+        if (adf == null) {
+            writeToLog(log,"ADF API is null!");
+            return;
+        }
 
         try {
             // Accept 'ADF_PROJECT' build parameter as an overload from job configuration.
@@ -562,10 +578,10 @@ public class AWSDeviceFarmRecorder extends Recorder {
             build.setResult(action.getBuildResult(ignoreRunError));
         } catch (AWSDeviceFarmException e) {
             writeToLog(log, e.getMessage());
-            return false;
+            return;
         }
 
-        return true;
+        return;
     }
 
     private Location getScheduleRunConfigurationLocation(Boolean deviceLocation) {
