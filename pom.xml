@@ -21,6 +21,12 @@
             <artifactId>aws-java-sdk</artifactId>
             <version>1.11.98</version>
         </dependency>
+        <dependency>
+            <!-- need to avoid http://stackoverflow.com/questions/37377075/java-lang-noclassdeffounderror-org-apache-http-conn-schemeportresolver-with-ama -->
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.2</version>
+        </dependency>
         
         <!-- dependencies on Jenkins Pipeline plugins -->
         <dependency>
