@@ -103,6 +103,24 @@ Usage
 13. Set the execution configuration parameters: video recording and app performance monitoring.
 14. Click “Save”.
 
+## Using the plugin in Jenkins Pipeline
+
+   Just call the plugin like the example bellow or use Snippet Generator.
+
+    step([$class: 'AWSDeviceFarmRecorder',
+                        projectName: 'MyProj',
+                        devicePoolName: 'My pool',
+                        runName: 'jenkins-functional-tests-${BUILD_ID}',
+                        appArtifact: 'app/build/outputs/apk/app-release.apk',
+                        testToRun: 'APPIUM_JAVA_JUNIT',
+                        appiumJavaJUnitTest: '**/zip-with-dependencies.zip',
+                        junitArtifact: '',
+                        junitFilter: '',
+                        ignoreRunError: false,
+                        isRunUnmetered: false,
+                        storeResults: true,
+                    ])
+
 Dependencies
 ============
 
