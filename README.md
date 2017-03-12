@@ -97,7 +97,25 @@ Usage
 10. Select the test you would like run and fill in all required fields.
 11. Click “Save”.
 
+## Using the plugin in Jenkins Pipeline
+
+   Just call the plugin like the example bellow or use Snippet Generator.
+
+    step([$class: 'AWSDeviceFarmRecorder',
+                        projectName: 'MyProj',
+                        devicePoolName: 'My pool',
+                        runName: 'jenkins-functional-tests-${BUILD_ID}',
+                        appArtifact: 'app/build/outputs/apk/app-release.apk',
+                        testToRun: 'APPIUM_JAVA_JUNIT',
+                        appiumJavaJUnitTest: '**/zip-with-dependencies.zip',
+                        junitArtifact: '',
+                        junitFilter: '', 
+                        ignoreRunError: false,
+                        isRunUnmetered: false,
+                        storeResults: true,
+                    ])
+
 Dependencies
 ============
 
-* AWS SDK 1.10.5 or later.
+* AWS SDK 1.11.98 or later.
