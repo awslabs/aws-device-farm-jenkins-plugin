@@ -53,6 +53,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     public String devicePoolName;
     public String appArtifact;
     public String runName;
+    public String locale;
 
     //// config.jelly fields
     // Radio Button Selection
@@ -112,6 +113,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
      * @param devicePoolName The name of the Device Farm device pool.
      * @param appArtifact The path to the app to be tested.
      * @param runName The name of the run.
+     * @param locale Locale of device (en_US by default)
      * @param testToRun The type of test to be run.
      * @param storeResults Download the results to a local archive.
      * @param eventCount The number of fuzz events to run.
@@ -139,6 +141,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                                  String devicePoolName,
                                  String appArtifact,
                                  String runName,
+                                 String locale,
                                  String testToRun,
                                  Boolean storeResults,
                                  Boolean isRunUnmetered,
@@ -165,6 +168,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         this.devicePoolName = devicePoolName;
         this.appArtifact = appArtifact;
         this.runName = runName;
+        this.locale = locale;
         this.testToRun = testToRun;
         this.storeResults = storeResults;
         this.isRunUnmetered = isRunUnmetered;
@@ -300,6 +304,10 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                 writeToLog(String.format("Using overloaded device pool '%s' from build parameters", devicePoolParameter));
                 devicePoolName = devicePoolParameter;
             }
+            
+            if (StringUtils.isBlank(locale)) {
+                locale = "en_US";
+            }
 
             // Get AWS Device Farm device pool from user provided name.
             writeToLog(String.format("Using DevicePool '%s'", devicePoolName));
@@ -323,7 +331,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             // Schedule test run.
             TestType testType = TestType.fromValue(testToSchedule.getType());
             writeToLog(String.format("Scheduling '%s' run '%s'", testType, deviceFarmRunName));
-            ScheduleRunConfiguration configuration = getScheduleRunConfiguration(isRunUnmetered);
+            ScheduleRunConfiguration configuration = getScheduleRunConfiguration(isRunUnmetered, locale);
             ScheduleRunResult run = adf.scheduleRun(project.getArn(), deviceFarmRunName, appArn, devicePool.getArn(), testToSchedule, configuration);
 
             String runArn = run.getRun().getArn();
@@ -383,7 +391,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         return;
     }
 
-    private ScheduleRunConfiguration getScheduleRunConfiguration(Boolean isRunUnmetered) {
+    private ScheduleRunConfiguration getScheduleRunConfiguration(Boolean isRunUnmetered, String locale) {
         ScheduleRunConfiguration configuration = new ScheduleRunConfiguration();
         if (isRunUnmetered != null && isRunUnmetered) {
             configuration.setBillingMethod(BillingMethod.UNMETERED);
@@ -394,7 +402,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         // set a bunch of other default values as Device Farm expect these
         configuration.setAuxiliaryApps(new ArrayList<String>());
         configuration.setExtraDataPackageArn(null);
-        configuration.setLocale("en_US");
+        configuration.setLocale(locale);
 
         Location location = new Location();
         location.setLatitude(47.6204);
