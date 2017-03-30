@@ -568,7 +568,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             case CALABASH: {
                 CalabashTest test = new CalabashTest.Builder()
                         .withFeatures(env.expand(calabashFeatures))
-                        .withTags(calabashTags)
+                        .withTags(env.expand(calabashTags))
                         .withProfile(calabashProfile)
                         .build();
 
