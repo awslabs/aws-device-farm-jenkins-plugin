@@ -18,6 +18,10 @@
     <f:textbox default="$${BUILD_TAG}" />
   </f:entry>
 
+  <f:entry title="Device Locale" field="locale" description="[Optional] Name of device locale. Defaults to en_US">
+    <f:textbox />
+  </f:entry>
+
   <f:entry>
     <f:checkbox name="isRunUnmetered" field="isRunUnmetered" title="Run on Unmetered Device Slots." checked="${instance.isRunUnmetered}" inline="true" />
   </f:entry>
