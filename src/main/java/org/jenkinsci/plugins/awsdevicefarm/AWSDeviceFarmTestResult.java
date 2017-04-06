@@ -350,10 +350,6 @@ public class AWSDeviceFarmTestResult extends TestResult {
     public TestObject getParent() {
         return null;
     }
-    
-    public AbstractBuild<?, ?> getOwner() {
-        return build;
-    }
 
     public String getDisplayName() {
         return String.format("AWS Device Farm #%s", id);

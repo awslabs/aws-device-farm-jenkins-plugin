@@ -11,15 +11,14 @@ import java.util.*;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.devicefarm.model.*;
 
-import hudson.model.Result;
+import com.amazonaws.services.devicefarm.model.Job;
+import com.amazonaws.services.devicefarm.model.Project;
+import hudson.model.*;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.Action;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
+import hudson.model.Run;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
@@ -28,6 +27,7 @@ import hudson.util.FormValidation;
 import hudson.util.IOUtils;
 import hudson.util.ListBoxModel;
 
+import jenkins.tasks.SimpleBuildStep;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.awsdevicefarm.test.*;
@@ -37,11 +37,13 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import net.sf.json.JSONObject;
 
+import javax.annotation.Nonnull;
+
 /**
  * Post-build step for running tests on AWS Device Farm.
  */
 @SuppressWarnings("unused")
-public class AWSDeviceFarmRecorder extends Recorder {
+public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
 
     ////// All of these fields have to be public so that they can be read (via reflection) by Jenkins. Probably not the
     ////// greatest thing in the world given that this is *allegedly* supposed to be an immutable class.
@@ -221,9 +223,11 @@ public class AWSDeviceFarmRecorder extends Recorder {
         return this.testToRun.equalsIgnoreCase(testTypeName) ? "true" : "";
     }
 
+
     /**
      * Perform the post-build test action.
-     * @param build The build to follow.
+     * @param build The run to follow.
+     * @param workspace The currentFilePath.
      * @param launcher The launcher.
      * @param listener The build launcher.
      * @return Whether or not the post-build action succeeded.
@@ -231,25 +235,23 @@ public class AWSDeviceFarmRecorder extends Recorder {
      * @throws InterruptedException
      */
     @Override
-    public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+    public void perform(@Nonnull Run<?, ?> build, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws InterruptedException, IOException {
+
         // Check if the build result set from a previous build step.
         // A null build result indicates that the build is still ongoing and we're
         // likely being run as a build step by the "Any Build Step Plugin".
         Result buildResult = build.getResult();
         if (buildResult != null && buildResult.isWorseOrEqualTo(Result.FAILURE)) {
-            return false;
+            return;
         }
 
         EnvVars env = build.getEnvironment(listener);
-        Map<String, String> parameters = build.getBuildVariables();
+        Map<String, String> parameters = ((AbstractBuild)build).getBuildVariables();
 
         log = listener.getLogger();
 
         // Artifacts location for this build on master.
         FilePath artifactsDir = new FilePath(build.getArtifactsDir());
-
-        // Workspace (potentially remote if using slave).
-        FilePath workspace = build.getWorkspace();
 
         // Run root location for this build on master.
         FilePath root = new FilePath(build.getRootDir());
@@ -258,7 +260,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
         boolean isValid = validateConfiguration() && validateTestConfiguration();
         if (!isValid) {
             writeToLog("Invalid configuration.");
-            return false;
+            return;
         }
 
         // Create & configure the AWSDeviceFarm client.
@@ -270,7 +272,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
         if (adf == null) {
             writeToLog("ADF API is null!");
-            return false;
+            return;
         }
 
         try {
@@ -378,10 +380,10 @@ public class AWSDeviceFarmRecorder extends Recorder {
         }
         catch (AWSDeviceFarmException e) {
             writeToLog(e.getMessage());
-            return false;
+            return;
         }
 
-        return true;
+        return;
     }
 
     private ScheduleRunConfiguration getScheduleRunConfiguration(Boolean isRunUnmetered) {

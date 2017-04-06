@@ -10,6 +10,7 @@ import hudson.util.Area;
 import hudson.util.ShiftedCategoryAxis;
 import hudson.util.ChartUtil.NumberOnlyBuildLabel;
 import hudson.util.DataSetBuilder;
+import hudson.model.Run;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.CategoryAxis;
@@ -104,10 +105,10 @@ public class AWSDeviceFarmGraph extends Graph {
         List<NumberOnlyBuildLabel> cols = new ArrayList<NumberOnlyBuildLabel>();
 
         for (AWSDeviceFarmTestResult result : results) {
-            AbstractBuild<?, ?> build = result.getOwner();
+            Run<?, ?> run = result.getRun();
     
             // Create label for this result using its Jenkins build number.
-            NumberOnlyBuildLabel label = new NumberOnlyBuildLabel(build);
+            NumberOnlyBuildLabel label = new NumberOnlyBuildLabel(run);
 
             // Add 'pass' results
             rows.add("Pass");
@@ -142,8 +143,8 @@ public class AWSDeviceFarmGraph extends Graph {
 
         for (AWSDeviceFarmTestResult result : results) {
             // Create label for this result using its Jenkins build number.
-            AbstractBuild<?, ?> build = result.getOwner();
-            NumberOnlyBuildLabel label = new NumberOnlyBuildLabel(build);
+            Run<?, ?> run = result.getRun();
+            NumberOnlyBuildLabel label = new NumberOnlyBuildLabel(run);
 
             // Attach duration value for all results in our trend.
             builder.add(result.getDuration(), "Minutes", label);
