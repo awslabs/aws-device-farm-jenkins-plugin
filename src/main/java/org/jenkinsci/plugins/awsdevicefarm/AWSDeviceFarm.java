@@ -372,7 +372,7 @@ public class AWSDeviceFarm {
                 .withType(uploadType.toString());
         Upload upload = api.createUpload(appUploadRequest).getUpload();
 
-        CloseableHttpClient httpClient = HttpClients.createDefault();
+        CloseableHttpClient httpClient = HttpClients.createSystem();
         HttpPut httpPut = new HttpPut(upload.getUrl());
         httpPut.setHeader("Content-Type", upload.getContentType());
 
