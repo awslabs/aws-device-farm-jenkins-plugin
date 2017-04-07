@@ -9,6 +9,7 @@ import hudson.EnvVars;
 import hudson.FilePath;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.http.HttpResponse;
+import org.apache.http.auth.AUTH;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -18,6 +19,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.*;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledFuture;
+import static java.util.concurrent.TimeUnit.*;
+
 
 /**
  * AWS Device Farm API wrapper class.
@@ -28,6 +34,12 @@ public class AWSDeviceFarm {
     private FilePath workspace;
     private FilePath artifactsDir;
     private EnvVars env;
+
+    private AWSCredentials _creds;
+    private String _roleArn;
+
+    private final ScheduledExecutorService scheduler =
+            Executors.newScheduledThreadPool(1);
 
     //// Constructors
 
@@ -52,17 +64,43 @@ public class AWSDeviceFarm {
      * @param roleArn Role ARN to use for authentication.
      */
     private AWSDeviceFarm(AWSCredentials creds, String roleArn) {
-        if (roleArn != null) {
+        _creds = creds;
+        _roleArn = roleArn;
+        Authentication();
+        if(_roleArn != null) {
+            ScheduleReauthentication();
+        }
+    }
+
+    /***
+     * Schedules Re-authentication every 14 minutes.
+     */
+    private void ScheduleReauthentication() {
+        Runnable reauthentication = new Runnable() {
+            public void run() {
+                writeToLog("Re-authenticating with AWS...");
+                Authentication();
+            }
+        };
+        scheduler.scheduleAtFixedRate(reauthentication, 840, 840, SECONDS); //The first run is delayed by 14mins and repeated every 14mins thereafter
+    }
+
+    /***
+     * AWS Device Farm Client Setter
+     */
+    private void Authentication() {
+        if (_roleArn != null) {
             STSAssumeRoleSessionCredentialsProvider sts = new STSAssumeRoleSessionCredentialsProvider
-                    .Builder(roleArn, RandomStringUtils.randomAlphanumeric(8))
+                    .Builder(_roleArn, RandomStringUtils.randomAlphanumeric(8))
                     .build();
-            creds = sts.getCredentials();
+            _creds = sts.getCredentials();
         }
 
         ClientConfiguration clientConfiguration = new ClientConfiguration().withUserAgent("AWS Device Farm - Jenkins v1.0");
-        api = new AWSDeviceFarmClient(creds, clientConfiguration);
+        api = new AWSDeviceFarmClient(_creds, clientConfiguration);
         api.setServiceNameIntern("devicefarm");
     }
+
 
     //// Builder Methods
 
