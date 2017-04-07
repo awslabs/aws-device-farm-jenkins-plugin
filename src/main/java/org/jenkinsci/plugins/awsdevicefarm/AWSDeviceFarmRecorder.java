@@ -302,6 +302,13 @@ public class AWSDeviceFarmRecorder extends Recorder {
                 devicePoolName = devicePoolParameter;
             }
 
+            // Accept 'CALABASH_TAGS' build parameter as an overload from job configuration.
+            String calabashTagsParameter = parameters.get("CALABASH_TAGS");
+            if (calabashTagsParameter != null) {
+                writeToLog(String.format("Using overloaded tags '%s' from build parameters", calabashTagsParameter));
+                calabashTags = calabashTagsParameter;
+            }
+
             // Get AWS Device Farm device pool from user provided name.
             writeToLog(String.format("Using DevicePool '%s'", devicePoolName));
             DevicePool devicePool = adf.getDevicePool(project, devicePoolName);
