@@ -104,6 +104,18 @@ public class AWSDeviceFarmRecorder extends Recorder {
     // ignore device farm run errors
     public Boolean ignoreRunError;
 
+    // web app
+    public Boolean ifWebApp;
+
+    // The Appium version for the Appium Tests.
+    public String appiumVersion_junit;
+    public String appiumVersion_python;
+    public String appiumVersion_testng;
+
+    private static final String APPIUM_VERSION_1_6_3 = "1.6.3";
+
+    private static final String APPIUM_VERSION_1_4_16 = "1.4.16";
+
     /**
      * The Device Farm recorder class for running post-build steps on Jenkins.
      * @param projectName The name of the Device Farm project.
@@ -130,6 +142,10 @@ public class AWSDeviceFarmRecorder extends Recorder {
      * @param uiautomationArtifact The path to the UI Automation tests to be run.
      * @param xctestArtifact The path to the XCTest tests to be run.
      * @param xctestUiArtifact The path to the XCTest UI tests to be run.
+     * @param appiumVersion_junit
+     * @param appiumVersion_python
+     * @param appiumVersion_testng
+     * @param ifWebApp
      */
     @DataBoundConstructor
     @SuppressWarnings("unused")
@@ -158,12 +174,15 @@ public class AWSDeviceFarmRecorder extends Recorder {
                                  String uiautomationArtifact,
                                  String xctestArtifact,
                                  String xctestUiArtifact,
+                                 String appiumVersion_junit,
+                                 String appiumVersion_python,
+                                 String appiumVersion_testng,
+                                 Boolean ifWebApp,
                                  Boolean ignoreRunError ) {
         this.projectName = projectName;
         this.devicePoolName = devicePoolName;
         this.appArtifact = appArtifact;
         this.runName = runName;
-        this.testToRun = testToRun;
         this.storeResults = storeResults;
         this.isRunUnmetered = isRunUnmetered;
         this.eventCount = eventCount;
@@ -185,6 +204,17 @@ public class AWSDeviceFarmRecorder extends Recorder {
         this.xctestArtifact = xctestArtifact;
         this.xctestUiArtifact = xctestUiArtifact;
         this.ignoreRunError = ignoreRunError;
+        this.appiumVersion_junit = appiumVersion_junit;
+        this.appiumVersion_python = appiumVersion_python;
+        this.appiumVersion_testng = appiumVersion_testng;
+
+
+        if (ifWebApp != null && ifWebApp) this.ifWebApp = true;
+        else this.ifWebApp = false;
+        if (ifWebApp && testToRun.equalsIgnoreCase("APPIUM_PYTHON")) this.testToRun = "APPIUM_WEB_PYTHON";
+        else if (ifWebApp && testToRun.equalsIgnoreCase("APPIUM_JAVA_JUNIT")) this.testToRun = "APPIUM_WEB_JAVA_JUNIT";
+        else if (ifWebApp && testToRun.equalsIgnoreCase("APPIUM_JAVA_TESTNG")) this.testToRun = "APPIUM_WEB_JAVA_TESTNG";
+        else this.testToRun = testToRun;
 
         // This is a hack because I have to get the service icon locally, but it's copy-righted. So I pull it when I need it.
         Path pluginIconPath = Paths.get(System.getenv("HOME"), "plugins", "aws-device-farm", "service-icon.svg").toAbsolutePath();
@@ -218,6 +248,9 @@ public class AWSDeviceFarmRecorder extends Recorder {
      * @return Whether or not the test type string matches.
      */
     public String isTestType(String testTypeName) {
+        if (ifWebApp != null && ifWebApp) {
+            if (testTypeName.substring(0,6).equalsIgnoreCase("APPIUM")) testTypeName = new StringBuilder(testTypeName).insert(7, "WEB_").toString();
+        }
         return this.testToRun.equalsIgnoreCase(testTypeName) ? "true" : "";
     }
 
@@ -307,9 +340,17 @@ public class AWSDeviceFarmRecorder extends Recorder {
             DevicePool devicePool = adf.getDevicePool(project, devicePoolName);
 
             // Upload app.
-            writeToLog(String.format("Using App '%s'", env.expand(appArtifact)));
-            Upload appUpload = adf.uploadApp(project, appArtifact);
-            String appArn = appUpload.getArn();
+            String appArn = null;
+            if (ifWebApp){
+                writeToLog("Tesing a Web App.");
+
+            }
+            else {
+                writeToLog(String.format("Using App '%s'", env.expand(appArtifact)));
+                Upload appUpload = adf.uploadApp(project, appArtifact);
+                appArn = appUpload.getArn();
+            }
+
             String deviceFarmRunName = null;
             if (StringUtils.isBlank(runName)) {
                 deviceFarmRunName = String.format("%s", env.get("BUILD_TAG"));
@@ -320,6 +361,14 @@ public class AWSDeviceFarmRecorder extends Recorder {
             // Upload test content.
             writeToLog("Getting test to schedule.");
             ScheduleRunTest testToSchedule = getScheduleRunTest(env, adf, project);
+
+            // State the Appium Version.
+            if (testToRun.equalsIgnoreCase("APPIUM_JAVA_JUNIT")) writeToLog(String.format("Using appium version: %s", appiumVersion_junit));
+            else if (testToRun.equalsIgnoreCase("APPIUM_WEB_JAVA_JUNIT")) writeToLog(String.format("Using appium version: %s", appiumVersion_junit));
+            else if (testToRun.equalsIgnoreCase("APPIUM_JAVA_TESTNG")) writeToLog(String.format("Using appium version: %s", appiumVersion_testng));
+            else if (testToRun.equalsIgnoreCase("APPIUM_WEB_JAVA_TESTNG")) writeToLog(String.format("Using appium version: %s", appiumVersion_testng));
+            else if (testToRun.equalsIgnoreCase("APPIUM_PYTHON")) writeToLog(String.format("Using appium version: %s", appiumVersion_python));
+            else if (testToRun.equalsIgnoreCase("APPIUM_WEB_PYTHON")) writeToLog(String.format("Using appium version: %s", appiumVersion_python));
 
             // Schedule test run.
             TestType testType = TestType.fromValue(testToSchedule.getType());
@@ -529,6 +578,8 @@ public class AWSDeviceFarmRecorder extends Recorder {
                 testToSchedule = new ScheduleRunTest()
                         .withType(testType)
                         .withTestPackageArn(upload.getArn());
+
+                testToSchedule.addParametersEntry("appium_version", appiumVersion_junit);
                 break;
             }
 
@@ -542,6 +593,8 @@ public class AWSDeviceFarmRecorder extends Recorder {
                 testToSchedule = new ScheduleRunTest()
                         .withType(testType)
                         .withTestPackageArn(upload.getArn());
+
+                testToSchedule.addParametersEntry("appium_version", appiumVersion_testng);
                 break;
             }
             
@@ -555,9 +608,56 @@ public class AWSDeviceFarmRecorder extends Recorder {
                 testToSchedule = new ScheduleRunTest()
                         .withType(testType)
                         .withTestPackageArn(upload.getArn());
+
+                testToSchedule.addParametersEntry("appium_version", appiumVersion_python);
                 break;
             }
-            
+
+            case APPIUM_WEB_JAVA_JUNIT: {
+                AppiumWebJavaJUnitTest test = new AppiumWebJavaJUnitTest.Builder()
+                        .withTests(env.expand(appiumJavaJUnitTest))
+                        .build();
+
+                Upload upload = adf.uploadTest(project, test);
+
+                testToSchedule = new ScheduleRunTest()
+                        .withType(testType)
+                        .withTestPackageArn(upload.getArn());
+
+                testToSchedule.addParametersEntry("appium_version", appiumVersion_junit);
+                break;
+            }
+
+            case APPIUM_WEB_JAVA_TESTNG: {
+                AppiumWebJavaTestNGTest test = new AppiumWebJavaTestNGTest.Builder()
+                        .withTests(env.expand(appiumJavaTestNGTest))
+                        .build();
+
+                Upload upload = adf.uploadTest(project, test);
+
+                testToSchedule = new ScheduleRunTest()
+                        .withType(testType)
+                        .withTestPackageArn(upload.getArn());
+
+                testToSchedule.addParametersEntry("appium_version", appiumVersion_testng);
+                break;
+            }
+
+            case APPIUM_WEB_PYTHON: {
+                AppiumWebPythonTest test = new AppiumWebPythonTest.Builder()
+                        .withTests(env.expand(appiumPythonTest))
+                        .build();
+
+                Upload upload = adf.uploadTest(project, test);
+
+                testToSchedule = new ScheduleRunTest()
+                        .withType(testType)
+                        .withTestPackageArn(upload.getArn());
+
+                testToSchedule.addParametersEntry("appium_version", appiumVersion_python);
+                break;
+            }
+
             case CALABASH: {
                 CalabashTest test = new CalabashTest.Builder()
                         .withFeatures(env.expand(calabashFeatures))
@@ -684,7 +784,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
             return false;
         }
         // [Required]: App Artifact
-        if (appArtifact == null || appArtifact.isEmpty()) {
+        if (!ifWebApp && (appArtifact == null || appArtifact.isEmpty())) {
             writeToLog("Application Artifact must be set.");
             return false;
         }
@@ -748,6 +848,33 @@ public class AWSDeviceFarmRecorder extends Recorder {
             case APPIUM_PYTHON: {
                 if (appiumPythonTest == null || appiumPythonTest.isEmpty()) {
                     writeToLog("Appium Python test must be set.");
+                    return false;
+                }
+
+                break;
+            }
+
+            case APPIUM_WEB_JAVA_JUNIT: {
+                if (appiumJavaJUnitTest == null || appiumJavaJUnitTest.isEmpty()) {
+                    writeToLog("Appium Java Junit test for the web application must be set.");
+                    return false;
+                }
+
+                break;
+            }
+
+            case APPIUM_WEB_JAVA_TESTNG: {
+                if (appiumJavaTestNGTest == null || appiumJavaTestNGTest.isEmpty()) {
+                    writeToLog("Appium Java TestNG test for the web application must be set.");
+                    return false;
+                }
+
+                break;
+            }
+
+            case APPIUM_WEB_PYTHON: {
+                if (appiumPythonTest == null || appiumPythonTest.isEmpty()) {
+                    writeToLog("Appium Python test for the web application must be set.");
                     return false;
                 }
 
@@ -1018,8 +1145,8 @@ public class AWSDeviceFarmRecorder extends Recorder {
          * @return Whether or not the form was ok.
          */
         @SuppressWarnings("unused")
-        public FormValidation doCheckAppArtifact(@QueryParameter String appArtifact) {
-            if (appArtifact == null || appArtifact.isEmpty()) {
+        public FormValidation doCheckAppArtifact(@QueryParameter  Boolean ifWebApp, @QueryParameter String appArtifact) {
+            if (!ifWebApp && (appArtifact == null || appArtifact.isEmpty())) {
                 return FormValidation.error("Required!");
             }
             return FormValidation.ok();
@@ -1209,6 +1336,72 @@ public class AWSDeviceFarmRecorder extends Recorder {
             for (String devicePoolName : devicePoolNames) {
                 // We don't ignore case because these *should* be unique.
                 entries.add(new ListBoxModel.Option(devicePoolName, devicePoolName, devicePoolName.equals(currentDevicePoolName)));
+            }
+            return new ListBoxModel(entries);
+        }
+
+        /**
+         * Populate the project drop-down Appium Version.
+         * @return The ListBoxModel for the UI.
+         */
+        @SuppressWarnings("unused")
+        public ListBoxModel doFillAppiumVersion_junitItems(@QueryParameter String currentAppiumVersion) {
+            // Create ListBoxModel from all projects for this AWS Device Farm account.
+            List<ListBoxModel.Option> entries = new ArrayList<ListBoxModel.Option>();
+            //System.out.print("getting appium version");
+            ArrayList<String> appiumVersions = new ArrayList<String>();
+            appiumVersions.add(APPIUM_VERSION_1_6_3);
+            appiumVersions.add(APPIUM_VERSION_1_4_16);
+            if (appiumVersions == null) {
+                return new ListBoxModel();
+            }
+            for (String appiumVersion: appiumVersions) {
+                // We don't ignore case because these *should* be unique.
+                entries.add(new ListBoxModel.Option(appiumVersion, appiumVersion, appiumVersion.equals(currentAppiumVersion)));
+            }
+            return new ListBoxModel(entries);
+        }
+
+        /**
+         * Populate the project drop-down Appium Version.
+         * @return The ListBoxModel for the UI.
+         */
+        @SuppressWarnings("unused")
+        public ListBoxModel doFillAppiumVersion_testngItems(@QueryParameter String currentAppiumVersion) {
+            // Create ListBoxModel from all projects for this AWS Device Farm account.
+            List<ListBoxModel.Option> entries = new ArrayList<ListBoxModel.Option>();
+            //System.out.print("getting appium version");
+            ArrayList<String> appiumVersions = new ArrayList<String>();
+            appiumVersions.add(APPIUM_VERSION_1_6_3);
+            appiumVersions.add(APPIUM_VERSION_1_4_16);
+            if (appiumVersions == null) {
+                return new ListBoxModel();
+            }
+            for (String appiumVersion: appiumVersions) {
+                // We don't ignore case because these *should* be unique.
+                entries.add(new ListBoxModel.Option(appiumVersion, appiumVersion, appiumVersion.equals(currentAppiumVersion)));
+            }
+            return new ListBoxModel(entries);
+        }
+
+        /**
+         * Populate the project drop-down Appium Version.
+         * @return The ListBoxModel for the UI.
+         */
+        @SuppressWarnings("unused")
+        public ListBoxModel doFillAppiumVersion_pythonItems(@QueryParameter String currentAppiumVersion) {
+            // Create ListBoxModel from all projects for this AWS Device Farm account.
+            List<ListBoxModel.Option> entries = new ArrayList<ListBoxModel.Option>();
+            //System.out.print("getting appium version");
+            ArrayList<String> appiumVersions = new ArrayList<String>();
+            appiumVersions.add(APPIUM_VERSION_1_6_3);
+            appiumVersions.add(APPIUM_VERSION_1_4_16);
+            if (appiumVersions == null) {
+                return new ListBoxModel();
+            }
+            for (String appiumVersion: appiumVersions) {
+                // We don't ignore case because these *should* be unique.
+                entries.add(new ListBoxModel.Option(appiumVersion, appiumVersion, appiumVersion.equals(currentAppiumVersion)));
             }
             return new ListBoxModel(entries);
         }

@@ -319,6 +319,43 @@ public class AWSDeviceFarm {
         return upload(project, test.getTests(), AWSDeviceFarmUploadType.APPIUM_PYTHON);
     }
 
+
+    /**
+     * Upload a test to Device Farm.
+     * @param project The Device Farm project to upload to.
+     * @param test Test object containing relevant test information.
+     * @return The Device Farm Upload object.
+     * @throws IOException
+     * @throws AWSDeviceFarmException
+     */
+    public Upload uploadTest(Project project, AppiumWebJavaTestNGTest test) throws InterruptedException, IOException, AWSDeviceFarmException {
+        return upload(project, test.getTests(), AWSDeviceFarmUploadType.APPIUM_WEB_JAVA_TESTNG);
+    }
+
+    /**
+     * Upload a test to Device Farm.
+     * @param project The Device Farm project to upload to.
+     * @param test Test object containing relevant test information.
+     * @return The Device Farm Upload object.
+     * @throws IOException
+     * @throws AWSDeviceFarmException
+     */
+    public Upload uploadTest(Project project, AppiumWebJavaJUnitTest test) throws InterruptedException, IOException, AWSDeviceFarmException {
+        return upload(project, test.getTests(), AWSDeviceFarmUploadType.APPIUM_WEB_JAVA_JUNIT);
+    }
+
+    /**
+     * Upload a test to Device Farm.
+     * @param project The Device Farm project to upload to.
+     * @param test Test object containing relevant test information.
+     * @return The Device Farm Upload object.
+     * @throws IOException
+     * @throws AWSDeviceFarmException
+     */
+    public Upload uploadTest(Project project, AppiumWebPythonTest test) throws InterruptedException, IOException, AWSDeviceFarmException {
+        return upload(project, test.getTests(), AWSDeviceFarmUploadType.APPIUM_WEB_PYTHON);
+    }
+
     /**
      * Private method to handle uploading apps and tests to Device Farm.
      * @param project The Device Farm project to upload to.
@@ -434,12 +471,16 @@ public class AWSDeviceFarm {
         ScheduleRunRequest request = new ScheduleRunRequest()
                 .withProjectArn(projectArn)
                 .withName(name)
-                .withAppArn(appArn)
+                //.withAppArn(appArn)
                 .withDevicePoolArn(devicePoolArn)
                 .withTest(test);
 
         if (configuration != null) {
             request.withConfiguration(configuration);
+        }
+
+        if (appArn != null) {
+            request.withAppArn(appArn);
         }
 
         return api.scheduleRun(request);

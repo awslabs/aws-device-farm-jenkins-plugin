@@ -10,8 +10,12 @@
     <f:select style="width:100%" inline="true"/>
   </f:entry>
 
-  <f:entry title="Application" field="appArtifact" description="[Required] Pattern to find newly built application.">
+  <f:entry title="Application" field="appArtifact" description="Pattern to find newly built application. Leave it blank if it is a web application.">
     <f:textbox />
+  </f:entry>
+
+  <f:entry>
+    <f:checkbox name="ifWebApp" title="It is a web application." checked="${instance.ifWebApp}"/>
   </f:entry>
   
   <f:entry title="Run Name" field="runName" description="[Optional] Name of your AWS Device Farm Run. Defaults to Environment variable BUILD_TAG.">
@@ -31,6 +35,7 @@
   </f:entry>
 
   <f:section title="Choose test to run">
+
     <f:radioBlock name="testToRun" value="BUILTIN_EXPLORER" checked="${instance.isTestType('BUILTIN_EXPLORER')}" title="Android Built-in Explorer" inline="true">
       <f:nested>
         <f:entry title="Username" field="username" description="A username to use if the Explorer encounters a login form. If not supplied, no username will be inserted.">
@@ -61,6 +66,10 @@
         <f:entry title="Tests" field="appiumJavaJUnitTest" description="[Required] Pattern to find Java JUnit tests.">
           <f:textbox />
         </f:entry>
+
+        <f:entry name="appiumVersion" title="Appium Version" field="appiumVersion">
+          <f:select style="width:100%; padding-right:5px; margin-right:5px" inline="true" />
+        </f:entry>
       </f:nested>
     </f:radioBlock>
 
@@ -69,6 +78,10 @@
         <f:entry title="Tests" field="appiumJavaTestNGTest" description="[Required] Pattern to find Java TestNG tests.">
           <f:textbox />
         </f:entry>
+
+        <f:entry name="appiumVersion" title="Appium Version" field="appiumVersion">
+          <f:select style="width:100%; padding-right:5px; margin-right:5px" inline="true" />
+        </f:entry>
       </f:nested>
     </f:radioBlock>
     
@@ -76,6 +89,10 @@
       <f:nested>
         <f:entry title="Tests" field="appiumPythonTest" description="[Required] Pattern to find Python tests.">
           <f:textbox />
+        </f:entry>
+
+        <f:entry name="appiumVersion" title="Appium Version" field="appiumVersion">
+          <f:select style="width:100%; padding-right:5px; margin-right:5px" inline="true" />
         </f:entry>
       </f:nested>
     </f:radioBlock>
