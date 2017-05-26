@@ -20,7 +20,8 @@ public enum AWSDeviceFarmUploadType {
     XCTEST_UI("XCTEST_UI_TEST_PACKAGE"),                            // Test
     APPIUM_WEB_PYTHON("APPIUM_WEB_PYTHON_TEST_PACKAGE"),            // Test
     APPIUM_WEB_JAVA_TESTNG("APPIUM_WEB_JAVA_TESTNG_TEST_PACKAGE"),  // Test
-    APPIUM_WEB_JAVA_JUNIT("APPIUM_WEB_JAVA_JUNIT_TEST_PACKAGE");    // Test
+    APPIUM_WEB_JAVA_JUNIT("APPIUM_WEB_JAVA_JUNIT_TEST_PACKAGE"),    // Test
+    EXTERNAL_DATA("EXTERNAL_DATA");                                 // Extra Data
 
 
     private final String type;

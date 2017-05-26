@@ -212,6 +212,26 @@ public class AWSDeviceFarm {
     }
 
     /**
+     * Upload an extra data file to Device Farm.
+     * @param project The Device Farm project to upload to.
+     * @param extraDataArtifact String path to the extra data to be uploaded to Device Farm.
+     * @return The Device Farm Upload object.
+     * @throws IOException
+     * @throws AWSDeviceFarmException
+     */
+    public Upload uploadExtraData(Project project, String extraDataArtifact) throws InterruptedException, IOException, AWSDeviceFarmException {
+        AWSDeviceFarmUploadType type;
+        if (extraDataArtifact.toLowerCase().endsWith("zip")) {
+            type = AWSDeviceFarmUploadType.EXTERNAL_DATA;
+        }
+        else {
+            throw new AWSDeviceFarmException(String.format("Unknown extra data file artifact to upload: %s", extraDataArtifact));
+        }
+
+        return upload(project, extraDataArtifact, type);
+    }
+
+    /**
      * Upload a test to Device Farm.
      * @param project The Device Farm project to upload to.
      * @param test Test object containing relevant test information.
@@ -467,6 +487,7 @@ public class AWSDeviceFarm {
                                          String appArn,
                                          String devicePoolArn,
                                          ScheduleRunTest test,
+                                         Integer jobTimeoutMinutes,
                                          ScheduleRunConfiguration configuration) {
         ScheduleRunRequest request = new ScheduleRunRequest()
                 .withProjectArn(projectArn)
@@ -474,6 +495,12 @@ public class AWSDeviceFarm {
                 //.withAppArn(appArn)
                 .withDevicePoolArn(devicePoolArn)
                 .withTest(test);
+
+        ExecutionConfiguration exeConfiguration = new ExecutionConfiguration();
+        if (jobTimeoutMinutes != 60){
+            exeConfiguration.setJobTimeoutMinutes(jobTimeoutMinutes);
+            request.withExecutionConfiguration(exeConfiguration);
+        }
 
         if (configuration != null) {
             request.withConfiguration(configuration);
@@ -504,7 +531,6 @@ public class AWSDeviceFarm {
         try {
             // Find glob matches.
             FilePath[] matches = workspace.list(pattern);
-
             if (matches == null || matches.length == 0) {
                 throw new AWSDeviceFarmException(String.format("No Artifacts found using pattern '%s'", pattern));
             }

@@ -116,6 +116,22 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
     private static final String APPIUM_VERSION_1_4_16 = "1.4.16";
 
+    //Device Stats Specification
+    public Boolean extraData;
+    public String extraDataArtifact;
+
+    public Boolean deviceLocation;
+    public Double deviceLatitude;
+    public Double deviceLongitude;
+
+    public Boolean radioDetails;
+    public Boolean ifWifi;
+    public Boolean ifGPS;
+    public Boolean ifNfc;
+    public Boolean ifBluetooth;
+
+    public Integer jobTimeoutMinutes;
+
     /**
      * The Device Farm recorder class for running post-build steps on Jenkins.
      * @param projectName The name of the Device Farm project.
@@ -146,6 +162,17 @@ public class AWSDeviceFarmRecorder extends Recorder {
      * @param appiumVersion_python
      * @param appiumVersion_testng
      * @param ifWebApp
+     * @param extraData
+     * @param extraDataArtifact
+     * @param deviceLocation
+     * @param deviceLatitude
+     * @param deviceLongitude
+     * @param radioDetails
+     * @param ifWifi
+     * @param ifNfc
+     * @param ifGPS
+     * @param ifBluetooth
+     * @param jobTimeoutMinutes
      */
     @DataBoundConstructor
     @SuppressWarnings("unused")
@@ -178,6 +205,17 @@ public class AWSDeviceFarmRecorder extends Recorder {
                                  String appiumVersion_python,
                                  String appiumVersion_testng,
                                  Boolean ifWebApp,
+                                 Boolean extraData,
+                                 String extraDataArtifact,
+                                 Boolean deviceLocation,
+                                 Double deviceLatitude,
+                                 Double deviceLongitude,
+                                 Boolean radioDetails,
+                                 Boolean ifBluetooth,
+                                 Boolean ifWifi,
+                                 Boolean ifGPS,
+                                 Boolean ifNfc,
+                                 Integer jobTimeoutMinutes,
                                  Boolean ignoreRunError ) {
         this.projectName = projectName;
         this.devicePoolName = devicePoolName;
@@ -208,6 +246,18 @@ public class AWSDeviceFarmRecorder extends Recorder {
         this.appiumVersion_python = appiumVersion_python;
         this.appiumVersion_testng = appiumVersion_testng;
 
+
+        this.extraData = extraData;
+        this.extraDataArtifact = extraDataArtifact;
+        this.deviceLocation = deviceLocation;
+        this.deviceLatitude = deviceLatitude;
+        this.deviceLongitude = deviceLongitude;
+        this.radioDetails = radioDetails;
+        this.ifWifi = ifWifi;
+        this.ifGPS = ifGPS;
+        this.ifBluetooth = ifBluetooth;
+        this.ifNfc = ifNfc;
+        this.jobTimeoutMinutes = jobTimeoutMinutes;
 
         if (ifWebApp != null && ifWebApp) this.ifWebApp = true;
         else this.ifWebApp = false;
@@ -341,7 +391,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
             // Upload app.
             String appArn = null;
-            if (ifWebApp){
+            if (ifWebApp != null && ifWebApp){
                 writeToLog("Tesing a Web App.");
 
             }
@@ -373,8 +423,19 @@ public class AWSDeviceFarmRecorder extends Recorder {
             // Schedule test run.
             TestType testType = TestType.fromValue(testToSchedule.getType());
             writeToLog(String.format("Scheduling '%s' run '%s'", testType, deviceFarmRunName));
-            ScheduleRunConfiguration configuration = getScheduleRunConfiguration(isRunUnmetered);
-            ScheduleRunResult run = adf.scheduleRun(project.getArn(), deviceFarmRunName, appArn, devicePool.getArn(), testToSchedule, configuration);
+            ScheduleRunConfiguration configuration = getScheduleRunConfiguration(isRunUnmetered, deviceLocation, radioDetails);
+
+            // Upload the extra data.
+            String extraDataArn = null;
+            if (extraData != null && extraData) {
+                writeToLog(String.format("Using Extra Data '%s'", env.expand(extraDataArtifact)));
+                Upload extraDataUpload = adf.uploadExtraData(project, extraDataArtifact);
+                extraDataArn = extraDataUpload.getArn();
+            }
+            configuration.setExtraDataPackageArn(extraDataArn);
+
+
+            ScheduleRunResult run = adf.scheduleRun(project.getArn(), deviceFarmRunName, appArn, devicePool.getArn(), testToSchedule, jobTimeoutMinutes, configuration);
 
             String runArn = run.getRun().getArn();
             try {
@@ -433,7 +494,38 @@ public class AWSDeviceFarmRecorder extends Recorder {
         return true;
     }
 
-    private ScheduleRunConfiguration getScheduleRunConfiguration(Boolean isRunUnmetered) {
+    private Location getScheduleRunConfigurationLocation(Boolean deviceLocation) {
+        Location location = new Location();
+        if (deviceLocation != null && deviceLocation){
+            location.setLatitude(deviceLatitude);
+            location.setLongitude(deviceLongitude);
+        }
+        else {
+            location.setLatitude(47.6204);
+            location.setLongitude(-122.3491);
+        }
+        return location;
+    }
+
+    private Radios getScheduleRunConfigurationRadio(Boolean radioDetails) {
+        Radios radio = new Radios();
+        if (radioDetails != null && radioDetails){
+            radio.setBluetooth(ifBluetooth);
+            radio.setGps(ifGPS);
+            radio.setNfc(ifNfc);
+            radio.setWifi(ifWifi);
+        }
+        else {
+            radio.setBluetooth(true);
+            radio.setGps(true);
+            radio.setNfc(true);
+            radio.setWifi(true);
+        }
+        return radio;
+
+    }
+
+    private ScheduleRunConfiguration getScheduleRunConfiguration(Boolean isRunUnmetered, Boolean deviceLocation, Boolean radioDetails) {
         ScheduleRunConfiguration configuration = new ScheduleRunConfiguration();
         if (isRunUnmetered != null && isRunUnmetered) {
             configuration.setBillingMethod(BillingMethod.UNMETERED);
@@ -443,19 +535,12 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
         // set a bunch of other default values as Device Farm expect these
         configuration.setAuxiliaryApps(new ArrayList<String>());
-        configuration.setExtraDataPackageArn(null);
         configuration.setLocale("en_US");
 
-        Location location = new Location();
-        location.setLatitude(47.6204);
-        location.setLongitude(-122.3491);
+        Location location = getScheduleRunConfigurationLocation(deviceLocation);
         configuration.setLocation(location);
 
-        Radios radio = new Radios();
-        radio.setBluetooth(true);
-        radio.setGps(true);
-        radio.setNfc(true);
-        radio.setWifi(true);
+        Radios radio = getScheduleRunConfigurationRadio(radioDetails);
         configuration.setRadios(radio);
 
         return configuration;
@@ -1277,6 +1362,22 @@ public class AWSDeviceFarmRecorder extends Recorder {
                 if (adf.getUnmeteredDevices(os) <= 0) {
                     return FormValidation.error(String.format("Your account does not have unmetered %s device slots.", os));
                 }
+            }
+            return FormValidation.ok();
+        }
+
+        /**
+         * Validate the user entered execution time.
+         * @param jobTimeoutMinutes The Int of the limit execute time the user typed.
+         * @return Whether or not the form was ok.
+         */
+        @SuppressWarnings("unused")
+        public FormValidation doCheckJobTimeoutMinutes(@QueryParameter Integer jobTimeoutMinutes) {
+            if (jobTimeoutMinutes == null) {
+                return FormValidation.error("Required");
+            }
+            else if (jobTimeoutMinutes < 5 || jobTimeoutMinutes > 60) {
+                return FormValidation.error("The value should be in the range [5, 60]!");
             }
             return FormValidation.ok();
         }

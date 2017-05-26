@@ -46,7 +46,7 @@
         </f:entry>
       </f:nested>
     </f:radioBlock>
-    
+
     <f:radioBlock name="testToRun" value="BUILTIN_FUZZ" checked="${instance.isTestType('BUILTIN_FUZZ')}" title="Built-in Fuzz" inline="true">
       <f:nested>
         <f:entry title="Event Count" field="eventCount" description="[Optional] Number of fuzz events.">
@@ -67,7 +67,7 @@
           <f:textbox />
         </f:entry>
 
-        <f:entry name="appiumVersion" title="Appium Version" field="appiumVersion">
+        <f:entry name="appiumVersion" title="Appium Version" field="appiumVersion_junit">
           <f:select style="width:100%; padding-right:5px; margin-right:5px" inline="true" />
         </f:entry>
       </f:nested>
@@ -79,19 +79,19 @@
           <f:textbox />
         </f:entry>
 
-        <f:entry name="appiumVersion" title="Appium Version" field="appiumVersion">
+        <f:entry name="appiumVersion" title="Appium Version" field="appiumVersion_testng">
           <f:select style="width:100%; padding-right:5px; margin-right:5px" inline="true" />
         </f:entry>
       </f:nested>
     </f:radioBlock>
-    
-     <f:radioBlock name="testToRun" value="APPIUM_PYTHON" checked="${instance.isTestType('APPIUM_PYTHON')}" title="Appium Python" inline="true">
+
+    <f:radioBlock name="testToRun" value="APPIUM_PYTHON" checked="${instance.isTestType('APPIUM_PYTHON')}" title="Appium Python" inline="true">
       <f:nested>
         <f:entry title="Tests" field="appiumPythonTest" description="[Required] Pattern to find Python tests.">
           <f:textbox />
         </f:entry>
 
-        <f:entry name="appiumVersion" title="Appium Version" field="appiumVersion">
+        <f:entry name="appiumVersion" title="Appium Version" field="appiumVersion_python">
           <f:select style="width:100%; padding-right:5px; margin-right:5px" inline="true" />
         </f:entry>
       </f:nested>
@@ -158,4 +158,54 @@
     </f:radioBlock>
     
   </f:section>
+
+
+  <f:section title="Specify Device State(Optional)">
+
+    <f:optionalBlock name="radioDetails" title="Specify Radio Details of Devices. Otherwise, use the default setting." checked="${instance.radioDetails}" inline="true">
+      <f:entry >
+        <f:checkbox name="ifWifi" title="Enable Wifi" default="true" checked="${instance.ifWifi}" inline="true"/>
+      </f:entry>
+
+      <f:entry >
+        <f:checkbox name="ifGPS" title="Enable GPS" default="true" checked="${instance.ifGPS}" inline="true"/>
+      </f:entry>
+
+      <f:entry >
+        <f:checkbox name="ifBluetooth" title="Enable Bluetooth" default="true" checked="${instance.ifBluetooth}" inline="true"/>
+      </f:entry>
+
+      <f:entry >
+        <f:checkbox name="ifNfc" title="Enable NFC" default="true" checked="${instance.ifNfc}" inline="true"/>
+      </f:entry>
+    </f:optionalBlock>
+
+    <f:optionalBlock name="extraData" title="Add Extra Data." checked="${instance.extraData}" inline="true">
+      <f:entry title="Extra Data" field="extraDataArtifact" description="[Optional] Pattern to a .zip file to be extracted before your app is tested." >
+        <f:textbox />
+      </f:entry>
+    </f:optionalBlock>
+
+    <f:optionalBlock name="deviceLocation" title="Specify Device Location." checked="${instance.deviceLocation}" inline="true">
+      <f:entry title="Device Latitude" field="deviceLatitude" description="[Optional] The Latitude of the device to be tested. Defaluts to be 47.6204." >
+        <f:textbox default="47.6204"/>
+      </f:entry>
+
+      <f:entry title="Device Longitude" field="deviceLongitude" description="[Optional] The Longitude of the device to be tested. Defaluts to be -122.3491.">
+        <f:textbox default="-122.3941"/>
+      </f:entry>
+    </f:optionalBlock>
+
+
+
+  </f:section>
+
+
+  <f:section title="Execution Information">
+    <f:entry title="Execution Timeout " field="jobTimeoutMinutes" description="[Optional] Limit the maximum number of device minutes that your run can use. Should be in the range [5, 60]. requiredDefaults to be 60 minutes.">
+      <f:textbox field="jobTimeoutMinutes" name="jobTimeoutMinutes" default="60" style="width:30%" /> Minutes Per Device
+    </f:entry>
+  </f:section>
+
+
 </j:jelly>
