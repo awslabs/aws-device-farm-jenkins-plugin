@@ -1,18 +1,33 @@
+//
+// Copyright 2015-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License").
+// You may not use this file except in compliance with the License.
+// A copy of the License is located at
+//
+// http://aws.amazon.com/apache2.0
+//
+// or in the "license" file accompanying this file. This file is distributed
+// on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+// express or implied. See the License for the specific language governing
+// permissions and limitations under the License.
+//
 package org.jenkinsci.plugins.awsdevicefarm;
 
-import java.util.ArrayList;
-import hudson.model.Action;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.Action;
 import hudson.util.ChartUtil;
 import hudson.util.Graph;
-import java.io.IOException;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
+import java.io.IOException;
+import java.util.ArrayList;
+
 /**
  * AWS Device Farm specific action tied to a Jenkins project.
- * 
+ * <p>
  * This class is used for the top-level project view of your project if it is configured to use AWS Device Farm. It is
  * responsible for serving up the project level graph (for all AWS Device Farm builds) as well as providing results for
  * the most recent AWS Device Farm runs.
@@ -22,14 +37,16 @@ public class AWSDeviceFarmProjectAction implements Action {
 
     /**
      * Create new AWS Device Farm project action.
+     *
      * @param project The Project which this action will be applied to.
      */
     public AWSDeviceFarmProjectAction(AbstractProject<?, ?> project) {
         this.project = project;
     }
-    
+
     /**
      * Get project associated with this action.
+     *
      * @return The project.
      */
     public AbstractProject<?, ?> getProject() {
@@ -38,14 +55,16 @@ public class AWSDeviceFarmProjectAction implements Action {
 
     /**
      * Returns true if there are any builds in the associated project.
+     *
      * @return Whether or not the graph should be displayed.
      */
     public boolean shouldDisplayGraph() {
         return AWSDeviceFarmUtils.previousAWSDeviceFarmBuildAction(project) != null;
     }
-    
+
     /**
      * Return the action of last build associated with AWS Device Farm.
+     *
      * @return The most recent build with AWS Device Farm or null.
      */
     public AWSDeviceFarmTestResultAction getLastBuildAction() {
@@ -54,6 +73,7 @@ public class AWSDeviceFarmProjectAction implements Action {
 
     /**
      * Return the action of all previous builds associated with AWS Device Farm.
+     *
      * @return An ArrayList of all AWS Device Farm build actions for this project.
      */
     public ArrayList<AWSDeviceFarmTestResultAction> getLastBuildActions() {
@@ -62,6 +82,7 @@ public class AWSDeviceFarmProjectAction implements Action {
 
     /**
      * Return the actions of 'n' previous builds associated with AWS Device Farm.
+     *
      * @param n Number of previous builds to get.
      * @return An ArrayList of the previous builds.
      */
@@ -72,7 +93,8 @@ public class AWSDeviceFarmProjectAction implements Action {
 
     /**
      * Serve up AWS Device Farm project page which redirects to the latest test results or 404.
-     * @param request The request object.
+     *
+     * @param request  The request object.
      * @param response The response object.
      * @throws IOException
      */
@@ -81,8 +103,7 @@ public class AWSDeviceFarmProjectAction implements Action {
         AbstractBuild<?, ?> prev = AWSDeviceFarmUtils.previousAWSDeviceFarmBuild(project);
         if (prev == null) {
             response.sendRedirect2("404");
-        }
-        else {
+        } else {
             // Redirect to build page of most recent AWS Device Farm test run.
             response.sendRedirect2(String.format("../%d/%s", prev.getNumber(), getUrlName()));
         }
@@ -90,7 +111,8 @@ public class AWSDeviceFarmProjectAction implements Action {
 
     /**
      * Return trend graph of all AWS Device Farm results for this project.
-     * @param request The request object.
+     *
+     * @param request  The request object.
      * @param response The response object.
      * @throws IOException
      */
@@ -119,6 +141,7 @@ public class AWSDeviceFarmProjectAction implements Action {
 
     /**
      * Get the icon file name.
+     *
      * @return The path to the icon.
      */
     public String getIconFileName() {
@@ -128,6 +151,7 @@ public class AWSDeviceFarmProjectAction implements Action {
 
     /**
      * Get the display name.
+     *
      * @return The display name.
      */
     public String getDisplayName() {
@@ -136,6 +160,7 @@ public class AWSDeviceFarmProjectAction implements Action {
 
     /**
      * Get the URL name.
+     *
      * @return The URL name.
      */
     public String getUrlName() {
