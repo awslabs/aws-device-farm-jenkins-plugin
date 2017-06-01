@@ -5,12 +5,14 @@ package org.jenkinsci.plugins.awsdevicefarm.test;
  */
 public final class XCTestTest {
     private final String tests;
+    private final String filter;
 
     /**
      * Static builder class.
      */
     public static class Builder {
         private String tests;
+        private String filter;
 
         /**
          * Test setter.
@@ -19,6 +21,16 @@ public final class XCTestTest {
          */
         public Builder withTests(String tests) {
             this.tests = tests;
+            return this;
+        }
+
+        /**
+         * Filter setter.
+         * @param filter The filter to use on tests.
+         * @return The builder object.
+         */
+        public Builder withFilter(String filter) {
+            this.filter = filter;
             return this;
         }
 
@@ -37,6 +49,7 @@ public final class XCTestTest {
      */
     private XCTestTest(Builder builder) {
         this.tests = builder.tests;
+        this.filter = builder.filter;
     }
 
     /**
@@ -45,5 +58,13 @@ public final class XCTestTest {
      */
     public String getTests() {
         return this.tests;
+    }
+
+    /**
+     * Filter getter.
+     * @return The filter to use on tests.
+     */
+    public String getFilter() {
+        return this.filter;
     }
 }

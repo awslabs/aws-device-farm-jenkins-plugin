@@ -15,7 +15,7 @@
   </f:entry>
 
   <f:entry>
-    <f:checkbox name="ifWebApp" title="It is a web application." checked="${instance.ifWebApp}"/>
+    <f:checkbox name="ifWebApp" title="It is a web application." checked="${instance.ifWebApp}" inline="true"/>
   </f:entry>
   
   <f:entry title="Run Name" field="runName" description="[Optional] Name of your AWS Device Farm Run. Defaults to Environment variable BUILD_TAG.">
@@ -146,12 +146,18 @@
         <f:entry title="Tests" field="xctestArtifact" description="[Required] Pattern to find XCTest tests.">
           <f:textbox />
         </f:entry>
+        <f:entry title="Test Filter" field="xctestFilter" description="[Optional] Click help icon to see details.">
+          <f:textbox />
+        </f:entry>
       </f:nested>
     </f:radioBlock>
     
     <f:radioBlock name="testToRun" value="XCTEST_UI" checked="${instance.isTestType('XCTEST_UI')}" title="XCTest UI" inline="true">
       <f:nested>
         <f:entry title="Tests" field="xctestUiArtifact" description="[Required] Pattern to find XCTest UI tests.">
+          <f:textbox />
+        </f:entry>
+        <f:entry title="Test Filter" field="xctestuiFilter" description="[Optional] Click help icon to see details.">
           <f:textbox />
         </f:entry>
       </f:nested>
@@ -196,16 +202,37 @@
       </f:entry>
     </f:optionalBlock>
 
-
-
+    <f:optionalBlock name="extraData" title="Add Extra Data." checked="${instance.extraData}" inline="true">
+      <f:entry title="Extra Data" field="extraDataArtifact" description="[Optional] Pattern to a .zip file to be extracted before your app is tested." >
+        <f:textbox />
+      </f:entry>
+    </f:optionalBlock>
   </f:section>
 
-
   <f:section title="Execution Information">
-    <f:entry title="Execution Timeout " field="jobTimeoutMinutes" description="[Optional] Limit the maximum number of device minutes that your run can use. Should be in the range [5, 60]. requiredDefaults to be 60 minutes.">
+    <f:entry title="Execution Timeout" field="jobTimeoutMinutes" description="[Optional] Limit the maximum number of device minutes that your run can use. Should be in the range [5, 60]. requiredDefaults to be 60 minutes.">
       <f:textbox field="jobTimeoutMinutes" name="jobTimeoutMinutes" default="60" style="width:30%" /> Minutes Per Device
     </f:entry>
   </f:section>
 
+  <f:section title="Execution Configuration">
+  <f:entry>
+    <f:repeatable var="executionConfiguration" items="${instance.executionConfiguration}" minimum="0" noAddButton="false">
+      <table width="100%">
+        <f:entry >
+          Name:<f:textbox name="jason.name" value="${executionConfiguration.name}" style="width:40%"  />Value:<f:textbox name="json.value" value="${executionConfiguration.value}" style="width:40%" />
+        </f:entry>
 
-</j:jelly>
+        <f:entry>
+          <div align="right">
+            <input type="button" value="${%Delete Configuration}" class="repeatable-delete show-if-only" style="margin-left: 1em;" /><br/>
+          </div>
+        </f:entry>
+      </table>
+    </f:repeatable>
+  </f:entry>
+
+  </f:section>
+
+
+        </j:jelly>

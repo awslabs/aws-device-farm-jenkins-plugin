@@ -454,6 +454,7 @@ public class AWSDeviceFarm {
                     break;
                 }
                 else if ("FAILED".equalsIgnoreCase(status)) {
+                    writeToLog(String.format("(Error Message: ) %s)", describeUploadResult.getUpload().getMetadata()));
                     throw new AWSDeviceFarmException(String.format("Upload %s failed!", upload.getName()));
                 }
                 else {

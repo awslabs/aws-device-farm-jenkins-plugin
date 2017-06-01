@@ -1,4 +1,4 @@
-@import url("font-awesome/css/font-awesome.css")
+@import url("${resURL}/plugin/aws-device-farm/font-awesome/css/font-awesome.css")
 /*
 @font-face {
     font-family: "foundation-icons";

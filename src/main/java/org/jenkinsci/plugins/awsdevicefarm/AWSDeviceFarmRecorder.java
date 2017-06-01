@@ -94,9 +94,11 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
     // XCTest
     public String xctestArtifact;
+    public String xctestFilter;
 
     // XCTest UI
     public String xctestUiArtifact;
+    public String xctestUiFilter;
 
     //// Fields not populated by the JSON binder.
     public PrintStream log;
@@ -116,7 +118,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
     private static final String APPIUM_VERSION_1_4_16 = "1.4.16";
 
-    //Device Stats Specification
+    //Device States Specification
     public Boolean extraData;
     public String extraDataArtifact;
 
@@ -132,6 +134,9 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
     public Integer jobTimeoutMinutes;
 
+    //Execution Configuration
+    public
+
     /**
      * The Device Farm recorder class for running post-build steps on Jenkins.
      * @param projectName The name of the Device Farm project.
@@ -145,34 +150,36 @@ public class AWSDeviceFarmRecorder extends Recorder {
      * @param seed The initial seed of fuzz events.
      * @param username username to use if explorer encounters a login form.
      * @param password password to use if explorer encounters a login form.
-     * @param appiumJavaJUnitTest
-     * @param appiumJavaTestNGTest
-     * @param appiumPythonTest
+     * @param appiumJavaJUnitTest The path to the Appium Java Junit tests.
+     * @param appiumJavaTestNGTest The path to the Appium Java tests.
+     * @param appiumPythonTest The path to the Appium python tests.
      * @param calabashFeatures The path to the Calabash tests to be run.
      * @param calabashTags Calabash tags to attach to the test.
      * @param calabashProfile Calabash Profile to attach to the test.
      * @param junitArtifact The path to the Instrumentation JUnit tests.
      * @param junitFilter The filter to apply to the Instrumentation JUnit tests.
      * @param uiautomatorArtifact The path to the UI Automator tests to be run.
-     * @param uiautomatorFilter
+     * @param uiautomatorFilter The filter to apply to the UI Automator tests.
      * @param uiautomationArtifact The path to the UI Automation tests to be run.
      * @param xctestArtifact The path to the XCTest tests to be run.
+     * @param xctestFilter The filter to apply to the XCTest tests.
      * @param xctestUiArtifact The path to the XCTest UI tests to be run.
-     * @param appiumVersion_junit
-     * @param appiumVersion_python
-     * @param appiumVersion_testng
-     * @param ifWebApp
-     * @param extraData
-     * @param extraDataArtifact
-     * @param deviceLocation
-     * @param deviceLatitude
-     * @param deviceLongitude
-     * @param radioDetails
+     * @param xctestUiFilter The filter to apply to the XCTest UI tests.
+     * @param appiumVersion_junit The version of the Appium used for Appium Junit tests.
+     * @param appiumVersion_python The version of the Appium used for Appium Python tests.
+     * @param appiumVersion_testng The version of the Appium used for Appoum Testing tests.
+     * @param ifWebApp True when it is a web app.
+     * @param extraData True when it has extra data.
+     * @param extraDataArtifact The path to the extra data.
+     * @param deviceLocation True when device location is specified.
+     * @param deviceLatitude The specified device latitude.
+     * @param deviceLongitude The specified device longitude.
+     * @param radioDetails True when the radio details are specified.
      * @param ifWifi
      * @param ifNfc
      * @param ifGPS
      * @param ifBluetooth
-     * @param jobTimeoutMinutes
+     * @param jobTimeoutMinutes The max execute time per job.
      */
     @DataBoundConstructor
     @SuppressWarnings("unused")
@@ -200,7 +207,9 @@ public class AWSDeviceFarmRecorder extends Recorder {
                                  String uiautomatorFilter,
                                  String uiautomationArtifact,
                                  String xctestArtifact,
+                                 String xctestFilter,
                                  String xctestUiArtifact,
+                                 String xctestUiFilter,
                                  String appiumVersion_junit,
                                  String appiumVersion_python,
                                  String appiumVersion_testng,
@@ -240,7 +249,9 @@ public class AWSDeviceFarmRecorder extends Recorder {
         this.uiautomatorFilter = uiautomatorFilter;
         this.uiautomationArtifact = uiautomationArtifact;
         this.xctestArtifact = xctestArtifact;
+        this.xctestFilter = xctestFilter;
         this.xctestUiArtifact = xctestUiArtifact;
+        this.xctestUiFilter = xctestUiFilter;
         this.ignoreRunError = ignoreRunError;
         this.appiumVersion_junit = appiumVersion_junit;
         this.appiumVersion_python = appiumVersion_python;
@@ -798,7 +809,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
              
                 break;
             }
-            
+
             case UIAUTOMATION: {
                 UIAutomationTest test = new UIAutomationTest.Builder()
                         .withTests(uiautomationArtifact)
@@ -815,12 +826,14 @@ public class AWSDeviceFarmRecorder extends Recorder {
             case XCTEST: {
                 XCTestTest test = new XCTestTest.Builder()
                         .withTests(xctestArtifact)
+                        .withFilter(xctestFilter)
                         .build();
 
                 Upload upload = adf.uploadTest(project, test);
 
                 testToSchedule = new ScheduleRunTest()
                         .withType(testType)
+                        .withFilter(test.getFilter())
                         .withTestPackageArn(upload.getArn());
                 break;
              }
@@ -834,6 +847,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
                 testToSchedule = new ScheduleRunTest()
                         .withType(testType)
+                        .withFilter(test.getFilter())
                         .withTestPackageArn(upload.getArn());
                 break;
              }
