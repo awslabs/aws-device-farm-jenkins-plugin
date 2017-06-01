@@ -1,10 +1,51 @@
+//
+// Copyright 2015-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License").
+// You may not use this file except in compliance with the License.
+// A copy of the License is located at
+//
+// http://aws.amazon.com/apache2.0
+//
+// or in the "license" file accompanying this file. This file is distributed
+// on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+// express or implied. See the License for the specific language governing
+// permissions and limitations under the License.
+//
 package org.jenkinsci.plugins.awsdevicefarm;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
 import com.amazonaws.services.devicefarm.AWSDeviceFarmClient;
-import com.amazonaws.services.devicefarm.model.*;
+import com.amazonaws.services.devicefarm.model.AccountSettings;
+import com.amazonaws.services.devicefarm.model.ArtifactCategory;
+import com.amazonaws.services.devicefarm.model.CreateUploadRequest;
+import com.amazonaws.services.devicefarm.model.DevicePool;
+import com.amazonaws.services.devicefarm.model.GetAccountSettingsRequest;
+import com.amazonaws.services.devicefarm.model.GetRunRequest;
+import com.amazonaws.services.devicefarm.model.GetRunResult;
+import com.amazonaws.services.devicefarm.model.GetUploadRequest;
+import com.amazonaws.services.devicefarm.model.GetUploadResult;
+import com.amazonaws.services.devicefarm.model.ListArtifactsRequest;
+import com.amazonaws.services.devicefarm.model.ListArtifactsResult;
+import com.amazonaws.services.devicefarm.model.ListDevicePoolsRequest;
+import com.amazonaws.services.devicefarm.model.ListDevicePoolsResult;
+import com.amazonaws.services.devicefarm.model.ListJobsRequest;
+import com.amazonaws.services.devicefarm.model.ListJobsResult;
+import com.amazonaws.services.devicefarm.model.ListProjectsRequest;
+import com.amazonaws.services.devicefarm.model.ListProjectsResult;
+import com.amazonaws.services.devicefarm.model.ListSuitesRequest;
+import com.amazonaws.services.devicefarm.model.ListSuitesResult;
+import com.amazonaws.services.devicefarm.model.ListTestsRequest;
+import com.amazonaws.services.devicefarm.model.ListTestsResult;
+import com.amazonaws.services.devicefarm.model.NotFoundException;
+import com.amazonaws.services.devicefarm.model.Project;
+import com.amazonaws.services.devicefarm.model.ScheduleRunConfiguration;
+import com.amazonaws.services.devicefarm.model.ScheduleRunRequest;
+import com.amazonaws.services.devicefarm.model.ScheduleRunResult;
+import com.amazonaws.services.devicefarm.model.ScheduleRunTest;
+import com.amazonaws.services.devicefarm.model.Upload;
 import hudson.EnvVars;
 import hudson.FilePath;
 import org.apache.commons.lang.RandomStringUtils;
@@ -13,11 +54,21 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.jenkinsci.plugins.awsdevicefarm.test.*;
+import org.jenkinsci.plugins.awsdevicefarm.test.AppiumJavaJUnitTest;
+import org.jenkinsci.plugins.awsdevicefarm.test.AppiumJavaTestNGTest;
+import org.jenkinsci.plugins.awsdevicefarm.test.AppiumPythonTest;
+import org.jenkinsci.plugins.awsdevicefarm.test.CalabashTest;
+import org.jenkinsci.plugins.awsdevicefarm.test.InstrumentationTest;
+import org.jenkinsci.plugins.awsdevicefarm.test.UIAutomationTest;
+import org.jenkinsci.plugins.awsdevicefarm.test.UIAutomatorTest;
+import org.jenkinsci.plugins.awsdevicefarm.test.XCTestTest;
+import org.jenkinsci.plugins.awsdevicefarm.test.XCTestUITest;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * AWS Device Farm API wrapper class.
@@ -33,6 +84,7 @@ public class AWSDeviceFarm {
 
     /**
      * AWSDeviceFarm constructor.
+     *
      * @param roleArn Role ARN to use for authentication.
      */
     public AWSDeviceFarm(String roleArn) {
@@ -41,14 +93,18 @@ public class AWSDeviceFarm {
 
     /**
      * AWSDeviceFarm constructor.
+     *
      * @param creds AWSCredentials to use for authentication.
      */
-    public AWSDeviceFarm(AWSCredentials creds) { this(creds, null); }
+    public AWSDeviceFarm(AWSCredentials creds) {
+        this(creds, null);
+    }
 
     /**
      * Private AWSDeviceFarm constructor. Uses the roleArn to generate STS creds if the roleArn isn't null; otherwise
      * just uses the AWSCredentials creds.
-     * @param creds AWSCredentials creds to use for authentication.
+     *
+     * @param creds   AWSCredentials creds to use for authentication.
      * @param roleArn Role ARN to use for authentication.
      */
     private AWSDeviceFarm(AWSCredentials creds, String roleArn) {
@@ -68,6 +124,7 @@ public class AWSDeviceFarm {
 
     /**
      * Logger setter.
+     *
      * @param logger The log print stream.
      * @return The AWSDeviceFarm object.
      */
@@ -78,6 +135,7 @@ public class AWSDeviceFarm {
 
     /**
      * Workspace setter.
+     *
      * @param workspace The FilePath to the Jenkins workspace.
      * @return The AWSDeviceFarm object.
      */
@@ -88,6 +146,7 @@ public class AWSDeviceFarm {
 
     /**
      * Artifacts directory setter.
+     *
      * @param artifactsDir The FilePath to the Jenkins artifacts directory.
      * @return The AWSDeviceFarm object.
      */
@@ -98,6 +157,7 @@ public class AWSDeviceFarm {
 
     /**
      * Environment setter.
+     *
      * @param env The EnvVars Jenkins environment.
      * @return The AWSDeviceFarm object.
      */
@@ -110,20 +170,21 @@ public class AWSDeviceFarm {
 
     /**
      * Get all Device Farm projects.
+     *
      * @return A List of the Device Farm projects.
      */
     public List<Project> getProjects() {
         ListProjectsResult result = api.listProjects(new ListProjectsRequest());
         if (result == null) {
             return new ArrayList<Project>();
-        }
-        else {
+        } else {
             return result.getProjects();
         }
     }
 
     /**
      * Get Device Farm project by name.
+     *
      * @param projectName String name of the Device Farm project.
      * @return The Device Farm project.
      * @throws AWSDeviceFarmException
@@ -139,6 +200,7 @@ public class AWSDeviceFarm {
 
     /**
      * Get Device Farm device pools for a given Device Farm project.
+     *
      * @param projectName String name of the Device Farm project.
      * @return A List of the Device Farm device pools.
      * @throws AWSDeviceFarmException
@@ -149,6 +211,7 @@ public class AWSDeviceFarm {
 
     /**
      * Get Device Farm device pools for a given Device Farm project.
+     *
      * @param project Device Farm Project.
      * @return A List of the Device Farm device pools.
      * @throws AWSDeviceFarmException
@@ -161,7 +224,8 @@ public class AWSDeviceFarm {
 
     /**
      * Get Device Farm device pool by Device Farm project and device pool name.
-     * @param projectName String name of the Device Farm project.
+     *
+     * @param projectName    String name of the Device Farm project.
      * @param devicePoolName String name of the device pool.
      * @return The Device Farm device pool.
      * @throws AWSDeviceFarmException
@@ -172,7 +236,8 @@ public class AWSDeviceFarm {
 
     /**
      * Get Device Farm device pool by Device Farm project and device pool name.
-     * @param project The Device Farm project.
+     *
+     * @param project        The Device Farm project.
      * @param devicePoolName String name of the device pool.
      * @return The Device Farm device pool.
      * @throws AWSDeviceFarmException
@@ -191,7 +256,8 @@ public class AWSDeviceFarm {
 
     /**
      * Upload an app to Device Farm to be tested.
-     * @param project The Device Farm project to upload to.
+     *
+     * @param project     The Device Farm project to upload to.
      * @param appArtifact String path to the app to be uploaded to Device Farm.
      * @return The Device Farm Upload object.
      * @throws IOException
@@ -203,8 +269,7 @@ public class AWSDeviceFarm {
             type = AWSDeviceFarmUploadType.ANDROID_APP;
         } else if (appArtifact.toLowerCase().endsWith("ipa") || appArtifact.toLowerCase().endsWith("zip")) {
             type = AWSDeviceFarmUploadType.IOS_APP;
-        }
-        else {
+        } else {
             throw new AWSDeviceFarmException(String.format("Unknown app artifact to upload: %s", appArtifact));
         }
 
@@ -233,8 +298,9 @@ public class AWSDeviceFarm {
 
     /**
      * Upload a test to Device Farm.
+     *
      * @param project The Device Farm project to upload to.
-     * @param test Test object containing relevant test information.
+     * @param test    Test object containing relevant test information.
      * @return The Device Farm Upload object.
      * @throws IOException
      * @throws AWSDeviceFarmException
@@ -245,8 +311,9 @@ public class AWSDeviceFarm {
 
     /**
      * Upload a test to Device Farm.
+     *
      * @param project The Device Farm project to upload to.
-     * @param test Test object containing relevant test information.
+     * @param test    Test object containing relevant test information.
      * @return The Device Farm Upload object.
      * @throws IOException
      * @throws AWSDeviceFarmException
@@ -257,8 +324,9 @@ public class AWSDeviceFarm {
 
     /**
      * Upload a test to Device Farm.
+     *
      * @param project The Device Farm project to upload to.
-     * @param test Test object containing relevant test information.
+     * @param test    Test object containing relevant test information.
      * @return The Device Farm Upload object.
      * @throws IOException
      * @throws AWSDeviceFarmException
@@ -266,11 +334,12 @@ public class AWSDeviceFarm {
     public Upload uploadTest(Project project, UIAutomatorTest test) throws InterruptedException, IOException, AWSDeviceFarmException {
         return upload(project, test.getTests(), AWSDeviceFarmUploadType.UIAUTOMATOR);
     }
-    
+
     /**
      * Upload a test to Device Farm.
+     *
      * @param project The Device Farm project to upload to.
-     * @param test Test object containing relevant test information.
+     * @param test    Test object containing relevant test information.
      * @return The Device Farm Upload object.
      * @throws IOException
      * @throws AWSDeviceFarmException
@@ -278,11 +347,12 @@ public class AWSDeviceFarm {
     public Upload uploadTest(Project project, UIAutomationTest test) throws InterruptedException, IOException, AWSDeviceFarmException {
         return upload(project, test.getTests(), AWSDeviceFarmUploadType.UIAUTOMATION);
     }
-    
+
     /**
      * Upload a test to Device Farm.
+     *
      * @param project The Device Farm project to upload to.
-     * @param test Test object containing relevant test information.
+     * @param test    Test object containing relevant test information.
      * @return The Device Farm Upload object.
      * @throws IOException
      * @throws AWSDeviceFarmException
@@ -290,11 +360,12 @@ public class AWSDeviceFarm {
     public Upload uploadTest(Project project, XCTestTest test) throws InterruptedException, IOException, AWSDeviceFarmException {
         return upload(project, test.getTests(), AWSDeviceFarmUploadType.XCTEST);
     }
-    
+
     /**
      * Upload a test to Device Farm.
+     *
      * @param project The Device Farm project to upload to.
-     * @param test Test object containing relevant test information.
+     * @param test    Test object containing relevant test information.
      * @return The Device Farm Upload object.
      * @throws IOException
      * @throws AWSDeviceFarmException
@@ -305,8 +376,9 @@ public class AWSDeviceFarm {
 
     /**
      * Upload a test to Device Farm.
+     *
      * @param project The Device Farm project to upload to.
-     * @param test Test object containing relevant test information.
+     * @param test    Test object containing relevant test information.
      * @return The Device Farm Upload object.
      * @throws IOException
      * @throws AWSDeviceFarmException
@@ -317,8 +389,9 @@ public class AWSDeviceFarm {
 
     /**
      * Upload a test to Device Farm.
+     *
      * @param project The Device Farm project to upload to.
-     * @param test Test object containing relevant test information.
+     * @param test    Test object containing relevant test information.
      * @return The Device Farm Upload object.
      * @throws IOException
      * @throws AWSDeviceFarmException
@@ -326,11 +399,12 @@ public class AWSDeviceFarm {
     public Upload uploadTest(Project project, AppiumJavaJUnitTest test) throws InterruptedException, IOException, AWSDeviceFarmException {
         return upload(project, test.getTests(), AWSDeviceFarmUploadType.APPIUM_JAVA_JUNIT);
     }
-    
+
     /**
      * Upload a test to Device Farm.
+     *
      * @param project The Device Farm project to upload to.
-     * @param test Test object containing relevant test information.
+     * @param test    Test object containing relevant test information.
      * @return The Device Farm Upload object.
      * @throws IOException
      * @throws AWSDeviceFarmException
@@ -378,8 +452,9 @@ public class AWSDeviceFarm {
 
     /**
      * Private method to handle uploading apps and tests to Device Farm.
-     * @param project The Device Farm project to upload to.
-     * @param artifact Possibly glob-y path to the file to be uploaded.
+     *
+     * @param project    The Device Farm project to upload to.
+     * @param artifact   Possibly glob-y path to the file to be uploaded.
      * @param uploadType The type of upload (app/test/etc.).
      * @return The Device Farm Upload object.
      * @throws IOException
@@ -400,8 +475,9 @@ public class AWSDeviceFarm {
 
     /**
      * Private method to handle uploading apps and tests to Device Farm.
-     * @param file The file to upload.
-     * @param project The Device Farm project to upload to.
+     *
+     * @param file       The file to upload.
+     * @param project    The Device Farm project to upload to.
      * @param uploadType The type of upload (app/test/etc.).
      * @return The Device Farm Upload object.
      * @throws IOException
@@ -413,9 +489,10 @@ public class AWSDeviceFarm {
 
     /**
      * Private method to handle upload apps and tests to Device Farm.
-     * @param file The file to upload.
-     * @param project TheDevice Farm project to upload to.
-     * @param uploadType The type of upload (app/test/etc.).
+     *
+     * @param file        The file to upload.
+     * @param project     TheDevice Farm project to upload to.
+     * @param uploadType  The type of upload (app/test/etc.).
      * @param synchronous Whether or not to wait for the upload to complete before returning.
      * @return The Device Farm Upload object.
      * @throws IOException
@@ -452,17 +529,19 @@ public class AWSDeviceFarm {
                 if ("SUCCEEDED".equalsIgnoreCase(status)) {
                     writeToLog(String.format("Upload %s succeeded", file.getName()));
                     break;
+<<<<<<< HEAD
                 }
                 else if ("FAILED".equalsIgnoreCase(status)) {
                     writeToLog(String.format("(Error Message: ) %s)", describeUploadResult.getUpload().getMetadata()));
+=======
+                } else if ("FAILED".equalsIgnoreCase(status)) {
+>>>>>>> upstream/master
                     throw new AWSDeviceFarmException(String.format("Upload %s failed!", upload.getName()));
-                }
-                else {
+                } else {
                     try {
                         writeToLog(String.format("Waiting for upload %s to be ready (current status: %s)", file.getName(), status));
                         Thread.sleep(5000);
-                    }
-                    catch (InterruptedException e) {
+                    } catch (InterruptedException e) {
                         writeToLog(String.format("Thread interrupted while waiting for the upload to complete"));
                         throw e;
                     }
@@ -475,11 +554,12 @@ public class AWSDeviceFarm {
 
     /**
      * Schedule a test run on Device Farm.
-     * @param projectArn The ARN of the Device Farm project to run the test on.
-     * @param name The name of the test run.
-     * @param appArn The ARN of the app to test.
+     *
+     * @param projectArn    The ARN of the Device Farm project to run the test on.
+     * @param name          The name of the test run.
+     * @param appArn        The ARN of the app to test.
      * @param devicePoolArn The ARN of the device pool to test against.
-     * @param test The run test.
+     * @param test          The run test.
      * @param configuration The run configuration.
      * @return The result of the schedle run.
      */
@@ -521,6 +601,7 @@ public class AWSDeviceFarm {
 
     /**
      * Gets a local File instance of a glob file pattern, pulling it from a slave if necessary.
+     *
      * @param pattern Glob pattern to find artifacts
      * @return File found by the glob.
      */
@@ -534,8 +615,7 @@ public class AWSDeviceFarm {
             FilePath[] matches = workspace.list(pattern);
             if (matches == null || matches.length == 0) {
                 throw new AWSDeviceFarmException(String.format("No Artifacts found using pattern '%s'", pattern));
-            }
-            else if (matches.length != 1) {
+            } else if (matches.length != 1) {
                 StringBuilder msg = new StringBuilder(String.format("More than one match found for pattern '%s':", pattern));
                 for (FilePath fp : matches) {
                     msg.append(String.format("\n\t%s", fp.getRemote()));
@@ -551,11 +631,9 @@ public class AWSDeviceFarm {
             FilePath localArtifact = new FilePath(artifactsDir, artifact.getName());
             artifact.copyTo(localArtifact);
             return new File(localArtifact.getRemote());
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new AWSDeviceFarmException(String.format("Unable to find artifact %s", e.toString()));
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             throw new AWSDeviceFarmException(String.format("Unable to find artifact %s", e.toString()));
         }
     }
@@ -601,7 +679,7 @@ public class AWSDeviceFarm {
         }
     }
 
-    public String getOs(String appArtifact) throws AWSDeviceFarmException  {
+    public String getOs(String appArtifact) throws AWSDeviceFarmException {
         if (appArtifact.toLowerCase().endsWith("apk")) {
             return "Android";
         } else if (appArtifact.toLowerCase().endsWith("ipa")) {
@@ -624,6 +702,7 @@ public class AWSDeviceFarm {
 
     /**
      * Stupid log helper.
+     *
      * @param message The message to log.
      */
     private void writeToLog(String message) {

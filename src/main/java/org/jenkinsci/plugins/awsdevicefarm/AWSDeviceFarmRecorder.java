@@ -1,25 +1,48 @@
+//
+// Copyright 2015-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License").
+// You may not use this file except in compliance with the License.
+// A copy of the License is located at
+//
+// http://aws.amazon.com/apache2.0
+//
+// or in the "license" file accompanying this file. This file is distributed
+// on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+// express or implied. See the License for the specific language governing
+// permissions and limitations under the License.
+//
 package org.jenkinsci.plugins.awsdevicefarm;
 
-import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-
 import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.services.devicefarm.model.*;
-
-import hudson.model.Result;
+import com.amazonaws.services.devicefarm.model.Artifact;
+import com.amazonaws.services.devicefarm.model.ArtifactCategory;
+import com.amazonaws.services.devicefarm.model.BillingMethod;
+import com.amazonaws.services.devicefarm.model.DevicePool;
+import com.amazonaws.services.devicefarm.model.Job;
+import com.amazonaws.services.devicefarm.model.ListArtifactsResult;
+import com.amazonaws.services.devicefarm.model.ListJobsResult;
+import com.amazonaws.services.devicefarm.model.ListSuitesResult;
+import com.amazonaws.services.devicefarm.model.ListTestsResult;
+import com.amazonaws.services.devicefarm.model.Location;
+import com.amazonaws.services.devicefarm.model.Project;
+import com.amazonaws.services.devicefarm.model.Radios;
+import com.amazonaws.services.devicefarm.model.ScheduleRunConfiguration;
+import com.amazonaws.services.devicefarm.model.ScheduleRunResult;
+import com.amazonaws.services.devicefarm.model.ScheduleRunTest;
+import com.amazonaws.services.devicefarm.model.Suite;
+import com.amazonaws.services.devicefarm.model.Test;
+import com.amazonaws.services.devicefarm.model.TestType;
+import com.amazonaws.services.devicefarm.model.Upload;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.Action;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.Action;
 import hudson.model.BuildListener;
+import hudson.model.Result;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
@@ -27,15 +50,36 @@ import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import hudson.util.IOUtils;
 import hudson.util.ListBoxModel;
-
+import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import org.jenkinsci.plugins.awsdevicefarm.test.*;
+import org.jenkinsci.plugins.awsdevicefarm.test.AppiumJavaJUnitTest;
+import org.jenkinsci.plugins.awsdevicefarm.test.AppiumJavaTestNGTest;
+import org.jenkinsci.plugins.awsdevicefarm.test.AppiumPythonTest;
+import org.jenkinsci.plugins.awsdevicefarm.test.CalabashTest;
+import org.jenkinsci.plugins.awsdevicefarm.test.InstrumentationTest;
+import org.jenkinsci.plugins.awsdevicefarm.test.UIAutomationTest;
+import org.jenkinsci.plugins.awsdevicefarm.test.UIAutomatorTest;
+import org.jenkinsci.plugins.awsdevicefarm.test.XCTestTest;
+import org.jenkinsci.plugins.awsdevicefarm.test.XCTestUITest;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
-import net.sf.json.JSONObject;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Post-build step for running tests on AWS Device Farm.
@@ -72,7 +116,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
     // Appium Java TestNG
     public String appiumJavaTestNGTest;
-    
+
     // Appium Python
     public String appiumPythonTest;
 
@@ -88,7 +132,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
     // UIAutomator
     public String uiautomatorArtifact;
     public String uiautomatorFilter;
-    
+
     // uiautomation
     public String uiautomationArtifact;
 
@@ -139,6 +183,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
     /**
      * The Device Farm recorder class for running post-build steps on Jenkins.
+<<<<<<< HEAD
      * @param projectName The name of the Device Farm project.
      * @param devicePoolName The name of the Device Farm device pool.
      * @param appArtifact The path to the app to be tested.
@@ -180,6 +225,33 @@ public class AWSDeviceFarmRecorder extends Recorder {
      * @param ifGPS
      * @param ifBluetooth
      * @param jobTimeoutMinutes The max execute time per job.
+=======
+     *
+     * @param projectName          The name of the Device Farm project.
+     * @param devicePoolName       The name of the Device Farm device pool.
+     * @param appArtifact          The path to the app to be tested.
+     * @param runName              The name of the run.
+     * @param testToRun            The type of test to be run.
+     * @param storeResults         Download the results to a local archive.
+     * @param eventCount           The number of fuzz events to run.
+     * @param eventThrottle        The the fuzz event throttle count.
+     * @param seed                 The initial seed of fuzz events.
+     * @param username             username to use if explorer encounters a login form.
+     * @param password             password to use if explorer encounters a login form.
+     * @param appiumJavaJUnitTest
+     * @param appiumJavaTestNGTest
+     * @param appiumPythonTest
+     * @param calabashFeatures     The path to the Calabash tests to be run.
+     * @param calabashTags         Calabash tags to attach to the test.
+     * @param calabashProfile      Calabash Profile to attach to the test.
+     * @param junitArtifact        The path to the Instrumentation JUnit tests.
+     * @param junitFilter          The filter to apply to the Instrumentation JUnit tests.
+     * @param uiautomatorArtifact  The path to the UI Automator tests to be run.
+     * @param uiautomatorFilter
+     * @param uiautomationArtifact The path to the UI Automation tests to be run.
+     * @param xctestArtifact       The path to the XCTest tests to be run.
+     * @param xctestUiArtifact     The path to the XCTest UI tests to be run.
+>>>>>>> upstream/master
      */
     @DataBoundConstructor
     @SuppressWarnings("unused")
@@ -209,6 +281,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
                                  String xctestArtifact,
                                  String xctestFilter,
                                  String xctestUiArtifact,
+<<<<<<< HEAD
                                  String xctestUiFilter,
                                  String appiumVersion_junit,
                                  String appiumVersion_python,
@@ -226,6 +299,9 @@ public class AWSDeviceFarmRecorder extends Recorder {
                                  Boolean ifNfc,
                                  Integer jobTimeoutMinutes,
                                  Boolean ignoreRunError ) {
+=======
+                                 Boolean ignoreRunError) {
+>>>>>>> upstream/master
         this.projectName = projectName;
         this.devicePoolName = devicePoolName;
         this.appArtifact = appArtifact;
@@ -284,18 +360,17 @@ public class AWSDeviceFarmRecorder extends Recorder {
             System.out.println("Downloading service icon!");
             try {
                 FileUtils.copyURLToFile(new URL("http://g-ecx.images-amazon.com/images/G/01/aws-device-farm/service-icon.svg"), pluginIcon);
-            }
-            catch (MalformedURLException e) {
+            } catch (MalformedURLException e) {
                 e.printStackTrace();
-            }
-            catch (IOException e) {
-            	 e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
 
     /**
      * Convert the test type String to TestType.
+     *
      * @param testTypeName The String representation of the test type.
      * @return The TestType.
      */
@@ -305,6 +380,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
     /**
      * Test if the test type names match (for marking the radio button).
+     *
      * @param testTypeName The String representation of the test type.
      * @return Whether or not the test type string matches.
      */
@@ -317,7 +393,8 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
     /**
      * Perform the post-build test action.
-     * @param build The build to follow.
+     *
+     * @param build    The build to follow.
      * @param launcher The launcher.
      * @param listener The build launcher.
      * @return Whether or not the post-build action succeeded.
@@ -451,8 +528,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
             String runArn = run.getRun().getArn();
             try {
                 writeToLog(String.format("View the %s run in the AWS Device Farm Console: %s", testType, AWSDeviceFarmUtils.getRunUrlFromArn(runArn)));
-            }
-            catch (ArrayIndexOutOfBoundsException e) {
+            } catch (ArrayIndexOutOfBoundsException e) {
                 writeToLog(String.format("Could not parse project ID and run ID from run ARN: %s", runArn));
             }
 
@@ -496,8 +572,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
             // Set Jenkins build result based on AWS Device Farm test result.
             build.setResult(action.getBuildResult(ignoreRunError));
-        }
-        catch (AWSDeviceFarmException e) {
+        } catch (AWSDeviceFarmException e) {
             writeToLog(e.getMessage());
             return false;
         }
@@ -563,9 +638,9 @@ public class AWSDeviceFarmRecorder extends Recorder {
         String components[] = runArn.split(":");
         // constructing job ARN for each job using the run ARN
         components[5] = "job";
-        for(String jobArn:jobs.keySet()) {
+        for (String jobArn : jobs.keySet()) {
             components[6] = jobArn;
-            String fullJobArn = StringUtils.join(components,":");
+            String fullJobArn = StringUtils.join(components, ":");
             ListSuitesResult result = adf.listSuites(fullJobArn);
             for (Suite suite : result.getSuites()) {
                 String arn = suite.getArn().split(":")[6];
@@ -614,8 +689,9 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
     /**
      * Schedule a test run.
-     * @param env The Jenkins environment to use.
-     * @param adf The AWS Device Farm.
+     *
+     * @param env     The Jenkins environment to use.
+     * @param adf     The AWS Device Farm.
      * @param project The project.
      * @return A list of all of the run tests scheduled.
      * @throws IOException
@@ -693,9 +769,9 @@ public class AWSDeviceFarmRecorder extends Recorder {
                 testToSchedule.addParametersEntry("appium_version", appiumVersion_testng);
                 break;
             }
-            
+
             case APPIUM_PYTHON: {
-            	AppiumPythonTest test = new AppiumPythonTest.Builder()
+                AppiumPythonTest test = new AppiumPythonTest.Builder()
                         .withTests(env.expand(appiumPythonTest))
                         .build();
 
@@ -709,6 +785,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
                 break;
             }
 
+<<<<<<< HEAD
             case APPIUM_WEB_JAVA_JUNIT: {
                 AppiumWebJavaJUnitTest test = new AppiumWebJavaJUnitTest.Builder()
                         .withTests(env.expand(appiumJavaJUnitTest))
@@ -754,6 +831,8 @@ public class AWSDeviceFarmRecorder extends Recorder {
                 break;
             }
 
+=======
+>>>>>>> upstream/master
             case CALABASH: {
                 CalabashTest test = new CalabashTest.Builder()
                         .withFeatures(env.expand(calabashFeatures))
@@ -784,7 +863,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
                         .build();
 
                 Upload upload = adf.uploadTest(project, test);
-                
+
                 testToSchedule = new ScheduleRunTest()
                         .withType(testType)
                         .withTestPackageArn(upload.getArn())
@@ -800,13 +879,13 @@ public class AWSDeviceFarmRecorder extends Recorder {
                         .build();
 
                 Upload upload = adf.uploadTest(project, test);
-                
+
                 testToSchedule = new ScheduleRunTest()
                         .withType(testType)
                         .withTestPackageArn(upload.getArn())
                         .withParameters(new HashMap<String, String>())
                         .withFilter(test.getFilter());
-             
+
                 break;
             }
 
@@ -836,10 +915,10 @@ public class AWSDeviceFarmRecorder extends Recorder {
                         .withFilter(test.getFilter())
                         .withTestPackageArn(upload.getArn());
                 break;
-             }
-            
+            }
+
             case XCTEST_UI: {
-            	XCTestUITest test = new XCTestUITest.Builder()
+                XCTestUITest test = new XCTestUITest.Builder()
                         .withTests(xctestUiArtifact)
                         .build();
 
@@ -850,7 +929,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
                         .withFilter(test.getFilter())
                         .withTestPackageArn(upload.getArn());
                 break;
-             }
+            }
 
         }
 
@@ -859,6 +938,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
     /**
      * Validate top level configuration values.
+     *
      * @return Whether or not the configuration is valid.
      */
     private boolean validateConfiguration() {
@@ -897,6 +977,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
     /**
      * Validate user selected test type and additional configuration values.
+     *
      * @return Whether or not the test configuration is valid.
      */
     private boolean validateTestConfiguration() {
@@ -921,8 +1002,8 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
                 break;
             }
-            
-            case BUILTIN_EXPLORER : {
+
+            case BUILTIN_EXPLORER: {
                 break;
             }
 
@@ -943,7 +1024,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
                 break;
             }
-            
+
             case APPIUM_PYTHON: {
                 if (appiumPythonTest == null || appiumPythonTest.isEmpty()) {
                     writeToLog("Appium Python test must be set.");
@@ -1013,7 +1094,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
                 break;
             }
-            
+
             case UIAUTOMATION: {
                 if (uiautomationArtifact == null || uiautomationArtifact.isEmpty()) {
                     writeToLog("UI Automation tests artifact must be set.");
@@ -1022,7 +1103,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
                 break;
             }
-            
+
             case XCTEST: {
                 if (xctestArtifact == null || xctestArtifact.isEmpty()) {
                     writeToLog("XC tests artifact must be set.");
@@ -1031,7 +1112,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
                 break;
             }
-            
+
             case XCTEST_UI: {
                 if (xctestUiArtifact == null || xctestUiArtifact.isEmpty()) {
                     writeToLog("XCTest UI tests artifact must be set.");
@@ -1052,6 +1133,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
     /**
      * Helper method for writing entries to the Jenkins log.
+     *
      * @param msg The message to be written to the Jenkins log.
      */
     private void writeToLog(String msg) {
@@ -1060,6 +1142,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
     /**
      * Role ARN getter.
+     *
      * @return The role ARN.
      */
     public String getRoleArn() {
@@ -1068,6 +1151,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
     /**
      * Access key ID getter.
+     *
      * @return The access key ID.
      */
     public String getAkid() {
@@ -1076,6 +1160,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
     /**
      * Secret key ID getter.
+     *
      * @return The secret key ID.
      */
     public String getSkid() {
@@ -1084,6 +1169,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
     /**
      * Getter for the Device Farm API.
+     *
      * @return The Device Farm API.
      */
     public AWSDeviceFarm getAWSDeviceFarm() {
@@ -1092,15 +1178,17 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
     /**
      * Getter for the Device Farm descriptor.
+     *
      * @return The Device Farm descriptor.
      */
     @Override
     public DescriptorImpl getDescriptor() {
-        return (DescriptorImpl)super.getDescriptor();
+        return (DescriptorImpl) super.getDescriptor();
     }
 
     /**
      * Return collection of all Jenkins actions to be attached to this project.
+     *
      * @param project The AWS Device Farm Jenkins project.
      * @return The AWS Device Farm project action collection.
      */
@@ -1111,6 +1199,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
     /**
      * In a concurrent environment, this MUST run after the has completed.
+     *
      * @return The BuildStepMonitor.
      */
     public BuildStepMonitor getRequiredMonitorService() {
@@ -1135,6 +1224,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
         /**
          * Return configured instance of the AWS Device Farm client.
+         *
          * @return The AWS Device Farm API object.
          */
         public AWSDeviceFarm getAWSDeviceFarm() {
@@ -1149,6 +1239,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
         /**
          * Validate the user account role ARN.
+         *
          * @param roleArn The AWS IAM role ARN.
          * @return Whether or not the form was OK.
          */
@@ -1163,7 +1254,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
                 isValidArn = roleArn.matches("^arn:aws:iam:[^:]*:[0-9]{12}:role/.*");
             }
 
-            if (!isValidArn && (akid == null || akid.isEmpty() || skid == null || skid.isEmpty())){
+            if (!isValidArn && (akid == null || akid.isEmpty() || skid == null || skid.isEmpty())) {
                 return FormValidation.error("Doesn't look like a valid IAM Role ARN (e.g. 'arn:aws:iam::123456789012:role/jenkins')!");
             }
 
@@ -1175,6 +1266,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
         /**
          * Validate the user account AKID.
+         *
          * @param akid The AWS access key ID.
          * @return Whether or not the form was ok.
          */
@@ -1194,6 +1286,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
         /**
          * Validate the user account SKID.
+         *
          * @param skid The AWS secret key ID.
          * @return Whether or not the form was ok.
          */
@@ -1213,8 +1306,8 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
         /**
          * Validate the user selected project.
-         * @param projectName
-         * The currently selected project name.
+         *
+         * @param projectName The currently selected project name.
          * @return Whether or not the form was ok.
          */
         @SuppressWarnings("unused")
@@ -1227,6 +1320,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
         /**
          * Validate the user selected device pool.
+         *
          * @param devicePoolName The currently selected device pool name.
          * @return Whether or not the form was ok.
          */
@@ -1240,6 +1334,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
         /**
          * Validate the user entered artifact for the application.
+         *
          * @param appArtifact The String of the application artifact.
          * @return Whether or not the form was ok.
          */
@@ -1253,6 +1348,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
         /**
          * Validate the user entered artifact for Appium Java jUnit test content.
+         *
          * @param appiumJavaJUnitTest The path to the test file.
          * @return Whether or not the form was ok.
          */
@@ -1266,6 +1362,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
         /**
          * Validate the user entered artifact for Appium Java TestNG test content.
+         *
          * @param appiumJavaTestNGTest The path to the test file.
          * @return Whether or not the form was ok.
          */
@@ -1276,9 +1373,10 @@ public class AWSDeviceFarmRecorder extends Recorder {
             }
             return FormValidation.ok();
         }
-        
+
         /**
          * Validate the user entered artifact for Appium Python test content.
+         *
          * @param appiumPythonTest The path to the test file.
          * @return Whether or not the form was ok.
          */
@@ -1293,6 +1391,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
         /**
          * Validate the user entered file path to local Calabash features.
+         *
          * @param calabashFeatures The String of the Calabash features.
          * @return Whether or not the form was ok.
          */
@@ -1306,6 +1405,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
         /**
          * Validate the user entered artifact for JUnit/Robotium test content.
+         *
          * @param junitArtifact The String of the jUnit artifact.
          * @return Whether or not the form was ok.
          */
@@ -1319,6 +1419,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
         /**
          * Validate the user entered artifact for uiautomator.
+         *
          * @param uiautomatorArtifact The String of the MonkeyTalk artifact.
          * @return Whether or not the form was ok.
          */
@@ -1329,9 +1430,10 @@ public class AWSDeviceFarmRecorder extends Recorder {
             }
             return FormValidation.ok();
         }
-        
+
         /**
          * Validate the user entered artifact for XCTest.
+         *
          * @param xctestArtifact The String of the XCTest artifact.
          * @return Whether or not the form was ok.
          */
@@ -1342,9 +1444,10 @@ public class AWSDeviceFarmRecorder extends Recorder {
             }
             return FormValidation.ok();
         }
-        
+
         /**
          * Validate the user entered artifact for XCTest UI.
+         *
          * @param xctestUiArtifact The String of the XCTest UI artifact.
          * @return Whether or not the form was ok.
          */
@@ -1355,10 +1458,10 @@ public class AWSDeviceFarmRecorder extends Recorder {
             }
             return FormValidation.ok();
         }
-        
+
         /**
          * Validate if user account has unmetered devices
-         * 
+         *
          * @param isRunUnmetered
          * @param appArtifact
          * @return
@@ -1370,7 +1473,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
                 String os = null;
                 try {
                     os = adf.getOs(appArtifact);
-                } catch(AWSDeviceFarmException e) {
+                } catch (AWSDeviceFarmException e) {
                     return FormValidation.error(e.getMessage());
                 }
                 if (adf.getUnmeteredDevices(os) <= 0) {
@@ -1399,6 +1502,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
         /**
          * Refresh button clicked, clear the project and device pool caches
          * so the next click on the drop-down will get fresh content from the API.
+         *
          * @return Whether or not the form was ok.
          */
         @SuppressWarnings("unused")
@@ -1415,6 +1519,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
         /**
          * Populate the project drop-down from the AWS Device Farm API or local cache.
+         *
          * @return The ListBoxModel for the UI.
          */
         @SuppressWarnings("unused")
@@ -1437,7 +1542,8 @@ public class AWSDeviceFarmRecorder extends Recorder {
         /**
          * Populate the device pool drop-down from AWS Device Farm API or local cache.
          * based on the selected project.
-         * @param projectName Name of the project selected.
+         *
+         * @param projectName           Name of the project selected.
          * @param currentDevicePoolName Name of the device pool selected.
          * @return The ListBoxModel for the UI.
          */
@@ -1524,6 +1630,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
         /**
          * Get all projects for the AWS Device Farm account tied to the API Key
          * and store them in a local cache.
+         *
          * @return The List of AWS Device Farm project names.
          */
         private synchronized List<String> getAWSDeviceFarmProjects() {
@@ -1542,6 +1649,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
         /**
          * Get all device pools for the selected project and store them
          * in a local cache.
+         *
          * @param projectName The name of the currently selected project.
          * @return The List of device pool names associated with that project.
          */
@@ -1558,8 +1666,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
                     }
 
                     Collections.sort(poolNames, String.CASE_INSENSITIVE_ORDER);
-                }
-                catch (AWSDeviceFarmException e) {
+                } catch (AWSDeviceFarmException e) {
                 }
 
                 poolsCache.put(projectName, poolNames);
@@ -1569,7 +1676,8 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
         /**
          * Bind descriptor object to capture global plugin settings from 'Manage Jenkins'.
-         * @param req The StaplerRequest.
+         *
+         * @param req  The StaplerRequest.
          * @param json The JSON to bind this to.
          * @return Always true, for whatever reason.
          */
