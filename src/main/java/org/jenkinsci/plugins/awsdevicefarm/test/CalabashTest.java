@@ -1,3 +1,17 @@
+//
+// Copyright 2015-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License").
+// You may not use this file except in compliance with the License.
+// A copy of the License is located at
+//
+// http://aws.amazon.com/apache2.0
+//
+// or in the "license" file accompanying this file. This file is distributed
+// on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+// express or implied. See the License for the specific language governing
+// permissions and limitations under the License.
+//
 package org.jenkinsci.plugins.awsdevicefarm.test;
 
 /**
@@ -18,6 +32,7 @@ public final class CalabashTest {
 
         /**
          * Features setter.
+         *
          * @param features The path to the Calabash features file.
          * @return The builder object.
          */
@@ -28,6 +43,7 @@ public final class CalabashTest {
 
         /**
          * Tags setter.
+         *
          * @param tags The tags to use.
          * @return The builder object.
          */
@@ -35,9 +51,10 @@ public final class CalabashTest {
             this.tags = tags;
             return this;
         }
-        
+
         /**
          * Profile setter.
+         *
          * @param profile The profile to use.
          * @return The builder object.
          */
@@ -48,13 +65,17 @@ public final class CalabashTest {
 
         /**
          * Build method
+         *
          * @return The new POJO.
          */
-        public CalabashTest build() { return new CalabashTest(this); }
+        public CalabashTest build() {
+            return new CalabashTest(this);
+        }
     }
 
     /**
      * POJO constructor with builder.
+     *
      * @param builder The builder to use.
      */
     private CalabashTest(Builder builder) {
@@ -65,6 +86,7 @@ public final class CalabashTest {
 
     /**
      * Features getter.
+     *
      * @return The path to the Calabash features file.
      */
     public String getFeatures() {
@@ -73,14 +95,16 @@ public final class CalabashTest {
 
     /**
      * Tags getter.
+     *
      * @return The tags to use.
      */
     public String getTags() {
         return this.tags;
     }
-    
+
     /**
      * profile getter.
+     *
      * @return The profile to use.
      */
     public String getProfile() {
