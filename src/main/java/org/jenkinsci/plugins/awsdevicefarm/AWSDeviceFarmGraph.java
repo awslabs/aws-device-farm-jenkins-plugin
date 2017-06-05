@@ -121,9 +121,6 @@ public class AWSDeviceFarmGraph extends Graph {
         List<NumberOnlyBuildLabel> cols = new ArrayList<NumberOnlyBuildLabel>();
 
         for (AWSDeviceFarmTestResult result : results) {
-
-            
-            //AbstractBuild<?, ?> build = result.getOwner();
             hudson.model.Run<?, ?> build = result.getOwner();
 
             // Create label for this result using its Jenkins build number.

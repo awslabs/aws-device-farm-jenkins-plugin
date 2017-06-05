@@ -22,6 +22,7 @@ import com.amazonaws.services.devicefarm.model.AccountSettings;
 import com.amazonaws.services.devicefarm.model.ArtifactCategory;
 import com.amazonaws.services.devicefarm.model.CreateUploadRequest;
 import com.amazonaws.services.devicefarm.model.DevicePool;
+import com.amazonaws.services.devicefarm.model.ExecutionConfiguration;
 import com.amazonaws.services.devicefarm.model.GetAccountSettingsRequest;
 import com.amazonaws.services.devicefarm.model.GetRunRequest;
 import com.amazonaws.services.devicefarm.model.GetRunResult;
@@ -54,6 +55,9 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.jenkinsci.plugins.awsdevicefarm.test.AppiumWebJavaJUnitTest;
+import org.jenkinsci.plugins.awsdevicefarm.test.AppiumWebJavaTestNGTest;
+import org.jenkinsci.plugins.awsdevicefarm.test.AppiumWebPythonTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.AppiumJavaJUnitTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.AppiumJavaTestNGTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.AppiumPythonTest;
@@ -79,6 +83,8 @@ public class AWSDeviceFarm {
     private FilePath workspace;
     private FilePath artifactsDir;
     private EnvVars env;
+
+    private static final Integer DEFAULT_JOB_TIMEOUT_MINUTE = 60;
 
     //// Constructors
 
@@ -278,7 +284,8 @@ public class AWSDeviceFarm {
 
     /**
      * Upload an extra data file to Device Farm.
-     * @param project The Device Farm project to upload to.
+     *
+     * @param project           The Device Farm project to upload to.
      * @param extraDataArtifact String path to the extra data to be uploaded to Device Farm.
      * @return The Device Farm Upload object.
      * @throws IOException
@@ -288,8 +295,7 @@ public class AWSDeviceFarm {
         AWSDeviceFarmUploadType type;
         if (extraDataArtifact.toLowerCase().endsWith("zip")) {
             type = AWSDeviceFarmUploadType.EXTERNAL_DATA;
-        }
-        else {
+        } else {
             throw new AWSDeviceFarmException(String.format("Unknown extra data file artifact to upload: %s", extraDataArtifact));
         }
 
@@ -416,8 +422,9 @@ public class AWSDeviceFarm {
 
     /**
      * Upload a test to Device Farm.
+     *
      * @param project The Device Farm project to upload to.
-     * @param test Test object containing relevant test information.
+     * @param test    Test object containing relevant test information.
      * @return The Device Farm Upload object.
      * @throws IOException
      * @throws AWSDeviceFarmException
@@ -429,7 +436,7 @@ public class AWSDeviceFarm {
     /**
      * Upload a test to Device Farm.
      * @param project The Device Farm project to upload to.
-     * @param test Test object containing relevant test information.
+     * @param test    Test object containing relevant test information.
      * @return The Device Farm Upload object.
      * @throws IOException
      * @throws AWSDeviceFarmException
@@ -440,8 +447,9 @@ public class AWSDeviceFarm {
 
     /**
      * Upload a test to Device Farm.
+     *
      * @param project The Device Farm project to upload to.
-     * @param test Test object containing relevant test information.
+     * @param test    Test object containing relevant test information.
      * @return The Device Farm Upload object.
      * @throws IOException
      * @throws AWSDeviceFarmException
@@ -529,13 +537,8 @@ public class AWSDeviceFarm {
                 if ("SUCCEEDED".equalsIgnoreCase(status)) {
                     writeToLog(String.format("Upload %s succeeded", file.getName()));
                     break;
-<<<<<<< HEAD
-                }
-                else if ("FAILED".equalsIgnoreCase(status)) {
-                    writeToLog(String.format("(Error Message: ) %s)", describeUploadResult.getUpload().getMetadata()));
-=======
                 } else if ("FAILED".equalsIgnoreCase(status)) {
->>>>>>> upstream/master
+                    writeToLog(String.format("(Error Message: ) %s)", describeUploadResult.getUpload().getMetadata()));
                     throw new AWSDeviceFarmException(String.format("Upload %s failed!", upload.getName()));
                 } else {
                     try {
@@ -573,12 +576,11 @@ public class AWSDeviceFarm {
         ScheduleRunRequest request = new ScheduleRunRequest()
                 .withProjectArn(projectArn)
                 .withName(name)
-                //.withAppArn(appArn)
                 .withDevicePoolArn(devicePoolArn)
                 .withTest(test);
 
         ExecutionConfiguration exeConfiguration = new ExecutionConfiguration();
-        if (jobTimeoutMinutes != 60){
+        if (jobTimeoutMinutes != DEFAULT_JOB_TIMEOUT_MINUTE){
             exeConfiguration.setJobTimeoutMinutes(jobTimeoutMinutes);
             request.withExecutionConfiguration(exeConfiguration);
         }

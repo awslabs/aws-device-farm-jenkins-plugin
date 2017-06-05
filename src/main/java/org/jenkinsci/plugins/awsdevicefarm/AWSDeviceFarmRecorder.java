@@ -56,6 +56,9 @@ import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.awsdevicefarm.test.AppiumJavaJUnitTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.AppiumJavaTestNGTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.AppiumPythonTest;
+import org.jenkinsci.plugins.awsdevicefarm.test.AppiumWebJavaJUnitTest;
+import org.jenkinsci.plugins.awsdevicefarm.test.AppiumWebJavaTestNGTest;
+import org.jenkinsci.plugins.awsdevicefarm.test.AppiumWebPythonTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.CalabashTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.InstrumentationTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.UIAutomationTest;
@@ -84,7 +87,6 @@ import java.util.Map;
 /**
  * Post-build step for running tests on AWS Device Farm.
  */
-@SuppressWarnings("unused")
 public class AWSDeviceFarmRecorder extends Recorder {
 
     ////// All of these fields have to be public so that they can be read (via reflection) by Jenkins. Probably not the
@@ -144,7 +146,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
     public String xctestUiArtifact;
     public String xctestUiFilter;
 
-    //// Fields not populated by the JSON binder.
+    // Fields not populated by the JSON binder.
     public PrintStream log;
 
     // ignore device farm run errors
@@ -154,15 +156,15 @@ public class AWSDeviceFarmRecorder extends Recorder {
     public Boolean ifWebApp;
 
     // The Appium version for the Appium Tests.
-    public String appiumVersion_junit;
-    public String appiumVersion_python;
-    public String appiumVersion_testng;
+    public String appiumVersionJunit;
+    public String appiumVersionPython;
+    public String appiumVersionTestng;
 
     private static final String APPIUM_VERSION_1_6_3 = "1.6.3";
 
     private static final String APPIUM_VERSION_1_4_16 = "1.4.16";
 
-    //Device States Specification
+    // Device States Specification
     public Boolean extraData;
     public String extraDataArtifact;
 
@@ -178,80 +180,57 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
     public Integer jobTimeoutMinutes;
 
-    //Execution Configuration
-    public
+    //E xecution Configuration
+    public Boolean ifVideoRecording;
+    public Boolean ifAppPerformanceMonitoring;
 
     /**
      * The Device Farm recorder class for running post-build steps on Jenkins.
-<<<<<<< HEAD
-     * @param projectName The name of the Device Farm project.
-     * @param devicePoolName The name of the Device Farm device pool.
-     * @param appArtifact The path to the app to be tested.
-     * @param runName The name of the run.
-     * @param testToRun The type of test to be run.
-     * @param storeResults Download the results to a local archive.
-     * @param eventCount The number of fuzz events to run.
-     * @param eventThrottle The the fuzz event throttle count.
-     * @param seed The initial seed of fuzz events.
-     * @param username username to use if explorer encounters a login form.
-     * @param password password to use if explorer encounters a login form.
-     * @param appiumJavaJUnitTest The path to the Appium Java Junit tests.
-     * @param appiumJavaTestNGTest The path to the Appium Java tests.
-     * @param appiumPythonTest The path to the Appium python tests.
-     * @param calabashFeatures The path to the Calabash tests to be run.
-     * @param calabashTags Calabash tags to attach to the test.
-     * @param calabashProfile Calabash Profile to attach to the test.
-     * @param junitArtifact The path to the Instrumentation JUnit tests.
-     * @param junitFilter The filter to apply to the Instrumentation JUnit tests.
-     * @param uiautomatorArtifact The path to the UI Automator tests to be run.
-     * @param uiautomatorFilter The filter to apply to the UI Automator tests.
-     * @param uiautomationArtifact The path to the UI Automation tests to be run.
-     * @param xctestArtifact The path to the XCTest tests to be run.
-     * @param xctestFilter The filter to apply to the XCTest tests.
-     * @param xctestUiArtifact The path to the XCTest UI tests to be run.
-     * @param xctestUiFilter The filter to apply to the XCTest UI tests.
-     * @param appiumVersion_junit The version of the Appium used for Appium Junit tests.
-     * @param appiumVersion_python The version of the Appium used for Appium Python tests.
-     * @param appiumVersion_testng The version of the Appium used for Appoum Testing tests.
-     * @param ifWebApp True when it is a web app.
-     * @param extraData True when it has extra data.
-     * @param extraDataArtifact The path to the extra data.
-     * @param deviceLocation True when device location is specified.
-     * @param deviceLatitude The specified device latitude.
-     * @param deviceLongitude The specified device longitude.
-     * @param radioDetails True when the radio details are specified.
+     *
+     * @param projectName                   The name of the Device Farm project.
+     * @param devicePoolName                The name of the Device Farm device pool.
+     * @param appArtifact                   The path to the app to be tested.
+     * @param runName                       The name of the run.
+     * @param testToRun                     The type of test to be run.
+     * @param storeResults                  Download the results to a local archive.
+     * @param eventCount                    The number of fuzz events to run.
+     * @param eventThrottle                 The the fuzz event throttle count.
+     * @param seed                          The initial seed of fuzz events.
+     * @param username                      Username to use if explorer encounters a login form.
+     * @param password                      Password to use if explorer encounters a login form.
+     * @param appiumJavaJUnitTest           The path to the Appium Java Junit tests.
+     * @param appiumJavaTestNGTest          The path to the Appium Java tests.
+     * @param appiumPythonTest              The path to the Appium python tests.
+     * @param calabashFeatures              The path to the Calabash tests to be run.
+     * @param calabashTags                  Calabash tags to attach to the test.
+     * @param calabashProfile               Calabash Profile to attach to the test.
+     * @param junitArtifact                 The path to the Instrumentation JUnit tests.
+     * @param junitFilter                   The filter to apply to the Instrumentation JUnit tests.
+     * @param uiautomatorArtifact           The path to the UI Automator tests to be run.
+     * @param uiautomatorFilter             The filter to apply to the UI Automator tests.
+     * @param uiautomationArtifact          The path to the UI Automation tests to be run.
+     * @param xctestArtifact                The path to the XCTest tests to be run.
+     * @param xctestFilter                  The filter to apply to the XCTest tests.
+     * @param xctestUiArtifact              The path to the XCTest UI tests to be run.
+     * @param xctestUiFilter                The filter to apply to the XCTest UI tests.
+     * @param appiumVersionJunit            The version of the Appium used for Appium Junit tests.
+     * @param appiumVersionPython           The version of the Appium used for Appium Python tests.
+     * @param appiumVersionTestng           The version of the Appium used for Appoum Testing tests.
+     * @param ifWebApp                      Whether it is a web app.
+     * @param extraData                     Whether it has extra data.
+     * @param extraDataArtifact             The path to the extra data.
+     * @param deviceLocation                True when device location is specified.
+     * @param deviceLatitude                The specified device latitude.
+     * @param deviceLongitude               The specified device longitude.
+     * @param radioDetails                  Whether the radio details would be specified.
      * @param ifWifi
      * @param ifNfc
      * @param ifGPS
      * @param ifBluetooth
-     * @param jobTimeoutMinutes The max execute time per job.
-=======
+     * @param jobTimeoutMinutes            The max execution time per job.
+     * @param ifAppPerformanceMonitoring   Whether the performance would be monitored.
+     * @param ifVideoRecording             Whether the video would be recorded.
      *
-     * @param projectName          The name of the Device Farm project.
-     * @param devicePoolName       The name of the Device Farm device pool.
-     * @param appArtifact          The path to the app to be tested.
-     * @param runName              The name of the run.
-     * @param testToRun            The type of test to be run.
-     * @param storeResults         Download the results to a local archive.
-     * @param eventCount           The number of fuzz events to run.
-     * @param eventThrottle        The the fuzz event throttle count.
-     * @param seed                 The initial seed of fuzz events.
-     * @param username             username to use if explorer encounters a login form.
-     * @param password             password to use if explorer encounters a login form.
-     * @param appiumJavaJUnitTest
-     * @param appiumJavaTestNGTest
-     * @param appiumPythonTest
-     * @param calabashFeatures     The path to the Calabash tests to be run.
-     * @param calabashTags         Calabash tags to attach to the test.
-     * @param calabashProfile      Calabash Profile to attach to the test.
-     * @param junitArtifact        The path to the Instrumentation JUnit tests.
-     * @param junitFilter          The filter to apply to the Instrumentation JUnit tests.
-     * @param uiautomatorArtifact  The path to the UI Automator tests to be run.
-     * @param uiautomatorFilter
-     * @param uiautomationArtifact The path to the UI Automation tests to be run.
-     * @param xctestArtifact       The path to the XCTest tests to be run.
-     * @param xctestUiArtifact     The path to the XCTest UI tests to be run.
->>>>>>> upstream/master
      */
     @DataBoundConstructor
     @SuppressWarnings("unused")
@@ -281,11 +260,10 @@ public class AWSDeviceFarmRecorder extends Recorder {
                                  String xctestArtifact,
                                  String xctestFilter,
                                  String xctestUiArtifact,
-<<<<<<< HEAD
                                  String xctestUiFilter,
-                                 String appiumVersion_junit,
-                                 String appiumVersion_python,
-                                 String appiumVersion_testng,
+                                 String appiumVersionJunit,
+                                 String appiumVersionPython,
+                                 String appiumVersionTestng,
                                  Boolean ifWebApp,
                                  Boolean extraData,
                                  String extraDataArtifact,
@@ -298,10 +276,9 @@ public class AWSDeviceFarmRecorder extends Recorder {
                                  Boolean ifGPS,
                                  Boolean ifNfc,
                                  Integer jobTimeoutMinutes,
+                                 Boolean ifVideoRecording,
+                                 Boolean ifAppPerformanceMonitoring,
                                  Boolean ignoreRunError ) {
-=======
-                                 Boolean ignoreRunError) {
->>>>>>> upstream/master
         this.projectName = projectName;
         this.devicePoolName = devicePoolName;
         this.appArtifact = appArtifact;
@@ -329,11 +306,9 @@ public class AWSDeviceFarmRecorder extends Recorder {
         this.xctestUiArtifact = xctestUiArtifact;
         this.xctestUiFilter = xctestUiFilter;
         this.ignoreRunError = ignoreRunError;
-        this.appiumVersion_junit = appiumVersion_junit;
-        this.appiumVersion_python = appiumVersion_python;
-        this.appiumVersion_testng = appiumVersion_testng;
-
-
+        this.appiumVersionJunit = appiumVersionJunit;
+        this.appiumVersionPython = appiumVersionPython;
+        this.appiumVersionTestng = appiumVersionTestng;
         this.extraData = extraData;
         this.extraDataArtifact = extraDataArtifact;
         this.deviceLocation = deviceLocation;
@@ -345,6 +320,8 @@ public class AWSDeviceFarmRecorder extends Recorder {
         this.ifBluetooth = ifBluetooth;
         this.ifNfc = ifNfc;
         this.jobTimeoutMinutes = jobTimeoutMinutes;
+        this.ifVideoRecording = ifVideoRecording;
+        this.ifAppPerformanceMonitoring = ifAppPerformanceMonitoring;
 
         if (ifWebApp != null && ifWebApp) this.ifWebApp = true;
         else this.ifWebApp = false;
@@ -500,18 +477,22 @@ public class AWSDeviceFarmRecorder extends Recorder {
             writeToLog("Getting test to schedule.");
             ScheduleRunTest testToSchedule = getScheduleRunTest(env, adf, project);
 
-            // State the Appium Version.
-            if (testToRun.equalsIgnoreCase("APPIUM_JAVA_JUNIT")) writeToLog(String.format("Using appium version: %s", appiumVersion_junit));
-            else if (testToRun.equalsIgnoreCase("APPIUM_WEB_JAVA_JUNIT")) writeToLog(String.format("Using appium version: %s", appiumVersion_junit));
-            else if (testToRun.equalsIgnoreCase("APPIUM_JAVA_TESTNG")) writeToLog(String.format("Using appium version: %s", appiumVersion_testng));
-            else if (testToRun.equalsIgnoreCase("APPIUM_WEB_JAVA_TESTNG")) writeToLog(String.format("Using appium version: %s", appiumVersion_testng));
-            else if (testToRun.equalsIgnoreCase("APPIUM_PYTHON")) writeToLog(String.format("Using appium version: %s", appiumVersion_python));
-            else if (testToRun.equalsIgnoreCase("APPIUM_WEB_PYTHON")) writeToLog(String.format("Using appium version: %s", appiumVersion_python));
+            if (ifVideoRecording != null & !ifVideoRecording) {
+                testToSchedule.addParametersEntry("video_recording", "false");
+            }
+            if (ifAppPerformanceMonitoring != null & !ifAppPerformanceMonitoring) {
+                testToSchedule.addParametersEntry("app_performance_monitoring", "false");
+            }
 
-            // Schedule test run.
-            TestType testType = TestType.fromValue(testToSchedule.getType());
-            writeToLog(String.format("Scheduling '%s' run '%s'", testType, deviceFarmRunName));
-            ScheduleRunConfiguration configuration = getScheduleRunConfiguration(isRunUnmetered, deviceLocation, radioDetails);
+
+            // State the Appium Version.
+            if (testToRun.equalsIgnoreCase("APPIUM_JAVA_JUNIT")) writeToLog(String.format("Using appium version: %s", appiumVersionJunit));
+            else if (testToRun.equalsIgnoreCase("APPIUM_WEB_JAVA_JUNIT")) writeToLog(String.format("Using appium version: %s", appiumVersionJunit));
+            else if (testToRun.equalsIgnoreCase("APPIUM_JAVA_TESTNG")) writeToLog(String.format("Using appium version: %s", appiumVersionTestng));
+            else if (testToRun.equalsIgnoreCase("APPIUM_WEB_JAVA_TESTNG")) writeToLog(String.format("Using appium version: %s", appiumVersionTestng));
+            else if (testToRun.equalsIgnoreCase("APPIUM_PYTHON")) writeToLog(String.format("Using appium version: %s", appiumVersionPython));
+            else if (testToRun.equalsIgnoreCase("APPIUM_WEB_PYTHON")) writeToLog(String.format("Using appium version: %s", appiumVersionPython));
+
 
             // Upload the extra data.
             String extraDataArn = null;
@@ -520,8 +501,13 @@ public class AWSDeviceFarmRecorder extends Recorder {
                 Upload extraDataUpload = adf.uploadExtraData(project, extraDataArtifact);
                 extraDataArn = extraDataUpload.getArn();
             }
-            configuration.setExtraDataPackageArn(extraDataArn);
 
+            // Schedule test run.
+            TestType testType = TestType.fromValue(testToSchedule.getType());
+            writeToLog(String.format("Scheduling '%s' run '%s'", testType, deviceFarmRunName));
+
+            ScheduleRunConfiguration configuration = getScheduleRunConfiguration(isRunUnmetered, deviceLocation, radioDetails);
+            configuration.setExtraDataPackageArn(extraDataArn);
 
             ScheduleRunResult run = adf.scheduleRun(project.getArn(), deviceFarmRunName, appArn, devicePool.getArn(), testToSchedule, jobTimeoutMinutes, configuration);
 
@@ -751,7 +737,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
                         .withType(testType)
                         .withTestPackageArn(upload.getArn());
 
-                testToSchedule.addParametersEntry("appium_version", appiumVersion_junit);
+                testToSchedule.addParametersEntry("appium_version", appiumVersionJunit);
                 break;
             }
 
@@ -766,7 +752,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
                         .withType(testType)
                         .withTestPackageArn(upload.getArn());
 
-                testToSchedule.addParametersEntry("appium_version", appiumVersion_testng);
+                testToSchedule.addParametersEntry("appium_version", appiumVersionTestng);
                 break;
             }
 
@@ -781,11 +767,10 @@ public class AWSDeviceFarmRecorder extends Recorder {
                         .withType(testType)
                         .withTestPackageArn(upload.getArn());
 
-                testToSchedule.addParametersEntry("appium_version", appiumVersion_python);
+                testToSchedule.addParametersEntry("appium_version", appiumVersionPython);
                 break;
             }
 
-<<<<<<< HEAD
             case APPIUM_WEB_JAVA_JUNIT: {
                 AppiumWebJavaJUnitTest test = new AppiumWebJavaJUnitTest.Builder()
                         .withTests(env.expand(appiumJavaJUnitTest))
@@ -797,7 +782,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
                         .withType(testType)
                         .withTestPackageArn(upload.getArn());
 
-                testToSchedule.addParametersEntry("appium_version", appiumVersion_junit);
+                testToSchedule.addParametersEntry("appium_version", appiumVersionJunit);
                 break;
             }
 
@@ -812,7 +797,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
                         .withType(testType)
                         .withTestPackageArn(upload.getArn());
 
-                testToSchedule.addParametersEntry("appium_version", appiumVersion_testng);
+                testToSchedule.addParametersEntry("appium_version", appiumVersionTestng);
                 break;
             }
 
@@ -827,12 +812,10 @@ public class AWSDeviceFarmRecorder extends Recorder {
                         .withType(testType)
                         .withTestPackageArn(upload.getArn());
 
-                testToSchedule.addParametersEntry("appium_version", appiumVersion_python);
+                testToSchedule.addParametersEntry("appium_version", appiumVersionPython);
                 break;
             }
 
-=======
->>>>>>> upstream/master
             case CALABASH: {
                 CalabashTest test = new CalabashTest.Builder()
                         .withFeatures(env.expand(calabashFeatures))
@@ -1485,6 +1468,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
         /**
          * Validate the user entered execution time.
+         *
          * @param jobTimeoutMinutes The Int of the limit execute time the user typed.
          * @return Whether or not the form was ok.
          */
@@ -1492,8 +1476,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
         public FormValidation doCheckJobTimeoutMinutes(@QueryParameter Integer jobTimeoutMinutes) {
             if (jobTimeoutMinutes == null) {
                 return FormValidation.error("Required");
-            }
-            else if (jobTimeoutMinutes < 5 || jobTimeoutMinutes > 60) {
+            } else if (jobTimeoutMinutes < 5 || jobTimeoutMinutes > 60) {
                 return FormValidation.error("The value should be in the range [5, 60]!");
             }
             return FormValidation.ok();
@@ -1563,19 +1546,32 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
         /**
          * Populate the project drop-down Appium Version.
+         *
          * @return The ListBoxModel for the UI.
          */
         @SuppressWarnings("unused")
-        public ListBoxModel doFillAppiumVersion_junitItems(@QueryParameter String currentAppiumVersion) {
-            // Create ListBoxModel from all projects for this AWS Device Farm account.
+        public ListBoxModel doFillAppiumVersionJunitItems(@QueryParameter String currentAppiumVersion) {
             List<ListBoxModel.Option> entries = new ArrayList<ListBoxModel.Option>();
-            //System.out.print("getting appium version");
             ArrayList<String> appiumVersions = new ArrayList<String>();
             appiumVersions.add(APPIUM_VERSION_1_6_3);
             appiumVersions.add(APPIUM_VERSION_1_4_16);
-            if (appiumVersions == null) {
-                return new ListBoxModel();
+            for (String appiumVersion: appiumVersions) {
+                entries.add(new ListBoxModel.Option(appiumVersion, appiumVersion, appiumVersion.equals(currentAppiumVersion)));
             }
+            return new ListBoxModel(entries);
+        }
+
+        /**
+         * Populate the project drop-down Appium Version.
+         *
+         * @return The ListBoxModel for the UI.
+         */
+        @SuppressWarnings("unused")
+        public ListBoxModel doFillAppiumVersionTestngItems(@QueryParameter String currentAppiumVersion) {
+            List<ListBoxModel.Option> entries = new ArrayList<ListBoxModel.Option>();
+            ArrayList<String> appiumVersions = new ArrayList<String>();
+            appiumVersions.add(APPIUM_VERSION_1_6_3);
+            appiumVersions.add(APPIUM_VERSION_1_4_16);
             for (String appiumVersion: appiumVersions) {
                 // We don't ignore case because these *should* be unique.
                 entries.add(new ListBoxModel.Option(appiumVersion, appiumVersion, appiumVersion.equals(currentAppiumVersion)));
@@ -1585,43 +1581,18 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
         /**
          * Populate the project drop-down Appium Version.
+         *
          * @return The ListBoxModel for the UI.
          */
         @SuppressWarnings("unused")
-        public ListBoxModel doFillAppiumVersion_testngItems(@QueryParameter String currentAppiumVersion) {
+        public ListBoxModel doFillAppiumVersionPythonItems(@QueryParameter String currentAppiumVersion) {
             // Create ListBoxModel from all projects for this AWS Device Farm account.
             List<ListBoxModel.Option> entries = new ArrayList<ListBoxModel.Option>();
             //System.out.print("getting appium version");
             ArrayList<String> appiumVersions = new ArrayList<String>();
             appiumVersions.add(APPIUM_VERSION_1_6_3);
             appiumVersions.add(APPIUM_VERSION_1_4_16);
-            if (appiumVersions == null) {
-                return new ListBoxModel();
-            }
             for (String appiumVersion: appiumVersions) {
-                // We don't ignore case because these *should* be unique.
-                entries.add(new ListBoxModel.Option(appiumVersion, appiumVersion, appiumVersion.equals(currentAppiumVersion)));
-            }
-            return new ListBoxModel(entries);
-        }
-
-        /**
-         * Populate the project drop-down Appium Version.
-         * @return The ListBoxModel for the UI.
-         */
-        @SuppressWarnings("unused")
-        public ListBoxModel doFillAppiumVersion_pythonItems(@QueryParameter String currentAppiumVersion) {
-            // Create ListBoxModel from all projects for this AWS Device Farm account.
-            List<ListBoxModel.Option> entries = new ArrayList<ListBoxModel.Option>();
-            //System.out.print("getting appium version");
-            ArrayList<String> appiumVersions = new ArrayList<String>();
-            appiumVersions.add(APPIUM_VERSION_1_6_3);
-            appiumVersions.add(APPIUM_VERSION_1_4_16);
-            if (appiumVersions == null) {
-                return new ListBoxModel();
-            }
-            for (String appiumVersion: appiumVersions) {
-                // We don't ignore case because these *should* be unique.
                 entries.add(new ListBoxModel.Option(appiumVersion, appiumVersion, appiumVersion.equals(currentAppiumVersion)));
             }
             return new ListBoxModel(entries);
