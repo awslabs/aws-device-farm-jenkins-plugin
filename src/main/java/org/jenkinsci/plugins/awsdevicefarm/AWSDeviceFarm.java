@@ -538,7 +538,7 @@ public class AWSDeviceFarm {
                     writeToLog(String.format("Upload %s succeeded", file.getName()));
                     break;
                 } else if ("FAILED".equalsIgnoreCase(status)) {
-                    writeToLog(String.format("(Error Message: ) %s)", describeUploadResult.getUpload().getMetadata()));
+                    writeToLog(String.format("Error message from device farm: '%s'", describeUploadResult.getUpload().getMetadata()));
                     throw new AWSDeviceFarmException(String.format("Upload %s failed!", upload.getName()));
                 } else {
                     try {
@@ -580,7 +580,7 @@ public class AWSDeviceFarm {
                 .withTest(test);
 
         ExecutionConfiguration exeConfiguration = new ExecutionConfiguration();
-        if (jobTimeoutMinutes != DEFAULT_JOB_TIMEOUT_MINUTE){
+        if (jobTimeoutMinutes != DEFAULT_JOB_TIMEOUT_MINUTE) {
             exeConfiguration.setJobTimeoutMinutes(jobTimeoutMinutes);
             request.withExecutionConfiguration(exeConfiguration);
         }

@@ -15,7 +15,7 @@
 package org.jenkinsci.plugins.awsdevicefarm.test;
 
 /**
- * POJO class for an Appium Java JUnit test.
+ * POJO class for a Web Appium Java JUnit test.
  */
 public class AppiumWebJavaJUnitTest {
     private final String tests;
@@ -28,6 +28,7 @@ public class AppiumWebJavaJUnitTest {
 
         /**
          * Test setter.
+         *
          * @param tests Path to the tests to run.
          * @return The builder object.
          */
@@ -38,6 +39,7 @@ public class AppiumWebJavaJUnitTest {
 
         /**
          * Build method.
+         *
          * @return The new POJO.
          */
         public AppiumWebJavaJUnitTest build() {
@@ -47,6 +49,7 @@ public class AppiumWebJavaJUnitTest {
 
     /**
      * POJO constructor with builder.
+     *
      * @param builder The builder to use.
      */
     private AppiumWebJavaJUnitTest(Builder builder) {
@@ -55,6 +58,7 @@ public class AppiumWebJavaJUnitTest {
 
     /**
      * Test getter.
+     *
      * @return The path to the tests to run.
      */
     public String getTests() {

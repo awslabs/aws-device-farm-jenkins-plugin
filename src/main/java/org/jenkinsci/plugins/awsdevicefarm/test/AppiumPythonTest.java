@@ -15,7 +15,7 @@
 package org.jenkinsci.plugins.awsdevicefarm.test;
 
 /**
- * POJO class for an Appium Java JUnit test.
+ * POJO class for an Appium Python test.
  */
 public class AppiumPythonTest {
     private final String tests;

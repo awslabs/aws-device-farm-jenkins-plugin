@@ -15,7 +15,7 @@
 package org.jenkinsci.plugins.awsdevicefarm.test;
 
 /**
- * POJO class for an Appium Java TestNG test.
+ * POJO class for a Web Appium Java TestNG test.
  */
 public class AppiumWebJavaTestNGTest {
     private final String tests;
@@ -28,6 +28,7 @@ public class AppiumWebJavaTestNGTest {
 
         /**
          * Test setter.
+         *
          * @param tests Path to the tests to run.
          * @return The builder object.
          */
@@ -38,6 +39,7 @@ public class AppiumWebJavaTestNGTest {
 
         /**
          * Build method.
+         *
          * @return The new POJO.
          */
         public AppiumWebJavaTestNGTest build() {
@@ -47,6 +49,7 @@ public class AppiumWebJavaTestNGTest {
 
     /**
      * POJO constructor with builder.
+     *
      * @param builder The builder to use.
      */
     private AppiumWebJavaTestNGTest(Builder builder) {
@@ -55,6 +58,7 @@ public class AppiumWebJavaTestNGTest {
 
     /**
      * Test getter.
+     *
      * @return The path to the tests to run.
      */
     public String getTests() {
