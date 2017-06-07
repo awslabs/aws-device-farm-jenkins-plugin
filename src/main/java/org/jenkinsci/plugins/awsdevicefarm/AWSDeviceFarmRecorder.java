@@ -180,6 +180,10 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
     public Integer jobTimeoutMinutes;
 
+    private static final int MIN_EXECUTION_TIMEOUT = 5;
+
+    private static final int MAX_EXECUTION_TIMEOUT = 60;
+
     //E xecution Configuration
     public Boolean ifVideoRecording;
     public Boolean ifAppPerformanceMonitoring;
@@ -1476,8 +1480,8 @@ public class AWSDeviceFarmRecorder extends Recorder {
         public FormValidation doCheckJobTimeoutMinutes(@QueryParameter Integer jobTimeoutMinutes) {
             if (jobTimeoutMinutes == null) {
                 return FormValidation.error("Required");
-            } else if (jobTimeoutMinutes < 5 || jobTimeoutMinutes > 60) {
-                return FormValidation.error("The value should be in the range [5, 60]!");
+            } else if (jobTimeoutMinutes < MIN_EXECUTION_TIMEOUT || jobTimeoutMinutes > MAX_EXECUTION_TIMEOUT) {
+                return FormValidation.error("The maximum execution timeout per device should not be greater than 60 or smaller than 5 minutes.");
             }
             return FormValidation.ok();
         }
