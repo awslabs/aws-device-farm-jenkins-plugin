@@ -1,4 +1,4 @@
-wAWS Device Farm Jenkins Plugin
+AWS Device Farm Jenkins Plugin
 ------------------------------
 
 AWS Device Farm integration with Jenkins CI
@@ -96,13 +96,12 @@ Usage
 6. Select the project you would like to use.
 7. Select the device pool you would like to use.
 8. Select if you'd like to have the test artifacts (such as the logs and screenshots) archived locally.
-9. Check "It is a web application." for testing web app.
-10. In “Application”, fill in the path to your compiled application for testing native or hybrid app.
-11. Select the test you would like run and fill in all required fields.
-12. Check the coresponding box and fill in the box if you would like specify some device states.
-13. Change the maximum execution timeout if you do not want to use the default setting.
-14. Uncheck the boxes under "Execution Configuration" if you would like to disable the video recording and app performance monitoring functions.
-15. Click “Save”.
+9. In “Application”, fill in the path to your compiled application for testing native or hybrid app. Check "It is a web application." for testing web app.
+10. Choose the test framework, provide the path to your test package location and other relavent details.
+11. Configure device state parameters like radio details, extra data and device locations.
+12. Configure the maximum execution timeout. The default execution timeout is 60 minutes.
+13. Set the execution configuration parameters: video recording and app performance monitoring.
+14. Click “Save”.
 
 Dependencies
 ============
