@@ -94,7 +94,7 @@ Usage
 7. Select the device pool you would like to use.
 8. Select if you'd like to have the test artifacts (such as the logs and screenshots) archived locally.
 9. In “Application”, fill in the path to your compiled application.
-10. Select the test you would like run and fill in all required fields.
+10. Select the test type you would like run and fill in all required fields.
 11. Click “Save”.
 
 Dependencies
