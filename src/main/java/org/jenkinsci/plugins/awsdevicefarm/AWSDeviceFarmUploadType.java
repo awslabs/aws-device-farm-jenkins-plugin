@@ -21,17 +21,21 @@ import java.util.Map;
  * This takes the place of the AWS Device Farm SDK type UploadType.
  */
 public enum AWSDeviceFarmUploadType {
-    ANDROID_APP("ANDROID_APP"),                            // App
-    IOS_APP("IOS_APP"),                                    // App
-    APPIUM_JAVA_TESTNG("APPIUM_JAVA_TESTNG_TEST_PACKAGE"),  // Test
-    APPIUM_JAVA_JUNIT("APPIUM_JAVA_JUNIT_TEST_PACKAGE"),    // Test
-    APPIUM_PYTHON("APPIUM_PYTHON_TEST_PACKAGE"),            // Test
-    CALABASH("CALABASH_TEST_PACKAGE"),                     // Test
-    INSTRUMENTATION("INSTRUMENTATION_TEST_PACKAGE"),       // Test
-    UIAUTOMATOR("UIAUTOMATOR_TEST_PACKAGE"),               // Test
-    UIAUTOMATION("UIAUTOMATION_TEST_PACKAGE"),             // Test
-    XCTEST("XCTEST_TEST_PACKAGE"),                         // Test
-    XCTEST_UI("XCTEST_UI_TEST_PACKAGE");                    // Test
+    ANDROID_APP ("ANDROID_APP"),                                    // App
+    IOS_APP ("IOS_APP"),                                            // App
+    APPIUM_JAVA_TESTNG("APPIUM_JAVA_TESTNG_TEST_PACKAGE"),          // Test
+    APPIUM_JAVA_JUNIT("APPIUM_JAVA_JUNIT_TEST_PACKAGE"),            // Test
+    APPIUM_PYTHON("APPIUM_PYTHON_TEST_PACKAGE"),                    // Test
+    CALABASH ("CALABASH_TEST_PACKAGE"),                             // Test
+    INSTRUMENTATION ("INSTRUMENTATION_TEST_PACKAGE"),               // Test
+    UIAUTOMATOR ("UIAUTOMATOR_TEST_PACKAGE"),                       // Test
+    UIAUTOMATION ("UIAUTOMATION_TEST_PACKAGE"),                     // Test
+    XCTEST ("XCTEST_TEST_PACKAGE"),                                 // Test
+    XCTEST_UI("XCTEST_UI_TEST_PACKAGE"),                            // Test
+    APPIUM_WEB_PYTHON("APPIUM_WEB_PYTHON_TEST_PACKAGE"),            // Test
+    APPIUM_WEB_JAVA_TESTNG("APPIUM_WEB_JAVA_TESTNG_TEST_PACKAGE"),  // Test
+    APPIUM_WEB_JAVA_JUNIT("APPIUM_WEB_JAVA_JUNIT_TEST_PACKAGE"),    // Test
+    EXTERNAL_DATA("EXTERNAL_DATA");                                 // Extra Data
 
     private final String type;
     // Lookup table For getting enum by value.

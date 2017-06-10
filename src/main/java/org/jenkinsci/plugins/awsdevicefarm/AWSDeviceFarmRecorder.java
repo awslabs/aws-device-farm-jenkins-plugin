@@ -56,6 +56,9 @@ import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.awsdevicefarm.test.AppiumJavaJUnitTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.AppiumJavaTestNGTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.AppiumPythonTest;
+import org.jenkinsci.plugins.awsdevicefarm.test.AppiumWebJavaJUnitTest;
+import org.jenkinsci.plugins.awsdevicefarm.test.AppiumWebJavaTestNGTest;
+import org.jenkinsci.plugins.awsdevicefarm.test.AppiumWebPythonTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.CalabashTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.InstrumentationTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.UIAutomationTest;
@@ -84,7 +87,6 @@ import java.util.Map;
 /**
  * Post-build step for running tests on AWS Device Farm.
  */
-@SuppressWarnings("unused")
 public class AWSDeviceFarmRecorder extends Recorder {
 
     ////// All of these fields have to be public so that they can be read (via reflection) by Jenkins. Probably not the
@@ -138,43 +140,101 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
     // XCTest
     public String xctestArtifact;
+    public String xctestFilter;
 
     // XCTest UI
     public String xctestUiArtifact;
+    public String xctestUiFilter;
 
-    //// Fields not populated by the JSON binder.
+    // Fields not populated by the JSON binder.
     public PrintStream log;
 
     // ignore device farm run errors
     public Boolean ignoreRunError;
 
+    // web app
+    public Boolean ifWebApp;
+
+    // The Appium version for the Appium Tests.
+    public String appiumVersionJunit;
+    public String appiumVersionPython;
+    public String appiumVersionTestng;
+
+    private static final String APPIUM_VERSION_1_6_3 = "1.6.3";
+
+    private static final String APPIUM_VERSION_1_4_16 = "1.4.16";
+
+    // Device States Specification
+    public Boolean extraData;
+    public String extraDataArtifact;
+
+    public Boolean deviceLocation;
+    public Double deviceLatitude;
+    public Double deviceLongitude;
+
+    public Boolean radioDetails;
+    public Boolean ifWifi;
+    public Boolean ifGPS;
+    public Boolean ifNfc;
+    public Boolean ifBluetooth;
+
+    public Integer jobTimeoutMinutes;
+
+    private static final int MIN_EXECUTION_TIMEOUT = 5;
+
+    private static final int MAX_EXECUTION_TIMEOUT = 60;
+
+    //E xecution Configuration
+    public Boolean ifVideoRecording;
+    public Boolean ifAppPerformanceMonitoring;
+
     /**
      * The Device Farm recorder class for running post-build steps on Jenkins.
      *
-     * @param projectName          The name of the Device Farm project.
-     * @param devicePoolName       The name of the Device Farm device pool.
-     * @param appArtifact          The path to the app to be tested.
-     * @param runName              The name of the run.
-     * @param testToRun            The type of test to be run.
-     * @param storeResults         Download the results to a local archive.
-     * @param eventCount           The number of fuzz events to run.
-     * @param eventThrottle        The the fuzz event throttle count.
-     * @param seed                 The initial seed of fuzz events.
-     * @param username             username to use if explorer encounters a login form.
-     * @param password             password to use if explorer encounters a login form.
-     * @param appiumJavaJUnitTest
-     * @param appiumJavaTestNGTest
-     * @param appiumPythonTest
-     * @param calabashFeatures     The path to the Calabash tests to be run.
-     * @param calabashTags         Calabash tags to attach to the test.
-     * @param calabashProfile      Calabash Profile to attach to the test.
-     * @param junitArtifact        The path to the Instrumentation JUnit tests.
-     * @param junitFilter          The filter to apply to the Instrumentation JUnit tests.
-     * @param uiautomatorArtifact  The path to the UI Automator tests to be run.
-     * @param uiautomatorFilter
-     * @param uiautomationArtifact The path to the UI Automation tests to be run.
-     * @param xctestArtifact       The path to the XCTest tests to be run.
-     * @param xctestUiArtifact     The path to the XCTest UI tests to be run.
+     * @param projectName                   The name of the Device Farm project.
+     * @param devicePoolName                The name of the Device Farm device pool.
+     * @param appArtifact                   The path to the app to be tested.
+     * @param runName                       The name of the run.
+     * @param testToRun                     The type of test to be run.
+     * @param storeResults                  Download the results to a local archive.
+     * @param eventCount                    The number of fuzz events to run.
+     * @param eventThrottle                 The the fuzz event throttle count.
+     * @param seed                          The initial seed of fuzz events.
+     * @param username                      Username to use if explorer encounters a login form.
+     * @param password                      Password to use if explorer encounters a login form.
+     * @param appiumJavaJUnitTest           The path to the Appium Java Junit tests.
+     * @param appiumJavaTestNGTest          The path to the Appium Java tests.
+     * @param appiumPythonTest              The path to the Appium python tests.
+     * @param calabashFeatures              The path to the Calabash tests to be run.
+     * @param calabashTags                  Calabash tags to attach to the test.
+     * @param calabashProfile               Calabash Profile to attach to the test.
+     * @param junitArtifact                 The path to the Instrumentation JUnit tests.
+     * @param junitFilter                   The filter to apply to the Instrumentation JUnit tests.
+     * @param uiautomatorArtifact           The path to the UI Automator tests to be run.
+     * @param uiautomatorFilter             The filter to apply to the UI Automator tests.
+     * @param uiautomationArtifact          The path to the UI Automation tests to be run.
+     * @param xctestArtifact                The path to the XCTest tests to be run.
+     * @param xctestFilter                  The filter to apply to the XCTest tests.
+     * @param xctestUiArtifact              The path to the XCTest UI tests to be run.
+     * @param xctestUiFilter                The filter to apply to the XCTest UI tests.
+     * @param appiumVersionJunit            The version of the Appium used for Appium Junit tests.
+     * @param appiumVersionPython           The version of the Appium used for Appium Python tests.
+     * @param appiumVersionTestng           The version of the Appium used for Appoum Testing tests.
+     * @param ifWebApp                      Whether it is a web app.
+     * @param extraData                     Whether it has extra data.
+     * @param extraDataArtifact             The path to the extra data.
+     * @param deviceLocation                True when device location is specified.
+     * @param deviceLatitude                The specified device latitude.
+     * @param deviceLongitude               The specified device longitude.
+     * @param radioDetails                  Whether the radio details would be specified.
+     * @param ifWifi
+     * @param ifNfc
+     * @param ifGPS
+     * @param ifBluetooth
+     * @param jobTimeoutMinutes            The max execution time per job.
+     * @param ifAppPerformanceMonitoring   Whether the performance would be monitored.
+     * @param ifVideoRecording             Whether the video would be recorded.
+     *
      */
     @DataBoundConstructor
     @SuppressWarnings("unused")
@@ -202,13 +262,31 @@ public class AWSDeviceFarmRecorder extends Recorder {
                                  String uiautomatorFilter,
                                  String uiautomationArtifact,
                                  String xctestArtifact,
+                                 String xctestFilter,
                                  String xctestUiArtifact,
-                                 Boolean ignoreRunError) {
+                                 String xctestUiFilter,
+                                 String appiumVersionJunit,
+                                 String appiumVersionPython,
+                                 String appiumVersionTestng,
+                                 Boolean ifWebApp,
+                                 Boolean extraData,
+                                 String extraDataArtifact,
+                                 Boolean deviceLocation,
+                                 Double deviceLatitude,
+                                 Double deviceLongitude,
+                                 Boolean radioDetails,
+                                 Boolean ifBluetooth,
+                                 Boolean ifWifi,
+                                 Boolean ifGPS,
+                                 Boolean ifNfc,
+                                 Integer jobTimeoutMinutes,
+                                 Boolean ifVideoRecording,
+                                 Boolean ifAppPerformanceMonitoring,
+                                 Boolean ignoreRunError ) {
         this.projectName = projectName;
         this.devicePoolName = devicePoolName;
         this.appArtifact = appArtifact;
         this.runName = runName;
-        this.testToRun = testToRun;
         this.storeResults = storeResults;
         this.isRunUnmetered = isRunUnmetered;
         this.eventCount = eventCount;
@@ -228,8 +306,33 @@ public class AWSDeviceFarmRecorder extends Recorder {
         this.uiautomatorFilter = uiautomatorFilter;
         this.uiautomationArtifact = uiautomationArtifact;
         this.xctestArtifact = xctestArtifact;
+        this.xctestFilter = xctestFilter;
         this.xctestUiArtifact = xctestUiArtifact;
+        this.xctestUiFilter = xctestUiFilter;
         this.ignoreRunError = ignoreRunError;
+        this.appiumVersionJunit = appiumVersionJunit;
+        this.appiumVersionPython = appiumVersionPython;
+        this.appiumVersionTestng = appiumVersionTestng;
+        this.extraData = extraData;
+        this.extraDataArtifact = extraDataArtifact;
+        this.deviceLocation = deviceLocation;
+        this.deviceLatitude = deviceLatitude;
+        this.deviceLongitude = deviceLongitude;
+        this.radioDetails = radioDetails;
+        this.ifWifi = ifWifi;
+        this.ifGPS = ifGPS;
+        this.ifBluetooth = ifBluetooth;
+        this.ifNfc = ifNfc;
+        this.jobTimeoutMinutes = jobTimeoutMinutes;
+        this.ifVideoRecording = ifVideoRecording;
+        this.ifAppPerformanceMonitoring = ifAppPerformanceMonitoring;
+
+        if (ifWebApp != null && ifWebApp) this.ifWebApp = true;
+        else this.ifWebApp = false;
+        if (ifWebApp && testToRun.equalsIgnoreCase("APPIUM_PYTHON")) this.testToRun = "APPIUM_WEB_PYTHON";
+        else if (ifWebApp && testToRun.equalsIgnoreCase("APPIUM_JAVA_JUNIT")) this.testToRun = "APPIUM_WEB_JAVA_JUNIT";
+        else if (ifWebApp && testToRun.equalsIgnoreCase("APPIUM_JAVA_TESTNG")) this.testToRun = "APPIUM_WEB_JAVA_TESTNG";
+        else this.testToRun = testToRun;
 
         // This is a hack because I have to get the service icon locally, but it's copy-righted. So I pull it when I need it.
         Path pluginIconPath = Paths.get(System.getenv("HOME"), "plugins", "aws-device-farm", "service-icon.svg").toAbsolutePath();
@@ -263,6 +366,9 @@ public class AWSDeviceFarmRecorder extends Recorder {
      * @return Whether or not the test type string matches.
      */
     public String isTestType(String testTypeName) {
+        if (ifWebApp != null && ifWebApp) {
+            if (testTypeName.substring(0,6).equalsIgnoreCase("APPIUM")) testTypeName = new StringBuilder(testTypeName).insert(7, "WEB_").toString();
+        }
         return this.testToRun.equalsIgnoreCase(testTypeName) ? "true" : "";
     }
 
@@ -353,9 +459,17 @@ public class AWSDeviceFarmRecorder extends Recorder {
             DevicePool devicePool = adf.getDevicePool(project, devicePoolName);
 
             // Upload app.
-            writeToLog(String.format("Using App '%s'", env.expand(appArtifact)));
-            Upload appUpload = adf.uploadApp(project, appArtifact);
-            String appArn = appUpload.getArn();
+            String appArn = null;
+            if (ifWebApp != null && ifWebApp){
+                writeToLog("Tesing a Web App.");
+
+            }
+            else {
+                writeToLog(String.format("Using App '%s'", env.expand(appArtifact)));
+                Upload appUpload = adf.uploadApp(project, appArtifact);
+                appArn = appUpload.getArn();
+            }
+
             String deviceFarmRunName = null;
             if (StringUtils.isBlank(runName)) {
                 deviceFarmRunName = String.format("%s", env.get("BUILD_TAG"));
@@ -367,11 +481,39 @@ public class AWSDeviceFarmRecorder extends Recorder {
             writeToLog("Getting test to schedule.");
             ScheduleRunTest testToSchedule = getScheduleRunTest(env, adf, project);
 
+            if (ifVideoRecording != null & !ifVideoRecording) {
+                testToSchedule.addParametersEntry("video_recording", "false");
+            }
+            if (ifAppPerformanceMonitoring != null & !ifAppPerformanceMonitoring) {
+                testToSchedule.addParametersEntry("app_performance_monitoring", "false");
+            }
+
+
+            // State the Appium Version.
+            if (testToRun.equalsIgnoreCase("APPIUM_JAVA_JUNIT")) writeToLog(String.format("Using appium version: %s", appiumVersionJunit));
+            else if (testToRun.equalsIgnoreCase("APPIUM_WEB_JAVA_JUNIT")) writeToLog(String.format("Using appium version: %s", appiumVersionJunit));
+            else if (testToRun.equalsIgnoreCase("APPIUM_JAVA_TESTNG")) writeToLog(String.format("Using appium version: %s", appiumVersionTestng));
+            else if (testToRun.equalsIgnoreCase("APPIUM_WEB_JAVA_TESTNG")) writeToLog(String.format("Using appium version: %s", appiumVersionTestng));
+            else if (testToRun.equalsIgnoreCase("APPIUM_PYTHON")) writeToLog(String.format("Using appium version: %s", appiumVersionPython));
+            else if (testToRun.equalsIgnoreCase("APPIUM_WEB_PYTHON")) writeToLog(String.format("Using appium version: %s", appiumVersionPython));
+
+
+            // Upload the extra data.
+            String extraDataArn = null;
+            if (extraData != null && extraData) {
+                writeToLog(String.format("Using Extra Data '%s'", env.expand(extraDataArtifact)));
+                Upload extraDataUpload = adf.uploadExtraData(project, extraDataArtifact);
+                extraDataArn = extraDataUpload.getArn();
+            }
+
             // Schedule test run.
             TestType testType = TestType.fromValue(testToSchedule.getType());
             writeToLog(String.format("Scheduling '%s' run '%s'", testType, deviceFarmRunName));
-            ScheduleRunConfiguration configuration = getScheduleRunConfiguration(isRunUnmetered);
-            ScheduleRunResult run = adf.scheduleRun(project.getArn(), deviceFarmRunName, appArn, devicePool.getArn(), testToSchedule, configuration);
+
+            ScheduleRunConfiguration configuration = getScheduleRunConfiguration(isRunUnmetered, deviceLocation, radioDetails);
+            configuration.setExtraDataPackageArn(extraDataArn);
+
+            ScheduleRunResult run = adf.scheduleRun(project.getArn(), deviceFarmRunName, appArn, devicePool.getArn(), testToSchedule, jobTimeoutMinutes, configuration);
 
             String runArn = run.getRun().getArn();
             try {
@@ -428,7 +570,38 @@ public class AWSDeviceFarmRecorder extends Recorder {
         return true;
     }
 
-    private ScheduleRunConfiguration getScheduleRunConfiguration(Boolean isRunUnmetered) {
+    private Location getScheduleRunConfigurationLocation(Boolean deviceLocation) {
+        Location location = new Location();
+        if (deviceLocation != null && deviceLocation){
+            location.setLatitude(deviceLatitude);
+            location.setLongitude(deviceLongitude);
+        }
+        else {
+            location.setLatitude(47.6204);
+            location.setLongitude(-122.3491);
+        }
+        return location;
+    }
+
+    private Radios getScheduleRunConfigurationRadio(Boolean radioDetails) {
+        Radios radio = new Radios();
+        if (radioDetails != null && radioDetails){
+            radio.setBluetooth(ifBluetooth);
+            radio.setGps(ifGPS);
+            radio.setNfc(ifNfc);
+            radio.setWifi(ifWifi);
+        }
+        else {
+            radio.setBluetooth(true);
+            radio.setGps(true);
+            radio.setNfc(true);
+            radio.setWifi(true);
+        }
+        return radio;
+
+    }
+
+    private ScheduleRunConfiguration getScheduleRunConfiguration(Boolean isRunUnmetered, Boolean deviceLocation, Boolean radioDetails) {
         ScheduleRunConfiguration configuration = new ScheduleRunConfiguration();
         if (isRunUnmetered != null && isRunUnmetered) {
             configuration.setBillingMethod(BillingMethod.UNMETERED);
@@ -438,19 +611,12 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
         // set a bunch of other default values as Device Farm expect these
         configuration.setAuxiliaryApps(new ArrayList<String>());
-        configuration.setExtraDataPackageArn(null);
         configuration.setLocale("en_US");
 
-        Location location = new Location();
-        location.setLatitude(47.6204);
-        location.setLongitude(-122.3491);
+        Location location = getScheduleRunConfigurationLocation(deviceLocation);
         configuration.setLocation(location);
 
-        Radios radio = new Radios();
-        radio.setBluetooth(true);
-        radio.setGps(true);
-        radio.setNfc(true);
-        radio.setWifi(true);
+        Radios radio = getScheduleRunConfigurationRadio(radioDetails);
         configuration.setRadios(radio);
 
         return configuration;
@@ -574,6 +740,8 @@ public class AWSDeviceFarmRecorder extends Recorder {
                 testToSchedule = new ScheduleRunTest()
                         .withType(testType)
                         .withTestPackageArn(upload.getArn());
+
+                testToSchedule.addParametersEntry("appium_version", appiumVersionJunit);
                 break;
             }
 
@@ -587,6 +755,8 @@ public class AWSDeviceFarmRecorder extends Recorder {
                 testToSchedule = new ScheduleRunTest()
                         .withType(testType)
                         .withTestPackageArn(upload.getArn());
+
+                testToSchedule.addParametersEntry("appium_version", appiumVersionTestng);
                 break;
             }
 
@@ -600,6 +770,53 @@ public class AWSDeviceFarmRecorder extends Recorder {
                 testToSchedule = new ScheduleRunTest()
                         .withType(testType)
                         .withTestPackageArn(upload.getArn());
+
+                testToSchedule.addParametersEntry("appium_version", appiumVersionPython);
+                break;
+            }
+
+            case APPIUM_WEB_JAVA_JUNIT: {
+                AppiumWebJavaJUnitTest test = new AppiumWebJavaJUnitTest.Builder()
+                        .withTests(env.expand(appiumJavaJUnitTest))
+                        .build();
+
+                Upload upload = adf.uploadTest(project, test);
+
+                testToSchedule = new ScheduleRunTest()
+                        .withType(testType)
+                        .withTestPackageArn(upload.getArn());
+
+                testToSchedule.addParametersEntry("appium_version", appiumVersionJunit);
+                break;
+            }
+
+            case APPIUM_WEB_JAVA_TESTNG: {
+                AppiumWebJavaTestNGTest test = new AppiumWebJavaTestNGTest.Builder()
+                        .withTests(env.expand(appiumJavaTestNGTest))
+                        .build();
+
+                Upload upload = adf.uploadTest(project, test);
+
+                testToSchedule = new ScheduleRunTest()
+                        .withType(testType)
+                        .withTestPackageArn(upload.getArn());
+
+                testToSchedule.addParametersEntry("appium_version", appiumVersionTestng);
+                break;
+            }
+
+            case APPIUM_WEB_PYTHON: {
+                AppiumWebPythonTest test = new AppiumWebPythonTest.Builder()
+                        .withTests(env.expand(appiumPythonTest))
+                        .build();
+
+                Upload upload = adf.uploadTest(project, test);
+
+                testToSchedule = new ScheduleRunTest()
+                        .withType(testType)
+                        .withTestPackageArn(upload.getArn());
+
+                testToSchedule.addParametersEntry("appium_version", appiumVersionPython);
                 break;
             }
 
@@ -675,12 +892,14 @@ public class AWSDeviceFarmRecorder extends Recorder {
             case XCTEST: {
                 XCTestTest test = new XCTestTest.Builder()
                         .withTests(xctestArtifact)
+                        .withFilter(xctestFilter)
                         .build();
 
                 Upload upload = adf.uploadTest(project, test);
 
                 testToSchedule = new ScheduleRunTest()
                         .withType(testType)
+                        .withFilter(test.getFilter())
                         .withTestPackageArn(upload.getArn());
                 break;
             }
@@ -694,6 +913,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
                 testToSchedule = new ScheduleRunTest()
                         .withType(testType)
+                        .withFilter(test.getFilter())
                         .withTestPackageArn(upload.getArn());
                 break;
             }
@@ -730,7 +950,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
             return false;
         }
         // [Required]: App Artifact
-        if (appArtifact == null || appArtifact.isEmpty()) {
+        if (!ifWebApp && (appArtifact == null || appArtifact.isEmpty())) {
             writeToLog("Application Artifact must be set.");
             return false;
         }
@@ -795,6 +1015,33 @@ public class AWSDeviceFarmRecorder extends Recorder {
             case APPIUM_PYTHON: {
                 if (appiumPythonTest == null || appiumPythonTest.isEmpty()) {
                     writeToLog("Appium Python test must be set.");
+                    return false;
+                }
+
+                break;
+            }
+
+            case APPIUM_WEB_JAVA_JUNIT: {
+                if (appiumJavaJUnitTest == null || appiumJavaJUnitTest.isEmpty()) {
+                    writeToLog("Appium Java Junit test for the web application must be set.");
+                    return false;
+                }
+
+                break;
+            }
+
+            case APPIUM_WEB_JAVA_TESTNG: {
+                if (appiumJavaTestNGTest == null || appiumJavaTestNGTest.isEmpty()) {
+                    writeToLog("Appium Java TestNG test for the web application must be set.");
+                    return false;
+                }
+
+                break;
+            }
+
+            case APPIUM_WEB_PYTHON: {
+                if (appiumPythonTest == null || appiumPythonTest.isEmpty()) {
+                    writeToLog("Appium Python test for the web application must be set.");
                     return false;
                 }
 
@@ -1079,8 +1326,8 @@ public class AWSDeviceFarmRecorder extends Recorder {
          * @return Whether or not the form was ok.
          */
         @SuppressWarnings("unused")
-        public FormValidation doCheckAppArtifact(@QueryParameter String appArtifact) {
-            if (appArtifact == null || appArtifact.isEmpty()) {
+        public FormValidation doCheckAppArtifact(@QueryParameter  Boolean ifWebApp, @QueryParameter String appArtifact) {
+            if (!ifWebApp && (appArtifact == null || appArtifact.isEmpty())) {
                 return FormValidation.error("Required!");
             }
             return FormValidation.ok();
@@ -1224,6 +1471,22 @@ public class AWSDeviceFarmRecorder extends Recorder {
         }
 
         /**
+         * Validate the user entered execution time.
+         *
+         * @param jobTimeoutMinutes The Int of the limit execute time the user typed.
+         * @return Whether or not the form was ok.
+         */
+        @SuppressWarnings("unused")
+        public FormValidation doCheckJobTimeoutMinutes(@QueryParameter Integer jobTimeoutMinutes) {
+            if (jobTimeoutMinutes == null) {
+                return FormValidation.error("Required");
+            } else if (jobTimeoutMinutes < MIN_EXECUTION_TIMEOUT || jobTimeoutMinutes > MAX_EXECUTION_TIMEOUT) {
+                return FormValidation.error("The maximum execution timeout per device should not be greater than 60 or smaller than 5 minutes.");
+            }
+            return FormValidation.ok();
+        }
+
+        /**
          * Refresh button clicked, clear the project and device pool caches
          * so the next click on the drop-down will get fresh content from the API.
          *
@@ -1281,6 +1544,60 @@ public class AWSDeviceFarmRecorder extends Recorder {
             for (String devicePoolName : devicePoolNames) {
                 // We don't ignore case because these *should* be unique.
                 entries.add(new ListBoxModel.Option(devicePoolName, devicePoolName, devicePoolName.equals(currentDevicePoolName)));
+            }
+            return new ListBoxModel(entries);
+        }
+
+        /**
+         * Populate the project drop-down Appium Version.
+         *
+         * @return The ListBoxModel for the UI.
+         */
+        @SuppressWarnings("unused")
+        public ListBoxModel doFillAppiumVersionJunitItems(@QueryParameter String currentAppiumVersion) {
+            List<ListBoxModel.Option> entries = new ArrayList<ListBoxModel.Option>();
+            ArrayList<String> appiumVersions = new ArrayList<String>();
+            appiumVersions.add(APPIUM_VERSION_1_6_3);
+            appiumVersions.add(APPIUM_VERSION_1_4_16);
+            for (String appiumVersion: appiumVersions) {
+                entries.add(new ListBoxModel.Option(appiumVersion, appiumVersion, appiumVersion.equals(currentAppiumVersion)));
+            }
+            return new ListBoxModel(entries);
+        }
+
+        /**
+         * Populate the project drop-down Appium Version.
+         *
+         * @return The ListBoxModel for the UI.
+         */
+        @SuppressWarnings("unused")
+        public ListBoxModel doFillAppiumVersionTestngItems(@QueryParameter String currentAppiumVersion) {
+            List<ListBoxModel.Option> entries = new ArrayList<ListBoxModel.Option>();
+            ArrayList<String> appiumVersions = new ArrayList<String>();
+            appiumVersions.add(APPIUM_VERSION_1_6_3);
+            appiumVersions.add(APPIUM_VERSION_1_4_16);
+            for (String appiumVersion: appiumVersions) {
+                // We don't ignore case because these *should* be unique.
+                entries.add(new ListBoxModel.Option(appiumVersion, appiumVersion, appiumVersion.equals(currentAppiumVersion)));
+            }
+            return new ListBoxModel(entries);
+        }
+
+        /**
+         * Populate the project drop-down Appium Version.
+         *
+         * @return The ListBoxModel for the UI.
+         */
+        @SuppressWarnings("unused")
+        public ListBoxModel doFillAppiumVersionPythonItems(@QueryParameter String currentAppiumVersion) {
+            // Create ListBoxModel from all projects for this AWS Device Farm account.
+            List<ListBoxModel.Option> entries = new ArrayList<ListBoxModel.Option>();
+            //System.out.print("getting appium version");
+            ArrayList<String> appiumVersions = new ArrayList<String>();
+            appiumVersions.add(APPIUM_VERSION_1_6_3);
+            appiumVersions.add(APPIUM_VERSION_1_4_16);
+            for (String appiumVersion: appiumVersions) {
+                entries.add(new ListBoxModel.Option(appiumVersion, appiumVersion, appiumVersion.equals(currentAppiumVersion)));
             }
             return new ListBoxModel(entries);
         }

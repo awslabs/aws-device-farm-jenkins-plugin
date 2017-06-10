@@ -3,12 +3,12 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>1.509.2</version><!-- which version of Jenkins is this plugin built against? -->
+    <version>2.29</version><!-- which version of Jenkins is this plugin built against? -->
   </parent>
 
   <groupId>org.jenkins-ci.plugins</groupId>
   <artifactId>aws-device-farm</artifactId>
-  <version>1.11-SNAPSHOT</version>
+  <version>1.14-SNAPSHOT</version>
   <packaging>hpi</packaging>
   
   <name>aws-device-farm</name>
@@ -17,9 +17,21 @@
   
   <dependencies>
     <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>junit</artifactId>
+      <version>1.20</version>
+    </dependency>
+
+    <dependency>
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk</artifactId>
-      <version>1.10.59</version>
+      <version>1.11.126</version>
+    </dependency>
+    
+    <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpcore</artifactId>
+        <version>4.4</version>
     </dependency>
   </dependencies>
 
@@ -41,11 +53,18 @@
 
   <developers>
     <developer>
-      <id>ahawker</id>
-      <name>Andrew Hawker</name>
-      <email>ahawker@amazon.com</email>
+      <id>chabom</id>
+      <name>Chandra Bommas</name>
+      <email>chabom@amazon.com</email>
+    </developer>
+
+    <developer>
+      <id>nikdabn</id>
+      <name>Nikhil Dabhade</name>
+      <email>nikdabn@amazon.com</email>
     </developer>
   </developers>
+
   
   <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
   <repositories>
