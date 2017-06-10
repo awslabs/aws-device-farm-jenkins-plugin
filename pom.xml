@@ -53,11 +53,18 @@
 
   <developers>
     <developer>
-      <id>ahawker</id>
-      <name>Andrew Hawker</name>
-      <email>ahawker@amazon.com</email>
+      <id>chabom</id>
+      <name>Chandra Bommas</name>
+      <email>chabom@amazon.com</email>
+    </developer>
+
+    <developer>
+      <id>nikdabn</id>
+      <name>Nikhil Dabhade</name>
+      <email>nikdabn@amazon.com</email>
     </developer>
   </developers>
+
   
   <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
   <repositories>
