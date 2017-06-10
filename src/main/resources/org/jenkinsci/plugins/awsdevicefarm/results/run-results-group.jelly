@@ -1,8 +1,8 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt" xmlns:r="/org/jenkinsci/plugins/awsdevicefarm/results">
   <st:attribute name="results" use="required" />
-  <link rel="stylesheet" href="/plugin/aws-device-farm/font-awesome/css/font-awesome.min.css"/>
+  <link rel="stylesheet" href="${resURL}/plugin/aws-device-farm/font-awesome/css/font-awesome.min.css"/>
   <style type="text/css">
-    @import url("/static/44e48ac2/plugin/aws-device-farm/default.css")
+    @import url("${resURL}/plugin/aws-device-farm/default.css")
   </style>
   <table class="pane sortable" style="table-layout:fixed; word-break: break-all; word-wrap: break-word;">
     <tr>

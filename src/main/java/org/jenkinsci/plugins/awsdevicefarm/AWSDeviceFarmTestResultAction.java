@@ -1,26 +1,35 @@
+//
+// Copyright 2015-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License").
+// You may not use this file except in compliance with the License.
+// A copy of the License is located at
+//
+// http://aws.amazon.com/apache2.0
+//
+// or in the "license" file accompanying this file. This file is distributed
+// on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+// express or implied. See the License for the specific language governing
+// permissions and limitations under the License.
+//
 package org.jenkinsci.plugins.awsdevicefarm;
-
-import java.io.PrintStream;
 
 import com.amazonaws.services.devicefarm.model.GetRunResult;
 import com.amazonaws.services.devicefarm.model.Run;
 import com.amazonaws.services.devicefarm.model.ScheduleRunResult;
-
 import hudson.model.AbstractBuild;
 import hudson.model.Result;
 import hudson.tasks.test.AbstractTestResultAction;
-
-import java.lang.InterruptedException;
-
 import org.kohsuke.stapler.StaplerProxy;
+
+import java.io.PrintStream;
 
 /**
  * Action which controls the execution management and results updating for AWS Device Farm runs.
- * 
+ * <p>
  * This object is analogous to an AWS Device Farm run.
- * 
- * @author hawker
  *
+ * @author hawker
  */
 public class AWSDeviceFarmTestResultAction extends AbstractTestResultAction<AWSDeviceFarmTestResultAction> implements StaplerProxy {
 
@@ -38,6 +47,7 @@ public class AWSDeviceFarmTestResultAction extends AbstractTestResultAction<AWSD
 
     /**
      * Returns the Jenkins result which matches the result of this AWS Device Farm run.
+     *
      * @return
      */
     public Result getBuildResult(Boolean ignoreRunError) {
@@ -48,6 +58,7 @@ public class AWSDeviceFarmTestResultAction extends AbstractTestResultAction<AWSD
      * Blocking function which periodically polls the given AWS Device Farm run until its completed. During this waiting period,
      * we will grab the latest results reported by Device Farm and updated our internal result "snapshot" which will be used
      * to populate/inform the UI of test results/progress.
+     *
      * @param runResult
      */
     public void waitForRunCompletion(AWSDeviceFarm adf, ScheduleRunResult runResult) throws InterruptedException {
@@ -61,8 +72,7 @@ public class AWSDeviceFarmTestResultAction extends AbstractTestResultAction<AWSD
             }
             try {
                 Thread.sleep(DefaultUpdateInterval);
-            }
-            catch(InterruptedException ex) {
+            } catch (InterruptedException ex) {
                 writeToLog(String.format("Thread interrupted while waiting for the Run to complete"));
                 throw ex;
             }
@@ -71,6 +81,7 @@ public class AWSDeviceFarmTestResultAction extends AbstractTestResultAction<AWSD
 
     /**
      * Returns the most recent AWS Device Farm test action from the previous build.
+     *
      * @return
      */
     @Override
@@ -84,6 +95,7 @@ public class AWSDeviceFarmTestResultAction extends AbstractTestResultAction<AWSD
 
     /**
      * Returns a snapshot of the current results for this AWS Device Farm run.
+     *
      * @return
      */
     @Override
@@ -93,6 +105,7 @@ public class AWSDeviceFarmTestResultAction extends AbstractTestResultAction<AWSD
 
     /**
      * Returns a snapshot of the current results for this AWS Device Farm run.
+     *
      * @return
      */
     public AWSDeviceFarmTestResult getTarget() {
@@ -101,30 +114,30 @@ public class AWSDeviceFarmTestResultAction extends AbstractTestResultAction<AWSD
 
     /**
      * Returns the number of failed tests for this AWS Device Farm run.
+     *
      * @return
      */
     @Override
     public int getFailCount() {
         AWSDeviceFarmTestResult result = getResult();
-        if (result !=null) {
+        if (result != null) {
             return getResult().getFailCount();
-        }
-        else {
+        } else {
             return -1;
         }
     }
 
     /**
      * Returns the total number of tests for this AWS Device Farm run.
+     *
      * @return
      */
     @Override
     public int getTotalCount() {
         AWSDeviceFarmTestResult result = getResult();
-        if (result !=null) {
+        if (result != null) {
             return getResult().getTotalCount();
-        }
-        else {
+        } else {
             return -1;
         }
     }

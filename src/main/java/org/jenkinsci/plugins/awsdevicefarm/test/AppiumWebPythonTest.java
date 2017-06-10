@@ -15,9 +15,9 @@
 package org.jenkinsci.plugins.awsdevicefarm.test;
 
 /**
- * POJO class for an Appium Java JUnit test.
+ * POJO class for a Web Appium Python test.
  */
-public class AppiumJavaJUnitTest {
+public class AppiumWebPythonTest {
     private final String tests;
 
     /**
@@ -42,8 +42,8 @@ public class AppiumJavaJUnitTest {
          *
          * @return The new POJO.
          */
-        public AppiumJavaJUnitTest build() {
-            return new AppiumJavaJUnitTest(this);
+        public AppiumWebPythonTest build() {
+            return new AppiumWebPythonTest(this);
         }
     }
 
@@ -52,7 +52,7 @@ public class AppiumJavaJUnitTest {
      *
      * @param builder The builder to use.
      */
-    private AppiumJavaJUnitTest(Builder builder) {
+    private AppiumWebPythonTest(Builder builder) {
         this.tests = builder.tests;
     }
 

@@ -10,8 +10,12 @@
     <f:select style="width:100%" inline="true"/>
   </f:entry>
 
-  <f:entry title="Application" field="appArtifact" description="[Required] Pattern to find newly built application.">
+  <f:entry title="Application" field="appArtifact" description="[Required for native and hybrid apps] Pattern to find newly built application. Leave it blank if it is a web application.">
     <f:textbox />
+  </f:entry>
+
+  <f:entry>
+    <f:checkbox name="ifWebApp" title="It is a web application." checked="${instance.ifWebApp}" inline="true"/>
   </f:entry>
   
   <f:entry title="Run Name" field="runName" description="[Optional] Name of your AWS Device Farm Run. Defaults to Environment variable BUILD_TAG.">
@@ -41,7 +45,7 @@
         </f:entry>
       </f:nested>
     </f:radioBlock>
-    
+
     <f:radioBlock name="testToRun" value="BUILTIN_FUZZ" checked="${instance.isTestType('BUILTIN_FUZZ')}" title="Built-in Fuzz" inline="true">
       <f:nested>
         <f:entry title="Event Count" field="eventCount" description="[Optional] Number of fuzz events.">
@@ -61,6 +65,10 @@
         <f:entry title="Tests" field="appiumJavaJUnitTest" description="[Required] Pattern to find Java JUnit tests.">
           <f:textbox />
         </f:entry>
+
+        <f:entry name="appiumVersion" title="Appium Version" field="appiumVersionJunit">
+          <f:select inline="true" />
+        </f:entry>
       </f:nested>
     </f:radioBlock>
 
@@ -69,13 +77,21 @@
         <f:entry title="Tests" field="appiumJavaTestNGTest" description="[Required] Pattern to find Java TestNG tests.">
           <f:textbox />
         </f:entry>
+
+        <f:entry name="appiumVersion" title="Appium Version" field="appiumVersionTestng">
+          <f:select inline="true" />
+        </f:entry>
       </f:nested>
     </f:radioBlock>
-    
-     <f:radioBlock name="testToRun" value="APPIUM_PYTHON" checked="${instance.isTestType('APPIUM_PYTHON')}" title="Appium Python" inline="true">
+
+    <f:radioBlock name="testToRun" value="APPIUM_PYTHON" checked="${instance.isTestType('APPIUM_PYTHON')}" title="Appium Python" inline="true">
       <f:nested>
         <f:entry title="Tests" field="appiumPythonTest" description="[Required] Pattern to find Python tests.">
           <f:textbox />
+        </f:entry>
+
+        <f:entry name="appiumVersion" title="Appium Version" field="appiumVersionPython">
+          <f:select inline="true" />
         </f:entry>
       </f:nested>
     </f:radioBlock>
@@ -129,6 +145,9 @@
         <f:entry title="Tests" field="xctestArtifact" description="[Required] Pattern to find XCTest tests.">
           <f:textbox />
         </f:entry>
+        <f:entry title="Test Filter" field="xctestFilter" description="[Optional] Click help icon to see details.">
+          <f:textbox />
+        </f:entry>
       </f:nested>
     </f:radioBlock>
     
@@ -137,8 +156,63 @@
         <f:entry title="Tests" field="xctestUiArtifact" description="[Required] Pattern to find XCTest UI tests.">
           <f:textbox />
         </f:entry>
+        <f:entry title="Test Filter" field="xctestuiFilter" description="[Optional] Click help icon to see details.">
+          <f:textbox />
+        </f:entry>
       </f:nested>
     </f:radioBlock>
-    
+  </f:section>
+
+  <f:section title="Specify Device State(Optional)">
+
+    <f:optionalBlock name="radioDetails" title="Specify Radio Details of Devices. Otherwise, use the default setting." checked="${instance.radioDetails}" inline="true">
+      <f:entry >
+        <f:checkbox name="ifWifi" title="Enable Wifi" default="true" checked="${instance.ifWifi}" inline="true"/>
+      </f:entry>
+
+      <f:entry >
+        <f:checkbox name="ifGPS" title="Enable GPS" default="true" checked="${instance.ifGPS}" inline="true"/>
+      </f:entry>
+
+      <f:entry >
+        <f:checkbox name="ifBluetooth" title="Enable Bluetooth" default="true" checked="${instance.ifBluetooth}" inline="true"/>
+      </f:entry>
+
+      <f:entry >
+        <f:checkbox name="ifNfc" title="Enable NFC" default="true" checked="${instance.ifNfc}" inline="true"/>
+      </f:entry>
+    </f:optionalBlock>
+
+    <f:optionalBlock name="extraData" title="Add Extra Data." checked="${instance.extraData}" inline="true">
+      <f:entry title="Extra Data" field="extraDataArtifact" description="[Optional] Relative or workspace path to a .zip file to be extracted to a device before your app is tested." >
+        <f:textbox />
+      </f:entry>
+    </f:optionalBlock>
+
+    <f:optionalBlock name="deviceLocation" title="Specify Device Location." checked="${instance.deviceLocation}" inline="true">
+      <f:entry title="Device Latitude" field="deviceLatitude" description="[Optional] The Latitude of the device to be tested." >
+        <f:textbox default="47.6204"/>
+      </f:entry>
+
+      <f:entry title="Device Longitude" field="deviceLongitude" description="[Optional] The Longitude of the device to be tested.">
+        <f:textbox default="-122.3941"/>
+      </f:entry>
+    </f:optionalBlock>
+  </f:section>
+
+  <f:section title="Execution Information">
+    <f:entry title="Execution Timeout" field="jobTimeoutMinutes" description="[Optional] The maximum execution timeout per device. By default 60 minutes">
+      <f:textbox field="jobTimeoutMinutes" default="60" style="width:30%" /> Minutes Per Device
+    </f:entry>
+  </f:section>
+
+  <f:section title="Execution Configuration">
+    <f:entry >
+      <f:checkbox name="ifVideoRecording" title="Enable Video Recording" default="true" checked="${instance.ifWifi}" inline="true"/>
+    </f:entry>
+
+    <f:entry >
+      <f:checkbox name="ifAppPerformanceMonitoring" title="Enable App Performance Monitoring" default="true" checked="${instance.ifGPS}" inline="true"/>
+    </f:entry>
   </f:section>
 </j:jelly>

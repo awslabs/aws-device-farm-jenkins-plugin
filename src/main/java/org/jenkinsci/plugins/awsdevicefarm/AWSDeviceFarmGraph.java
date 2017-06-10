@@ -1,15 +1,27 @@
+//
+// Copyright 2015-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License").
+// You may not use this file except in compliance with the License.
+// A copy of the License is located at
+//
+// http://aws.amazon.com/apache2.0
+//
+// or in the "license" file accompanying this file. This file is distributed
+// on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+// express or implied. See the License for the specific language governing
+// permissions and limitations under the License.
+//
 package org.jenkinsci.plugins.awsdevicefarm;
 
-import java.awt.Color;
-import java.util.List;
-import java.util.ArrayList;
 import hudson.Functions;
 import hudson.model.AbstractBuild;
-import hudson.util.Graph;
+import hudson.model.Run;
 import hudson.util.Area;
-import hudson.util.ShiftedCategoryAxis;
 import hudson.util.ChartUtil.NumberOnlyBuildLabel;
 import hudson.util.DataSetBuilder;
+import hudson.util.Graph;
+import hudson.util.ShiftedCategoryAxis;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.CategoryAxis;
@@ -24,6 +36,10 @@ import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.ui.RectangleEdge;
 import org.jfree.ui.RectangleInsets;
 
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Generate stylized graphs for AWS Device Farm results.
  */
@@ -33,7 +49,7 @@ public class AWSDeviceFarmGraph extends Graph {
     public static final Color FailColor = new Color(0xbe2326);
     public static final Color DurationColor = new Color(0x083250);
     public static final Color FrameColor = new Color(0xEBEBDC);
-    
+
     private final String xLabel;
     private final String yLabel;
     private final CategoryDataset dataset;
@@ -47,9 +63,10 @@ public class AWSDeviceFarmGraph extends Graph {
         this.yLabel = yLabel;
         this.colors = colors;
     }
- 
+
     /**
      * Create graph based on the given dataset and constraints.
+     *
      * @return The JFreeChart graph.
      */
     protected JFreeChart createGraph() {
@@ -62,7 +79,7 @@ public class AWSDeviceFarmGraph extends Graph {
         legend.setPosition(RectangleEdge.RIGHT);
 
         // Create chart plot.
-        CategoryPlot plot  = (CategoryPlot) chart.getPlot();
+        CategoryPlot plot = (CategoryPlot) chart.getPlot();
         plot.setForegroundAlpha(0.7f);
         plot.setBackgroundPaint(Color.WHITE);
         plot.setRangeGridlinePaint(Color.darkGray);
@@ -85,7 +102,7 @@ public class AWSDeviceFarmGraph extends Graph {
         plot.setInsets(new RectangleInsets(5.0, 0, 0, 5.0));
 
         // Set chart colors for sections.
-        for (int i=0; i<colors.length; i++) {
+        for (int i = 0; i < colors.length; i++) {
             renderer.setSeriesPaint(i, colors[i]);
         }
         return chart;
@@ -93,9 +110,10 @@ public class AWSDeviceFarmGraph extends Graph {
 
     /**
      * Generate a results (pass/warn/fail) trend graph for recent results.
-     * @param owner The build which owns the latest result.
+     *
+     * @param owner       The build which owns the latest result.
      * @param isCompleted The flag to denote if the result is completed which determines our caching.
-     * @param results The list of previous to latest results which generate the trend.
+     * @param results     The list of previous to latest results which generate the trend.
      * @return The result trend graph.
      */
     public static Graph createResultTrendGraph(AbstractBuild<?, ?> owner, Boolean isCompleted, List<AWSDeviceFarmTestResult> results) {
@@ -104,8 +122,8 @@ public class AWSDeviceFarmGraph extends Graph {
         List<NumberOnlyBuildLabel> cols = new ArrayList<NumberOnlyBuildLabel>();
 
         for (AWSDeviceFarmTestResult result : results) {
-            AbstractBuild<?, ?> build = result.getOwner();
-    
+            Run<?, ?> build = result.getOwner();
+
             // Create label for this result using its Jenkins build number.
             NumberOnlyBuildLabel label = new NumberOnlyBuildLabel(build);
 
@@ -118,7 +136,7 @@ public class AWSDeviceFarmGraph extends Graph {
             rows.add("Warn");
             cols.add(label);
             vals.add(result.getWarnCount());
-    
+
             // Add 'fail' results.
             rows.add("Fail");
             cols.add(label);
@@ -126,15 +144,16 @@ public class AWSDeviceFarmGraph extends Graph {
         }
 
         CategoryDataset dataset = createDataset(vals, rows, cols);
-        Color[] colors = new Color[] { AWSDeviceFarmGraph.PassColor, AWSDeviceFarmGraph.WarnColor, AWSDeviceFarmGraph.FailColor };
+        Color[] colors = new Color[]{AWSDeviceFarmGraph.PassColor, AWSDeviceFarmGraph.WarnColor, AWSDeviceFarmGraph.FailColor};
         return new AWSDeviceFarmGraph(owner, isCompleted, getGraphSize(), dataset, "Build #", "# of tests", colors);
     }
 
     /**
      * Generate a duration trend graph for device minutes used for recent results.
-     * @param owner The build which owns the latest result.
+     *
+     * @param owner       The build which owns the latest result.
      * @param isCompleted The flag to denote if the result is completed which determines our caching.
-     * @param results The list of previous to latest results which generate the trend.
+     * @param results     The list of previous to latest results which generate the trend.
      * @return The duration trend graph.
      */
     public static Graph createDurationTrendGraph(AbstractBuild<?, ?> owner, Boolean isCompleted, List<AWSDeviceFarmTestResult> results) {
@@ -142,7 +161,7 @@ public class AWSDeviceFarmGraph extends Graph {
 
         for (AWSDeviceFarmTestResult result : results) {
             // Create label for this result using its Jenkins build number.
-            AbstractBuild<?, ?> build = result.getOwner();
+            Run<?, ?> build = result.getOwner();
             NumberOnlyBuildLabel label = new NumberOnlyBuildLabel(build);
 
             // Attach duration value for all results in our trend.
@@ -150,20 +169,21 @@ public class AWSDeviceFarmGraph extends Graph {
         }
 
         CategoryDataset dataset = builder.build();
-        Color[] colors = new Color[] { AWSDeviceFarmGraph.DurationColor };
+        Color[] colors = new Color[]{AWSDeviceFarmGraph.DurationColor};
         return new AWSDeviceFarmGraph(owner, isCompleted, getGraphSize(), dataset, "Build #", "Device Minutes Used", colors);
     }
 
     /**
      * Generate a category dataset.
-     * @param values The values in the dataset.
-     * @param rows The names of the rows in the dataset.
+     *
+     * @param values  The values in the dataset.
+     * @param rows    The names of the rows in the dataset.
      * @param columns The columns in the the dataset.
      * @return The category dataset.
      */
     private static CategoryDataset createDataset(List<Number> values, List<String> rows, List<NumberOnlyBuildLabel> columns) {
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-        for (int i=0; i<values.size(); i++) {
+        for (int i = 0; i < values.size(); i++) {
             dataset.addValue(values.get(i), rows.get(i), columns.get(i));
         }
         return dataset;
@@ -171,6 +191,7 @@ public class AWSDeviceFarmGraph extends Graph {
 
     /**
      * Get the size of the graph on the screen.
+     *
      * @return The area of the graph.
      */
     private static Area getGraphSize() {

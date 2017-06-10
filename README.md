@@ -9,6 +9,9 @@ This plugin provides AWS Device Farm functionality from your own Jenkins CI serv
 
 ![configuration](https://raw.github.com/awslabs/aws-device-farm-jenkins-plugin/master/ext/configuration.png)
 
+It also provides the device state details specification if the checkboxs are checked. Otherwise, the default settings will be used:
+![device-state-specification](https://raw.github.com/awslabs/aws-device-farm-jenkins-plugin/master/ext/device-state-specification.png)
+
 It also can pull down all of the test artifacts (logs, screenshots, etc.) locally: 
 
 ![build-artifacts](https://raw.github.com/awslabs/aws-device-farm-jenkins-plugin/master/ext/build-artifacts.png)
@@ -93,11 +96,14 @@ Usage
 6. Select the project you would like to use.
 7. Select the device pool you would like to use.
 8. Select if you'd like to have the test artifacts (such as the logs and screenshots) archived locally.
-9. In “Application”, fill in the path to your compiled application.
-10. Select the test you would like run and fill in all required fields.
-11. Click “Save”.
+9. In “Application”, fill in the path to your compiled application for testing native or hybrid app. Check "It is a web application." for testing web app.
+10. Choose the test framework, provide the path to your test package location and other relavent details.
+11. Configure device state parameters like radio details, extra data and device locations.
+12. Configure the maximum execution timeout. The default execution timeout is 60 minutes.
+13. Set the execution configuration parameters: video recording and app performance monitoring.
+14. Click “Save”.
 
 Dependencies
 ============
 
-* AWS SDK 1.10.5 or later.
+* AWS SDK 1.11.126 or later.
