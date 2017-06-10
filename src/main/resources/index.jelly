@@ -1,3 +1,4 @@
+<?jelly escape-by-default='true'?>
 <div>
   This plugin schedules test runs on AWS Device Farm.
 </div>
