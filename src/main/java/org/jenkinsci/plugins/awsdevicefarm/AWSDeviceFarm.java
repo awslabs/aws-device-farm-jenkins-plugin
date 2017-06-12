@@ -524,7 +524,7 @@ public class AWSDeviceFarm {
         writeToLog(String.format("Uploading %s to S3", file.getName()));
         HttpResponse response = httpClient.execute(httpPut);
         if (response.getStatusLine().getStatusCode() != 200) {
-            throw new AWSDeviceFarmException(String.format("Upload returned non-200 responses: %i", response.getStatusLine().getStatusCode()));
+            throw new AWSDeviceFarmException(String.format("Upload returned non-200 responses: %d", response.getStatusLine().getStatusCode()));
         }
 
         if (synchronous) {
@@ -580,7 +580,7 @@ public class AWSDeviceFarm {
                 .withTest(test);
 
         ExecutionConfiguration exeConfiguration = new ExecutionConfiguration();
-        if (jobTimeoutMinutes != DEFAULT_JOB_TIMEOUT_MINUTE) {
+        if (!jobTimeoutMinutes.equals(DEFAULT_JOB_TIMEOUT_MINUTE)) {
             exeConfiguration.setJobTimeoutMinutes(jobTimeoutMinutes);
             request.withExecutionConfiguration(exeConfiguration);
         }
@@ -620,7 +620,7 @@ public class AWSDeviceFarm {
             } else if (matches.length != 1) {
                 StringBuilder msg = new StringBuilder(String.format("More than one match found for pattern '%s':", pattern));
                 for (FilePath fp : matches) {
-                    msg.append(String.format("\n\t%s", fp.getRemote()));
+                    msg.append(String.format("%n\t%s", fp.getRemote()));
                 }
                 throw new AWSDeviceFarmException(msg.toString());
             }
