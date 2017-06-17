@@ -16,7 +16,7 @@
   </f:entry>
 
   <f:entry>
-    <f:checkbox name="ifWebApp" title="It is a web application." checked="${instance.ifWebApp}" inline="true"/>
+    <f:checkbox name="ifWebApp" title="It is a web application." checked="${instance.ifWebApp}" default="false" inline="true"/>
   </f:entry>
   
   <f:entry title="Run Name" field="runName" description="[Optional] Name of your AWS Device Farm Run. Defaults to Environment variable BUILD_TAG.">

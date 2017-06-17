@@ -326,13 +326,8 @@ public class AWSDeviceFarmRecorder extends Recorder {
         this.jobTimeoutMinutes = jobTimeoutMinutes;
         this.ifVideoRecording = ifVideoRecording;
         this.ifAppPerformanceMonitoring = ifAppPerformanceMonitoring;
-
-        if (ifWebApp != null && ifWebApp) this.ifWebApp = true;
-        else this.ifWebApp = false;
-        if (ifWebApp && testToRun.equalsIgnoreCase("APPIUM_PYTHON")) this.testToRun = "APPIUM_WEB_PYTHON";
-        else if (ifWebApp && testToRun.equalsIgnoreCase("APPIUM_JAVA_JUNIT")) this.testToRun = "APPIUM_WEB_JAVA_JUNIT";
-        else if (ifWebApp && testToRun.equalsIgnoreCase("APPIUM_JAVA_TESTNG")) this.testToRun = "APPIUM_WEB_JAVA_TESTNG";
-        else this.testToRun = testToRun;
+        this.ifWebApp = ifWebApp;
+        this.testToRun = transformTestToRunForWebApp(testToRun);
 
         // This is a hack because I have to get the service icon locally, but it's copy-righted. So I pull it when I need it.
         Path pluginIconPath = Paths.get(System.getenv("HOME"), "plugins", "aws-device-farm", "service-icon.svg").toAbsolutePath();
@@ -360,15 +355,28 @@ public class AWSDeviceFarmRecorder extends Recorder {
     }
 
     /**
+     * Transform the test type parameter as the requirement for AWS devicefarm API for appium tests of web apps.
+     *
+     * @param testToRun The String representation of the test type.
+     * @return The String should bu input as the parameter of the devicefarm API.
+     */
+    public String transformTestToRunForWebApp(String testToRun) {
+        if (ifWebApp) {
+            if (testToRun.equalsIgnoreCase("APPIUM_PYTHON")) return"APPIUM_WEB_PYTHON";
+            else if (testToRun.equalsIgnoreCase("APPIUM_JAVA_JUNIT")) return"APPIUM_WEB_JAVA_JUNIT";
+            else if (testToRun.equalsIgnoreCase("APPIUM_JAVA_TESTNG")) return"APPIUM_WEB_JAVA_TESTNG";
+        }
+        return testToRun;
+    }
+
+    /**
      * Test if the test type names match (for marking the radio button).
      *
      * @param testTypeName The String representation of the test type.
      * @return Whether or not the test type string matches.
      */
     public String isTestType(String testTypeName) {
-        if (ifWebApp != null && ifWebApp) {
-            if (testTypeName.substring(0,6).equalsIgnoreCase("APPIUM")) testTypeName = new StringBuilder(testTypeName).insert(7, "WEB_").toString();
-        }
+        testTypeName = transformTestToRunForWebApp(testTypeName);
         return this.testToRun.equalsIgnoreCase(testTypeName) ? "true" : "";
     }
 
@@ -403,9 +411,6 @@ public class AWSDeviceFarmRecorder extends Recorder {
         // Workspace (potentially remote if using slave).
         FilePath workspace = build.getWorkspace();
 
-        // Run root location for this build on master.
-        FilePath root = new FilePath(build.getRootDir());
-
         // Validate user selection & input values.
         boolean isValid = validateConfiguration() && validateTestConfiguration();
         if (!isValid) {
@@ -419,11 +424,6 @@ public class AWSDeviceFarmRecorder extends Recorder {
                 .withWorkspace(workspace)
                 .withArtifactsDir(artifactsDir)
                 .withEnv(env);
-
-        if (adf == null) {
-            writeToLog("ADF API is null!");
-            return false;
-        }
 
         try {
             // Accept 'ADF_PROJECT' build parameter as an overload from job configuration.
@@ -481,10 +481,10 @@ public class AWSDeviceFarmRecorder extends Recorder {
             writeToLog("Getting test to schedule.");
             ScheduleRunTest testToSchedule = getScheduleRunTest(env, adf, project);
 
-            if (ifVideoRecording != null & !ifVideoRecording) {
+            if (ifVideoRecording != null && !ifVideoRecording) {
                 testToSchedule.addParametersEntry("video_recording", "false");
             }
-            if (ifAppPerformanceMonitoring != null & !ifAppPerformanceMonitoring) {
+            if (ifAppPerformanceMonitoring != null && !ifAppPerformanceMonitoring) {
                 testToSchedule.addParametersEntry("app_performance_monitoring", "false");
             }
 
@@ -628,7 +628,8 @@ public class AWSDeviceFarmRecorder extends Recorder {
         String components[] = runArn.split(":");
         // constructing job ARN for each job using the run ARN
         components[5] = "job";
-        for (String jobArn : jobs.keySet()) {
+        for (Map.Entry<String, FilePath> jobEntry : jobs.entrySet()) {
+            String jobArn = jobEntry.getKey();
             components[6] = jobArn;
             String fullJobArn = StringUtils.join(components, ":");
             ListSuitesResult result = adf.listSuites(fullJobArn);
@@ -647,7 +648,8 @@ public class AWSDeviceFarmRecorder extends Recorder {
         String components[] = runArn.split(":");
         // constructing suite ARN for each job using the run ARN
         components[5] = "suite";
-        for (String suiteArn : suites.keySet()) {
+        for (Map.Entry<String, FilePath> suiteEntry : suites.entrySet()) {
+            String suiteArn = suiteEntry.getKey();
             components[6] = suiteArn;
             String fullsuiteArn = StringUtils.join(components, ":");
             ListTestsResult result = adf.listTests(fullsuiteArn);
@@ -907,6 +909,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
             case XCTEST_UI: {
                 XCTestUITest test = new XCTestUITest.Builder()
                         .withTests(xctestUiArtifact)
+                        .withFilter(xctestUiFilter)
                         .build();
 
                 Upload upload = adf.uploadTest(project, test);
@@ -1207,6 +1210,33 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
         public DescriptorImpl() {
             load();
+        }
+
+        /**
+         * roleArn Setter
+         *
+         * @param roleArnValue
+         */
+        protected final void setRoleArn(String roleArnValue){
+            roleArn = roleArnValue;
+        }
+
+        /**
+         * akid Setter
+         *
+         * @param akidValue
+         */
+        protected final void setAkid(String akidValue){
+            akid = akidValue;
+        }
+
+        /**
+         * skid Setter
+         *
+         * @param skidValue
+         */
+        protected final void setSkid(String skidValue){
+            skid = skidValue;
         }
 
         /**
@@ -1516,9 +1546,6 @@ public class AWSDeviceFarmRecorder extends Recorder {
             System.out.print("getting projects");
             List<String> projectNames = getAWSDeviceFarmProjects();
             System.out.print(String.format("project length = %d", projectNames.size()));
-            if (projectNames == null) {
-                return new ListBoxModel();
-            }
             for (String projectName : projectNames) {
                 // We don't ignore case because these *should* be unique.
                 entries.add(new ListBoxModel.Option(projectName, projectName, projectName.equals(currentProjectName)));
