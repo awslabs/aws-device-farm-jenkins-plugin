@@ -157,7 +157,7 @@
         <f:entry title="Tests" field="xctestUiArtifact" description="[Required] Pattern to find XCTest UI tests.">
           <f:textbox />
         </f:entry>
-        <f:entry title="Test Filter" field="xctestuiFilter" description="[Optional] Click help icon to see details.">
+        <f:entry title="Test Filter" field="xctestUiFilter" description="[Optional] Click help icon to see details.">
           <f:textbox />
         </f:entry>
       </f:nested>
@@ -202,18 +202,18 @@
   </f:section>
 
   <f:section title="Execution Information">
-    <f:entry title="Execution Timeout" field="jobTimeoutMinutes" description="[Optional] The maximum execution timeout per device. By default 60 minutes">
+    <f:entry title="Execution Timeout" field="jobTimeoutMinutes" description="[Optional] The maximum execution timeout per device, default to 60 minutes. Contact Device Farm for higher limit.">
       <f:textbox field="jobTimeoutMinutes" default="60" style="width:30%" /> Minutes Per Device
     </f:entry>
   </f:section>
 
   <f:section title="Execution Configuration">
     <f:entry >
-      <f:checkbox name="ifVideoRecording" title="Enable Video Recording" default="true" checked="${instance.ifWifi}" inline="true"/>
+      <f:checkbox name="ifVideoRecording" title="Enable Video Recording" default="true" checked="${instance.ifVideoRecording}" inline="true"/>
     </f:entry>
 
     <f:entry >
-      <f:checkbox name="ifAppPerformanceMonitoring" title="Enable App Performance Monitoring" default="true" checked="${instance.ifGPS}" inline="true"/>
+      <f:checkbox name="ifAppPerformanceMonitoring" title="Enable App Performance Monitoring" default="true" checked="${instance.ifAppPerformanceMonitoring}" inline="true"/>
     </f:entry>
   </f:section>
 </j:jelly>
