@@ -1193,7 +1193,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
      * @return The BuildStepMonitor.
      */
     public BuildStepMonitor getRequiredMonitorService() {
-        return BuildStepMonitor.BUILD;
+        return BuildStepMonitor.NONE;
     }
 
     /**
