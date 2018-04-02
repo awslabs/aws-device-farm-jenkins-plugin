@@ -69,6 +69,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -242,7 +243,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
                                  String devicePoolName,
                                  String appArtifact,
                                  String runName,
-                                 String testToRun,
+                                 @Nonnull String testToRun,
                                  Boolean storeResults,
                                  Boolean isRunUnmetered,
                                  String eventCount,
@@ -360,7 +361,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
      * @param testToRun The String representation of the test type.
      * @return The String should bu input as the parameter of the devicefarm API.
      */
-    public String transformTestToRunForWebApp(String testToRun) {
+    public String transformTestToRunForWebApp(@Nonnull String testToRun) {
         if (ifWebApp) {
             if (testToRun.equalsIgnoreCase("APPIUM_PYTHON")) return"APPIUM_WEB_PYTHON";
             else if (testToRun.equalsIgnoreCase("APPIUM_JAVA_JUNIT")) return"APPIUM_WEB_JAVA_JUNIT";
