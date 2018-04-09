@@ -43,7 +43,7 @@ public class AWSDeviceFarmRecorderTest {
                 null, null, null, null, false, false,
                 null, null, null, null, null, null,
                 false, false, false, 10, false, false,
-                false, false, false, null
+                false, false, false, null, true, "", "A, B"
         );
         p.getPublishersList().add(rec);
 
