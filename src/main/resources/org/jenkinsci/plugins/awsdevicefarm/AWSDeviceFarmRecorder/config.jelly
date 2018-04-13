@@ -4,7 +4,7 @@
   <f:validateButton title="refresh" method="refresh" progress="Checking..." inline="true" />
 
   <f:entry title="Project" field="projectName" description="[Required] Select your AWS Device Farm project.">
-    <f:select style="width:100%; padding-right:5px; margin-right:5px" inline="true" />
+    <f:select default="Select your project" style="width:100%; padding-right:5px; margin-right:5px" inline="true" />
   </f:entry>
 
   <f:entry title="Device Pool" field="devicePoolName" description="[Required] Select your AWS Device Farm device pool.">
