@@ -14,12 +14,10 @@
 //
 package org.jenkinsci.plugins.awsdevicefarm;
 
-import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
 
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.devicefarm.model.Artifact;
@@ -45,10 +43,8 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
-import hudson.model.BuildListener;
 import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
@@ -76,18 +72,14 @@ import org.jenkinsci.plugins.awsdevicefarm.test.UIAutomationTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.UIAutomatorTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.XCTestTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.XCTestUITest;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
-import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -417,13 +409,11 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         // Artifacts location for this build on master.
         FilePath artifactsDir = new FilePath(build.getArtifactsDir());
 
-        // Run root location for this build on master.
-        FilePath root = new FilePath(build.getRootDir());
-
         // Validate user selection & input values.
         boolean isValid = validateConfiguration(log) && validateTestConfiguration(log);
         if (!isValid) {
             writeToLog(log, "Invalid configuration.");
+            build.setResult(Result.FAILURE);
             return;
         }
 
@@ -433,11 +423,6 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                 .withWorkspace(workspace)
                 .withArtifactsDir(artifactsDir)
                 .withEnv(env);
-
-        if (adf == null) {
-            writeToLog(log,"ADF API is null!");
-            return;
-        }
 
         try {
             // Accept 'ADF_PROJECT' build parameter as an overload from job configuration.
@@ -1217,6 +1202,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
      * Descriptor for AWSDeviceFarmRecorder.
      */
     @Extension
+    @Symbol("devicefarm")
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         public String roleArn;
         public String akid;
