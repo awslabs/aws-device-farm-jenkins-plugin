@@ -160,9 +160,9 @@ public class AWSDeviceFarmRecorder extends Recorder {
     public String appiumVersionPython;
     public String appiumVersionTestng;
 
-    private static final String APPIUM_VERSION_1_6_3 = "1.6.3";
     private static final String APPIUM_VERSION_1_6_5 = "1.6.5";
-    private static final String APPIUM_VERSION_1_4_16 = "1.4.16";
+    private static final String APPIUM_VERSION_1_7_1 = "1.7.1";
+    private static final String APPIUM_VERSION_1_7_2 = "1.7.2";
 
     // Device States Specification
     public Boolean extraData;
@@ -1584,9 +1584,9 @@ public class AWSDeviceFarmRecorder extends Recorder {
         public ListBoxModel doFillAppiumVersionJunitItems(@QueryParameter String currentAppiumVersion) {
             List<ListBoxModel.Option> entries = new ArrayList<ListBoxModel.Option>();
             ArrayList<String> appiumVersions = new ArrayList<String>();
-            appiumVersions.add(APPIUM_VERSION_1_6_3);
             appiumVersions.add(APPIUM_VERSION_1_6_5);
-            appiumVersions.add(APPIUM_VERSION_1_4_16);
+            appiumVersions.add(APPIUM_VERSION_1_7_1);
+            appiumVersions.add(APPIUM_VERSION_1_7_2);
             for (String appiumVersion: appiumVersions) {
                 entries.add(new ListBoxModel.Option(appiumVersion, appiumVersion, appiumVersion.equals(currentAppiumVersion)));
             }
@@ -1602,9 +1602,9 @@ public class AWSDeviceFarmRecorder extends Recorder {
         public ListBoxModel doFillAppiumVersionTestngItems(@QueryParameter String currentAppiumVersion) {
             List<ListBoxModel.Option> entries = new ArrayList<ListBoxModel.Option>();
             ArrayList<String> appiumVersions = new ArrayList<String>();
-            appiumVersions.add(APPIUM_VERSION_1_6_3);
             appiumVersions.add(APPIUM_VERSION_1_6_5);
-            appiumVersions.add(APPIUM_VERSION_1_4_16);
+            appiumVersions.add(APPIUM_VERSION_1_7_1);
+            appiumVersions.add(APPIUM_VERSION_1_7_2);
             for (String appiumVersion: appiumVersions) {
                 // We don't ignore case because these *should* be unique.
                 entries.add(new ListBoxModel.Option(appiumVersion, appiumVersion, appiumVersion.equals(currentAppiumVersion)));
@@ -1623,9 +1623,9 @@ public class AWSDeviceFarmRecorder extends Recorder {
             List<ListBoxModel.Option> entries = new ArrayList<ListBoxModel.Option>();
             //System.out.print("getting appium version");
             ArrayList<String> appiumVersions = new ArrayList<String>();
-            appiumVersions.add(APPIUM_VERSION_1_6_3);
             appiumVersions.add(APPIUM_VERSION_1_6_5);
-            appiumVersions.add(APPIUM_VERSION_1_4_16);
+            appiumVersions.add(APPIUM_VERSION_1_7_1);
+            appiumVersions.add(APPIUM_VERSION_1_7_2);
             for (String appiumVersion: appiumVersions) {
                 entries.add(new ListBoxModel.Option(appiumVersion, appiumVersion, appiumVersion.equals(currentAppiumVersion)));
             }
