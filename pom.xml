@@ -10,7 +10,7 @@
   <artifactId>aws-device-farm</artifactId>
   <version>1.17-SNAPSHOT</version>
   <packaging>hpi</packaging>
-  
+
   <name>aws-device-farm</name>
   <url>https://wiki.jenkins.io/display/JENKINS/AWS+Device+Farm+Plugin</url>
   <description>AWS Device Farm Jenkins Plugin</description>
@@ -19,7 +19,7 @@
     <jenkins.version>1.625.3</jenkins.version>
     <java.level>7</java.level>
   </properties>
-  
+
   <dependencies>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -36,9 +36,9 @@
 
     <!-- TODO: Use Apache HttpComponents Client 4.x API instead: https://plugins.jenkins.io/apache-httpcomponents-client-4-api -->
     <dependency>
-        <groupId>org.apache.httpcomponents</groupId>
-        <artifactId>httpcore</artifactId>
-        <version>4.4.4</version>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpcore</artifactId>
+      <version>4.4.4</version>
     </dependency>
   </dependencies>
 
@@ -50,7 +50,7 @@
       <comments>A business-friendly OSS license</comments>
     </license>
   </licenses>
-  
+
   <scm>
     <connection>scm:git:ssh://github.com/jenkinsci/aws-device-farm-plugin.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/jenkinsci/aws-device-farm-plugin.git</developerConnection>
@@ -64,11 +64,15 @@
       <name>Chandra Bommas</name>
       <email>chabom@amazon.com</email>
     </developer>
-
     <developer>
       <id>nikdabn</id>
       <name>Nikhil Dabhade</name>
       <email>nikdabn@amazon.com</email>
+    </developer>
+    <developer>
+      <id>ahawker</id>
+      <name>Andrew Hawker</name>
+      <email>ahawker@amazon.com</email>
     </developer>
   </developers>
 
