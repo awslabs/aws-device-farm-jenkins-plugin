@@ -103,6 +103,13 @@ Usage
 13. Set the execution configuration parameters: video recording and app performance monitoring.
 14. Click “Save”.
 
+## Using the plugin in Jenkins Pipeline
+
+1. Go to Job > Pipeline Syntax > Snippet Generator
+2. Select "devicefarm" sample step or "step: General Build Step" > "Run Tests on AWS Device Farm"
+3. Input the [Device Farm Run Configuration](https://docs.aws.amazon.com/devicefarm/latest/developerguide/test-runs.html#test-runs-configuration)
+4. Click "Generate Pipeline Script"
+
 Dependencies
 ============
 

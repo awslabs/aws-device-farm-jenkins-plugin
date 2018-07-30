@@ -3,18 +3,23 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>2.29</version><!-- which version of Jenkins is this plugin built against? -->
+    <version>3.6</version>
   </parent>
 
   <groupId>org.jenkins-ci.plugins</groupId>
   <artifactId>aws-device-farm</artifactId>
-  <version>1.14-SNAPSHOT</version>
+  <version>1.18-SNAPSHOT</version>
   <packaging>hpi</packaging>
-  
+
   <name>aws-device-farm</name>
-  <url>https://wiki.jenkins-ci.org/display/JENKINS/AWS+Device+Farm+Plugin</url>
+  <url>https://wiki.jenkins.io/display/JENKINS/AWS+Device+Farm+Plugin</url>
   <description>AWS Device Farm Jenkins Plugin</description>
-  
+
+  <properties>
+    <jenkins.version>1.625.3</jenkins.version>
+    <java.level>7</java.level>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -22,16 +27,18 @@
       <version>1.20</version>
     </dependency>
 
+    <!-- TODO: use AWS SDK Plugin instead: https://plugins.jenkins.io/aws-java-sdk -->
     <dependency>
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk</artifactId>
       <version>1.11.126</version>
     </dependency>
-    
+
+    <!-- TODO: Use Apache HttpComponents Client 4.x API instead: https://plugins.jenkins.io/apache-httpcomponents-client-4-api -->
     <dependency>
-        <groupId>org.apache.httpcomponents</groupId>
-        <artifactId>httpcore</artifactId>
-        <version>4.4</version>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpcore</artifactId>
+      <version>4.4.4</version>
     </dependency>
   </dependencies>
 
@@ -43,7 +50,7 @@
       <comments>A business-friendly OSS license</comments>
     </license>
   </licenses>
-  
+
   <scm>
     <connection>scm:git:ssh://github.com/jenkinsci/aws-device-farm-plugin.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/jenkinsci/aws-device-farm-plugin.git</developerConnection>
@@ -57,20 +64,22 @@
       <name>Chandra Bommas</name>
       <email>chabom@amazon.com</email>
     </developer>
-
     <developer>
       <id>nikdabn</id>
       <name>Nikhil Dabhade</name>
       <email>nikdabn@amazon.com</email>
     </developer>
+    <developer>
+      <id>ahawker</id>
+      <name>Andrew Hawker</name>
+      <email>ahawker@amazon.com</email>
+    </developer>
   </developers>
 
-  
-  <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
   <repositories>
     <repository>
       <id>repo.jenkins-ci.org</id>
-      <url>http://repo.jenkins-ci.org/public/</url>
+      <url>https://repo.jenkins-ci.org/public/</url>
     </repository>
     <repository>
       <id>central</id>
@@ -86,17 +95,9 @@
   <pluginRepositories>
     <pluginRepository>
       <id>repo.jenkins-ci.org</id>
-      <url>http://repo.jenkins-ci.org/public/</url>
+      <url>https://repo.jenkins-ci.org/public/</url>
     </pluginRepository>
   </pluginRepositories>
-
-  <properties>
-    <!--
-      explicitly specifying the latest version here because one we get from the parent POM
-      tends to lag behind a bit
-    -->
-    <maven-hpi-plugin.version>1.96</maven-hpi-plugin.version>
-  </properties>
 
   <build>
     <plugins>
@@ -106,18 +107,6 @@
         <configuration>
           <additionalparam>-Xdoclint:none</additionalparam>
         </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-release-plugin</artifactId>
-        <version>2.5.1</version>
-        <dependencies>
-          <dependency>
-            <groupId>org.apache.maven.scm</groupId>
-            <artifactId>maven-scm-provider-gitexe</artifactId>
-            <version>1.9.2</version>
-          </dependency>
-        </dependencies>
       </plugin>
     </plugins>
   </build>

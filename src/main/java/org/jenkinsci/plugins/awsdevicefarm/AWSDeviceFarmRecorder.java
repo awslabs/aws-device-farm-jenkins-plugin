@@ -14,6 +14,11 @@
 //
 package org.jenkinsci.plugins.awsdevicefarm;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.devicefarm.model.Artifact;
 import com.amazonaws.services.devicefarm.model.ArtifactCategory;
@@ -38,11 +43,10 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
-import hudson.model.BuildListener;
 import hudson.model.Result;
+import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
@@ -51,6 +55,9 @@ import hudson.util.FormValidation;
 import hudson.util.IOUtils;
 import hudson.util.ListBoxModel;
 import net.sf.json.JSONObject;
+import javax.annotation.Nonnull;
+import jenkins.tasks.SimpleBuildStep;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.awsdevicefarm.test.AppiumJavaJUnitTest;
@@ -65,6 +72,7 @@ import org.jenkinsci.plugins.awsdevicefarm.test.UIAutomationTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.UIAutomatorTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.XCTestTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.XCTestUITest;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -72,10 +80,6 @@ import org.kohsuke.stapler.StaplerRequest;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -87,8 +91,8 @@ import java.util.Map;
 /**
  * Post-build step for running tests on AWS Device Farm.
  */
-public class AWSDeviceFarmRecorder extends Recorder {
-
+@SuppressWarnings("unused")
+public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     ////// All of these fields have to be public so that they can be read (via reflection) by Jenkins. Probably not the
     ////// greatest thing in the world given that this is *allegedly* supposed to be an immutable class.
 
@@ -145,9 +149,6 @@ public class AWSDeviceFarmRecorder extends Recorder {
     // XCTest UI
     public String xctestUiArtifact;
     public String xctestUiFilter;
-
-    // Fields not populated by the JSON binder.
-    public PrintStream log;
 
     // ignore device farm run errors
     public Boolean ignoreRunError;
@@ -242,7 +243,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
                                  String devicePoolName,
                                  String appArtifact,
                                  String runName,
-                                 String testToRun,
+                                 @Nonnull String testToRun,
                                  Boolean storeResults,
                                  Boolean isRunUnmetered,
                                  String eventCount,
@@ -360,7 +361,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
      * @param testToRun The String representation of the test type.
      * @return The String should bu input as the parameter of the devicefarm API.
      */
-    public String transformTestToRunForWebApp(String testToRun) {
+    public String transformTestToRunForWebApp(@Nonnull String testToRun) {
         if (ifWebApp) {
             if (testToRun.equalsIgnoreCase("APPIUM_PYTHON")) return"APPIUM_WEB_PYTHON";
             else if (testToRun.equalsIgnoreCase("APPIUM_JAVA_JUNIT")) return"APPIUM_WEB_JAVA_JUNIT";
@@ -391,31 +392,29 @@ public class AWSDeviceFarmRecorder extends Recorder {
      * @throws InterruptedException
      */
     @Override
-    public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+    public void perform(@Nonnull hudson.model.Run<?, ?> build, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws IOException, InterruptedException {
         // Check if the build result set from a previous build step.
         // A null build result indicates that the build is still ongoing and we're
         // likely being run as a build step by the "Any Build Step Plugin".
         Result buildResult = build.getResult();
         if (buildResult != null && buildResult.isWorseOrEqualTo(Result.FAILURE)) {
-            return false;
+            listener.error("Still building");
         }
 
         EnvVars env = build.getEnvironment(listener);
-        Map<String, String> parameters = build.getBuildVariables();
+        Map<String, String> parameters = build.getEnvironment(listener);
 
-        log = listener.getLogger();
+        final PrintStream log = listener.getLogger();
 
         // Artifacts location for this build on master.
         FilePath artifactsDir = new FilePath(build.getArtifactsDir());
 
-        // Workspace (potentially remote if using slave).
-        FilePath workspace = build.getWorkspace();
-
         // Validate user selection & input values.
-        boolean isValid = validateConfiguration() && validateTestConfiguration();
+        boolean isValid = validateConfiguration(log) && validateTestConfiguration(log);
         if (!isValid) {
-            writeToLog("Invalid configuration.");
-            return false;
+            writeToLog(log, "Invalid configuration.");
+            build.setResult(Result.FAILURE);
+            return;
         }
 
         // Create & configure the AWSDeviceFarm client.
@@ -429,7 +428,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
             // Accept 'ADF_PROJECT' build parameter as an overload from job configuration.
             String projectNameParameter = parameters.get("AWSDEVICEFARM_PROJECT");
             if (projectNameParameter != null && !projectNameParameter.isEmpty()) {
-                writeToLog(String.format("Using overloaded project '%s' from build parameters", projectNameParameter));
+                writeToLog(log, String.format("Using overloaded project '%s' from build parameters", projectNameParameter));
                 projectName = projectNameParameter;
             }
 
@@ -444,28 +443,28 @@ public class AWSDeviceFarmRecorder extends Recorder {
             }
 
             // Get AWS Device Farm project from user provided name.
-            writeToLog(String.format("Using Project '%s'", projectName));
+            writeToLog(log, String.format("Using Project '%s'", projectName));
             Project project = adf.getProject(projectName);
 
             // Accept 'ADF_DEVICE_POOL' build parameter as an overload from job configuration.
             String devicePoolParameter = parameters.get("AWSDEVICEFARM_DEVICE_POOL");
             if (devicePoolParameter != null) {
-                writeToLog(String.format("Using overloaded device pool '%s' from build parameters", devicePoolParameter));
+                writeToLog(log, String.format("Using overloaded device pool '%s' from build parameters", devicePoolParameter));
                 devicePoolName = devicePoolParameter;
             }
 
             // Get AWS Device Farm device pool from user provided name.
-            writeToLog(String.format("Using DevicePool '%s'", devicePoolName));
+            writeToLog(log, String.format("Using DevicePool '%s'", devicePoolName));
             DevicePool devicePool = adf.getDevicePool(project, devicePoolName);
 
             // Upload app.
             String appArn = null;
             if (ifWebApp != null && ifWebApp){
-                writeToLog("Tesing a Web App.");
+                writeToLog(log, "Tesing a Web App.");
 
             }
             else {
-                writeToLog(String.format("Using App '%s'", env.expand(appArtifact)));
+                writeToLog(log, String.format("Using App '%s'", env.expand(appArtifact)));
                 Upload appUpload = adf.uploadApp(project, appArtifact);
                 appArn = appUpload.getArn();
             }
@@ -478,7 +477,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
             }
 
             // Upload test content.
-            writeToLog("Getting test to schedule.");
+            writeToLog(log, "Getting test to schedule.");
             ScheduleRunTest testToSchedule = getScheduleRunTest(env, adf, project);
 
             if (ifVideoRecording != null && !ifVideoRecording) {
@@ -490,25 +489,25 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
 
             // State the Appium Version.
-            if (testToRun.equalsIgnoreCase("APPIUM_JAVA_JUNIT")) writeToLog(String.format("Using appium version: %s", appiumVersionJunit));
-            else if (testToRun.equalsIgnoreCase("APPIUM_WEB_JAVA_JUNIT")) writeToLog(String.format("Using appium version: %s", appiumVersionJunit));
-            else if (testToRun.equalsIgnoreCase("APPIUM_JAVA_TESTNG")) writeToLog(String.format("Using appium version: %s", appiumVersionTestng));
-            else if (testToRun.equalsIgnoreCase("APPIUM_WEB_JAVA_TESTNG")) writeToLog(String.format("Using appium version: %s", appiumVersionTestng));
-            else if (testToRun.equalsIgnoreCase("APPIUM_PYTHON")) writeToLog(String.format("Using appium version: %s", appiumVersionPython));
-            else if (testToRun.equalsIgnoreCase("APPIUM_WEB_PYTHON")) writeToLog(String.format("Using appium version: %s", appiumVersionPython));
+            if (testToRun.equalsIgnoreCase("APPIUM_JAVA_JUNIT")) writeToLog(log, String.format("Using appium version: %s", appiumVersionJunit));
+            else if (testToRun.equalsIgnoreCase("APPIUM_WEB_JAVA_JUNIT")) writeToLog(log, String.format("Using appium version: %s", appiumVersionJunit));
+            else if (testToRun.equalsIgnoreCase("APPIUM_JAVA_TESTNG")) writeToLog(log, String.format("Using appium version: %s", appiumVersionTestng));
+            else if (testToRun.equalsIgnoreCase("APPIUM_WEB_JAVA_TESTNG")) writeToLog(log, String.format("Using appium version: %s", appiumVersionTestng));
+            else if (testToRun.equalsIgnoreCase("APPIUM_PYTHON")) writeToLog(log, String.format("Using appium version: %s", appiumVersionPython));
+            else if (testToRun.equalsIgnoreCase("APPIUM_WEB_PYTHON")) writeToLog(log, String.format("Using appium version: %s", appiumVersionPython));
 
 
             // Upload the extra data.
             String extraDataArn = null;
             if (extraData != null && extraData) {
-                writeToLog(String.format("Using Extra Data '%s'", env.expand(extraDataArtifact)));
+                writeToLog(log, String.format("Using Extra Data '%s'", env.expand(extraDataArtifact)));
                 Upload extraDataUpload = adf.uploadExtraData(project, extraDataArtifact);
                 extraDataArn = extraDataUpload.getArn();
             }
 
             // Schedule test run.
             TestType testType = TestType.fromValue(testToSchedule.getType());
-            writeToLog(String.format("Scheduling '%s' run '%s'", testType, deviceFarmRunName));
+            writeToLog(log, String.format("Scheduling '%s' run '%s'", testType, deviceFarmRunName));
 
             ScheduleRunConfiguration configuration = getScheduleRunConfiguration(isRunUnmetered, deviceLocation, radioDetails);
             configuration.setExtraDataPackageArn(extraDataArn);
@@ -517,9 +516,9 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
             String runArn = run.getRun().getArn();
             try {
-                writeToLog(String.format("View the %s run in the AWS Device Farm Console: %s", testType, AWSDeviceFarmUtils.getRunUrlFromArn(runArn)));
+                writeToLog(log, String.format("View the %s run in the AWS Device Farm Console: %s", testType, AWSDeviceFarmUtils.getRunUrlFromArn(runArn)));
             } catch (ArrayIndexOutOfBoundsException e) {
-                writeToLog(String.format("Could not parse project ID and run ID from run ARN: %s", runArn));
+                writeToLog(log, String.format("Could not parse project ID and run ID from run ARN: %s", runArn));
             }
 
             // Attach AWS Device Farm action to poll periodically and update results UI.
@@ -527,9 +526,9 @@ public class AWSDeviceFarmRecorder extends Recorder {
             build.addAction(action);
 
             // Wait for test result to complete will updating status periodically.
-            writeToLog("Waiting for test run to complete.");
+            writeToLog(log, "Waiting for test run to complete.");
             action.waitForRunCompletion(adf, run);
-            writeToLog("Test run is complete.");
+            writeToLog(log, "Test run is complete.");
 
 
             // Download results archive and store it.
@@ -537,13 +536,13 @@ public class AWSDeviceFarmRecorder extends Recorder {
                 // Create results storage directory which will contain the unzip logs/screenshots pulled from AWS Device Farm.
                 FilePath resultsDir = new FilePath(artifactsDir, "AWS Device Farm Results");
                 resultsDir.mkdirs();
-                writeToLog(String.format("Storing AWS Device Farm results in directory %s", resultsDir));
+                writeToLog(log, String.format("Storing AWS Device Farm results in directory %s", resultsDir));
 
                 Map<String, FilePath> jobs = getJobs(adf, run, resultsDir);
                 Map<String, FilePath> suites = getSuites(adf, run, jobs);
                 Map<String, FilePath> tests = getTests(adf, run, suites);
 
-                writeToLog("Downloading AWS Device Farm results archive...");
+                writeToLog(log, "Downloading AWS Device Farm results archive...");
                 // Iterating over all values in the Enum.
                 for (ArtifactCategory category : new ArrayList<ArtifactCategory>(Arrays.asList(ArtifactCategory.values()))) {
                     ListArtifactsResult result = adf.listArtifacts(run.getRun().getArn(), category);
@@ -557,17 +556,17 @@ public class AWSDeviceFarmRecorder extends Recorder {
                         artifactFilePath.write().write(IOUtils.toByteArray(url.openStream()));
                     }
                 }
-                writeToLog(String.format("Results archive saved in %s", artifactsDir.getName()));
+                writeToLog(log, String.format("Results archive saved in %s", artifactsDir.getName()));
             }
 
             // Set Jenkins build result based on AWS Device Farm test result.
             build.setResult(action.getBuildResult(ignoreRunError));
         } catch (AWSDeviceFarmException e) {
-            writeToLog(e.getMessage());
-            return false;
+            writeToLog(log, e.getMessage());
+            return;
         }
 
-        return true;
+        return;
     }
 
     private Location getScheduleRunConfigurationLocation(Boolean deviceLocation) {
@@ -929,37 +928,38 @@ public class AWSDeviceFarmRecorder extends Recorder {
     /**
      * Validate top level configuration values.
      *
+     * @param log Destination Task Log
      * @return Whether or not the configuration is valid.
      */
-    private boolean validateConfiguration() {
+    private boolean validateConfiguration(@Nonnull PrintStream log) {
         String roleArn = getRoleArn();
         String akid = getAkid();
         String skid = getSkid();
 
         // [Required]: Auth Credentials
         if ((roleArn == null || roleArn.isEmpty()) && (akid == null || akid.isEmpty() || skid == null || skid.isEmpty())) {
-            writeToLog("Either IAM Role ARN or AKID/SKID must be set.");
+            writeToLog(log, "Either IAM Role ARN or AKID/SKID must be set.");
             return false;
         }
 
         // [Required]: Project
         if (projectName == null || projectName.isEmpty()) {
-            writeToLog("Project must be set.");
+            writeToLog(log, "Project must be set.");
             return false;
         }
         // [Required]: DevicePool
         if (devicePoolName == null || devicePoolName.isEmpty()) {
-            writeToLog("DevicePool must be set.");
+            writeToLog(log, "DevicePool must be set.");
             return false;
         }
         // [Required]: App Artifact
         if (!ifWebApp && (appArtifact == null || appArtifact.isEmpty())) {
-            writeToLog("Application Artifact must be set.");
+            writeToLog(log, "Application Artifact must be set.");
             return false;
         }
         // [Required]: At least one test.
         if (testToRun == null || stringToTestType(testToRun) == null) {
-            writeToLog("A test type must be set.");
+            writeToLog(log, "A test type must be set.");
             return false;
         }
         return true;
@@ -968,9 +968,10 @@ public class AWSDeviceFarmRecorder extends Recorder {
     /**
      * Validate user selected test type and additional configuration values.
      *
+     * @param log Destination Task Log
      * @return Whether or not the test configuration is valid.
      */
-    private boolean validateTestConfiguration() {
+    private boolean validateTestConfiguration(@Nonnull PrintStream log) {
         TestType testType = stringToTestType(testToRun);
 
         switch (testType) {
@@ -978,14 +979,14 @@ public class AWSDeviceFarmRecorder extends Recorder {
                 // [Optional]: EventCount (int)
                 if (eventCount != null && !eventCount.isEmpty()) {
                     if (!eventCount.matches("^\\d+$")) {
-                        writeToLog("EventCount must be a number.");
+                        writeToLog(log,"EventCount must be a number.");
                         return false;
                     }
                 }
                 // [Optional]: Seed (int)
                 if (seed != null && !seed.isEmpty()) {
                     if (!seed.matches("^\\d+$")) {
-                        writeToLog("Seed must be a number.");
+                        writeToLog(log, "Seed must be a number.");
                         return false;
                     }
                 }
@@ -999,7 +1000,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
             case APPIUM_JAVA_JUNIT: {
                 if (appiumJavaJUnitTest == null || appiumJavaJUnitTest.isEmpty()) {
-                    writeToLog("Appium Java Junit test must be set.");
+                    writeToLog(log, "Appium Java Junit test must be set.");
                     return false;
                 }
 
@@ -1008,7 +1009,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
             case APPIUM_JAVA_TESTNG: {
                 if (appiumJavaTestNGTest == null || appiumJavaTestNGTest.isEmpty()) {
-                    writeToLog("Appium Java TestNG test must be set.");
+                    writeToLog(log, "Appium Java TestNG test must be set.");
                     return false;
                 }
 
@@ -1017,7 +1018,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
             case APPIUM_PYTHON: {
                 if (appiumPythonTest == null || appiumPythonTest.isEmpty()) {
-                    writeToLog("Appium Python test must be set.");
+                    writeToLog(log, "Appium Python test must be set.");
                     return false;
                 }
 
@@ -1026,7 +1027,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
             case APPIUM_WEB_JAVA_JUNIT: {
                 if (appiumJavaJUnitTest == null || appiumJavaJUnitTest.isEmpty()) {
-                    writeToLog("Appium Java Junit test for the web application must be set.");
+                    writeToLog(log, "Appium Java Junit test for the web application must be set.");
                     return false;
                 }
 
@@ -1035,7 +1036,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
             case APPIUM_WEB_JAVA_TESTNG: {
                 if (appiumJavaTestNGTest == null || appiumJavaTestNGTest.isEmpty()) {
-                    writeToLog("Appium Java TestNG test for the web application must be set.");
+                    writeToLog(log, "Appium Java TestNG test for the web application must be set.");
                     return false;
                 }
 
@@ -1044,7 +1045,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
             case APPIUM_WEB_PYTHON: {
                 if (appiumPythonTest == null || appiumPythonTest.isEmpty()) {
-                    writeToLog("Appium Python test for the web application must be set.");
+                    writeToLog(log, "Appium Python test for the web application must be set.");
                     return false;
                 }
 
@@ -1054,12 +1055,12 @@ public class AWSDeviceFarmRecorder extends Recorder {
             case CALABASH: {
                 // [Required]: Features Path
                 if (calabashFeatures == null || calabashFeatures.isEmpty()) {
-                    writeToLog("Calabash Features must be set.");
+                    writeToLog(log, "Calabash Features must be set.");
                     return false;
                 }
                 // [Required]: Features.zip
                 if (!calabashFeatures.endsWith(".zip")) {
-                    writeToLog("Calabash content must be of type .zip");
+                    writeToLog(log, "Calabash content must be of type .zip");
                     return false;
                 }
 
@@ -1069,7 +1070,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
             case INSTRUMENTATION: {
                 // [Required]: Tests Artifact
                 if (junitArtifact == null || junitArtifact.isEmpty()) {
-                    writeToLog("JUnit tests Artifact must be set.");
+                    writeToLog(log, "JUnit tests Artifact must be set.");
                     return false;
                 }
 
@@ -1078,7 +1079,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
             case UIAUTOMATOR: {
                 if (uiautomatorArtifact == null || uiautomatorArtifact.isEmpty()) {
-                    writeToLog("UI Automator tests artifact must be set.");
+                    writeToLog(log, "UI Automator tests artifact must be set.");
                     return false;
                 }
 
@@ -1087,7 +1088,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
             case UIAUTOMATION: {
                 if (uiautomationArtifact == null || uiautomationArtifact.isEmpty()) {
-                    writeToLog("UI Automation tests artifact must be set.");
+                    writeToLog(log, "UI Automation tests artifact must be set.");
                     return false;
                 }
 
@@ -1096,7 +1097,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
             case XCTEST: {
                 if (xctestArtifact == null || xctestArtifact.isEmpty()) {
-                    writeToLog("XC tests artifact must be set.");
+                    writeToLog(log, "XC tests artifact must be set.");
                     return false;
                 }
 
@@ -1105,7 +1106,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
 
             case XCTEST_UI: {
                 if (xctestUiArtifact == null || xctestUiArtifact.isEmpty()) {
-                    writeToLog("XCTest UI tests artifact must be set.");
+                    writeToLog(log, "XCTest UI tests artifact must be set.");
                     return false;
                 }
 
@@ -1113,7 +1114,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
             }
 
             default: {
-                writeToLog("Must select a test type to run.");
+                writeToLog(log, "Must select a test type to run.");
                 return false;
             }
         }
@@ -1124,9 +1125,10 @@ public class AWSDeviceFarmRecorder extends Recorder {
     /**
      * Helper method for writing entries to the Jenkins log.
      *
+     * @param log Destination log
      * @param msg The message to be written to the Jenkins log.
      */
-    private void writeToLog(String msg) {
+    private void writeToLog(PrintStream log, String msg) {
         log.println(String.format("[AWSDeviceFarm] %s", msg));
     }
 
@@ -1200,6 +1202,7 @@ public class AWSDeviceFarmRecorder extends Recorder {
      * Descriptor for AWSDeviceFarmRecorder.
      */
     @Extension
+    @Symbol("devicefarm")
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         public String roleArn;
         public String akid;

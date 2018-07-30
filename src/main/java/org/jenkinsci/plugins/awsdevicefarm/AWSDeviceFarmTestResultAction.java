@@ -19,9 +19,11 @@ import com.amazonaws.services.devicefarm.model.Run;
 import com.amazonaws.services.devicefarm.model.ScheduleRunResult;
 import hudson.model.AbstractBuild;
 import hudson.model.Result;
+import hudson.model.TaskListener;
 import hudson.tasks.test.AbstractTestResultAction;
 import org.kohsuke.stapler.StaplerProxy;
 
+import javax.annotation.CheckForNull;
 import java.io.PrintStream;
 
 /**
@@ -34,15 +36,27 @@ import java.io.PrintStream;
 public class AWSDeviceFarmTestResultAction extends AbstractTestResultAction<AWSDeviceFarmTestResultAction> implements StaplerProxy {
 
     private static final int DefaultUpdateInterval = 30 * 1000;
-
     private PrintStream log;
     private AWSDeviceFarmTestResult result;
 
-    public AWSDeviceFarmTestResultAction(AbstractBuild<?, ?> owner, AWSDeviceFarmTestResult result, PrintStream log) {
-
+    public AWSDeviceFarmTestResultAction(AbstractBuild<?, ?> owner, AWSDeviceFarmTestResult result) {
         super(owner);
+        this.result = result;
+    }
+
+    public AWSDeviceFarmTestResultAction(hudson.model.Run<?, ?> owner, AWSDeviceFarmTestResult result, PrintStream log) {
+        super();
+        onAttached(owner);
         this.log = log;
         this.result = result;
+    }
+
+    /**
+     * @deprecated log is no longer passed, use {@link #AWSDeviceFarmTestResultAction(AbstractBuild, AWSDeviceFarmTestResult)}
+     */
+    @Deprecated
+    public AWSDeviceFarmTestResultAction(AbstractBuild<?, ?> owner, AWSDeviceFarmTestResult result, @CheckForNull PrintStream log) {
+        this(owner, result);
     }
 
     /**
@@ -54,6 +68,10 @@ public class AWSDeviceFarmTestResultAction extends AbstractTestResultAction<AWSD
         return getResult().getBuildResult(ignoreRunError);
     }
 
+    public void waitForRunCompletion(AWSDeviceFarm adf, ScheduleRunResult runResult) throws InterruptedException {
+        waitForRunCompletion(adf, runResult, TaskListener.NULL);
+    }
+
     /**
      * Blocking function which periodically polls the given AWS Device Farm run until its completed. During this waiting period,
      * we will grab the latest results reported by Device Farm and updated our internal result "snapshot" which will be used
@@ -61,19 +79,20 @@ public class AWSDeviceFarmTestResultAction extends AbstractTestResultAction<AWSD
      *
      * @param runResult
      */
-    public void waitForRunCompletion(AWSDeviceFarm adf, ScheduleRunResult runResult) throws InterruptedException {
+    public void waitForRunCompletion(AWSDeviceFarm adf, ScheduleRunResult runResult, TaskListener listener) throws InterruptedException {
+        PrintStream log = listener.getLogger();
         while (true) {
             GetRunResult latestRunResult = adf.describeRun(runResult.getRun().getArn());
             Run run = latestRunResult.getRun();
             result = new AWSDeviceFarmTestResult(owner, run);
-            writeToLog(String.format("Run %s status %s", run.getName(), run.getStatus()));
+            writeToLog(log, String.format("Run %s status %s", run.getName(), run.getStatus()));
             if (result.isCompleted()) {
                 break;
             }
             try {
                 Thread.sleep(DefaultUpdateInterval);
             } catch (InterruptedException ex) {
-                writeToLog(String.format("Thread interrupted while waiting for the Run to complete"));
+                writeToLog(log, String.format("Thread interrupted while waiting for the Run to complete"));
                 throw ex;
             }
         }
@@ -163,7 +182,7 @@ public class AWSDeviceFarmTestResultAction extends AbstractTestResultAction<AWSD
 
     //// Helper Methods
 
-    private void writeToLog(String message) {
+    private void writeToLog(PrintStream log, String message) {
         if (log != null) {
             log.println(String.format("[AWSDeviceFarm] %s", message));
         }
