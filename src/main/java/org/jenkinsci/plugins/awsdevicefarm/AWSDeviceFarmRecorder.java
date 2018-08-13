@@ -39,6 +39,7 @@ import com.amazonaws.services.devicefarm.model.Suite;
 import com.amazonaws.services.devicefarm.model.Test;
 import com.amazonaws.services.devicefarm.model.TestType;
 import com.amazonaws.services.devicefarm.model.Upload;
+import com.amazonaws.services.devicefarm.model.VPCEConfiguration;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
@@ -87,6 +88,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.HashSet;
 
 /**
  * Post-build step for running tests on AWS Device Farm.
@@ -161,6 +163,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     public String appiumVersionPython;
     public String appiumVersionTestng;
 
+    private static final String APPIUM_VERSION_1_7_2 = "1.7.2";
+    private static final String APPIUM_VERSION_1_7_1 = "1.7.1";
     private static final String APPIUM_VERSION_1_6_3 = "1.6.3";
     private static final String APPIUM_VERSION_1_6_5 = "1.6.5";
     private static final String APPIUM_VERSION_1_4_16 = "1.4.16";
@@ -168,6 +172,10 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     // Device States Specification
     public Boolean extraData;
     public String extraDataArtifact;
+
+    // VPCE Configuration
+    public String vpceServiceName;
+    public Boolean ifVpce;
 
     public Boolean deviceLocation;
     public Double deviceLatitude;
@@ -224,9 +232,11 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
      * @param ifWebApp                      Whether it is a web app.
      * @param extraData                     Whether it has extra data.
      * @param extraDataArtifact             The path to the extra data.
+     * @param vpceServiceName               The name of the VPCE configuration.
      * @param deviceLocation                True when device location is specified.
      * @param deviceLatitude                The specified device latitude.
      * @param deviceLongitude               The specified device longitude.
+     * @param ifVpce                        Checked if VPCE config is enabled.
      * @param radioDetails                  Whether the radio details would be specified.
      * @param ifWifi
      * @param ifNfc
@@ -272,9 +282,11 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                                  Boolean ifWebApp,
                                  Boolean extraData,
                                  String extraDataArtifact,
+                                 String vpceServiceName,
                                  Boolean deviceLocation,
                                  Double deviceLatitude,
                                  Double deviceLongitude,
+                                 Boolean ifVpce,
                                  Boolean radioDetails,
                                  Boolean ifBluetooth,
                                  Boolean ifWifi,
@@ -316,9 +328,11 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         this.appiumVersionTestng = appiumVersionTestng;
         this.extraData = extraData;
         this.extraDataArtifact = extraDataArtifact;
+        this.vpceServiceName = vpceServiceName;
         this.deviceLocation = deviceLocation;
         this.deviceLatitude = deviceLatitude;
         this.deviceLongitude = deviceLongitude;
+        this.ifVpce = ifVpce;
         this.radioDetails = radioDetails;
         this.ifWifi = ifWifi;
         this.ifGPS = ifGPS;
@@ -505,12 +519,25 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                 extraDataArn = extraDataUpload.getArn();
             }
 
+
+
             // Schedule test run.
             TestType testType = TestType.fromValue(testToSchedule.getType());
             writeToLog(log, String.format("Scheduling '%s' run '%s'", testType, deviceFarmRunName));
 
             ScheduleRunConfiguration configuration = getScheduleRunConfiguration(isRunUnmetered, deviceLocation, radioDetails);
             configuration.setExtraDataPackageArn(extraDataArn);
+
+            // Check if VPCE option is enabled
+            if(ifVpce)
+            {
+                // Get AWS Device Farm VPCE.
+                writeToLog(log, String.format("Using VPCE Configuartion '%s'", vpceServiceName));
+                VPCEConfiguration vpceConfiguration = adf.getVPCEConfiguration(vpceServiceName);
+                Collection vpceConfigurationArns = new HashSet();
+                vpceConfigurationArns.add(vpceConfiguration.getArn());
+                configuration.setVpceConfigurationArns(vpceConfigurationArns);
+            }
 
             ScheduleRunResult run = adf.scheduleRun(project.getArn(), deviceFarmRunName, appArn, devicePool.getArn(), testToSchedule, jobTimeoutMinutes, configuration);
 
@@ -1210,6 +1237,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
 
         private List<String> projectsCache = new ArrayList<String>();
         private Map<String, List<String>> poolsCache = new HashMap<String, List<String>>();
+        private List<String> vpceCache = new ArrayList<String>();
 
         public DescriptorImpl() {
             load();
@@ -1484,7 +1512,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
          *
          * @param isRunUnmetered
          * @param appArtifact
-         * @return
+         * @return Returns whether form validation passed
          */
         @SuppressWarnings("unused")
         public FormValidation doCheckIsRunUnmetered(@QueryParameter Boolean isRunUnmetered, @QueryParameter String appArtifact) {
@@ -1534,6 +1562,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             // Clear local caches
             projectsCache.clear();
             poolsCache.clear();
+            vpceCache.clear();
             return FormValidation.ok();
         }
 
@@ -1552,6 +1581,18 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             for (String projectName : projectNames) {
                 // We don't ignore case because these *should* be unique.
                 entries.add(new ListBoxModel.Option(projectName, projectName, projectName.equals(currentProjectName)));
+            }
+            return new ListBoxModel(entries);
+        }
+
+        public ListBoxModel doFillVpceServiceNameItems(@QueryParameter String currentVpceServiceName) {
+            // Create ListBoxModel for all VPCE configs for this AWS Device Farm account.
+            List<ListBoxModel.Option> entries = new ArrayList<ListBoxModel.Option>();
+            System.out.print("Getting VPCE configs");
+            List<String> vpceServiceNames = getAWSDeviceFarmVpceConfigurations();
+            System.out.print(String.format("VPCE configs length = %d", vpceServiceNames.size()));
+            for (String vpceServiceName : vpceServiceNames) {
+                entries.add(new ListBoxModel.Option(vpceServiceName, vpceServiceName, vpceServiceName.equals(currentVpceServiceName)));
             }
             return new ListBoxModel(entries);
         }
@@ -1587,9 +1628,11 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         public ListBoxModel doFillAppiumVersionJunitItems(@QueryParameter String currentAppiumVersion) {
             List<ListBoxModel.Option> entries = new ArrayList<ListBoxModel.Option>();
             ArrayList<String> appiumVersions = new ArrayList<String>();
+            appiumVersions.add(APPIUM_VERSION_1_4_16);
             appiumVersions.add(APPIUM_VERSION_1_6_3);
             appiumVersions.add(APPIUM_VERSION_1_6_5);
-            appiumVersions.add(APPIUM_VERSION_1_4_16);
+            appiumVersions.add(APPIUM_VERSION_1_7_1);
+            appiumVersions.add(APPIUM_VERSION_1_7_2);
             for (String appiumVersion: appiumVersions) {
                 entries.add(new ListBoxModel.Option(appiumVersion, appiumVersion, appiumVersion.equals(currentAppiumVersion)));
             }
@@ -1605,9 +1648,11 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         public ListBoxModel doFillAppiumVersionTestngItems(@QueryParameter String currentAppiumVersion) {
             List<ListBoxModel.Option> entries = new ArrayList<ListBoxModel.Option>();
             ArrayList<String> appiumVersions = new ArrayList<String>();
+            appiumVersions.add(APPIUM_VERSION_1_4_16);
             appiumVersions.add(APPIUM_VERSION_1_6_3);
             appiumVersions.add(APPIUM_VERSION_1_6_5);
-            appiumVersions.add(APPIUM_VERSION_1_4_16);
+            appiumVersions.add(APPIUM_VERSION_1_7_1);
+            appiumVersions.add(APPIUM_VERSION_1_7_2);
             for (String appiumVersion: appiumVersions) {
                 // We don't ignore case because these *should* be unique.
                 entries.add(new ListBoxModel.Option(appiumVersion, appiumVersion, appiumVersion.equals(currentAppiumVersion)));
@@ -1626,9 +1671,11 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             List<ListBoxModel.Option> entries = new ArrayList<ListBoxModel.Option>();
             //System.out.print("getting appium version");
             ArrayList<String> appiumVersions = new ArrayList<String>();
+            appiumVersions.add(APPIUM_VERSION_1_4_16);
             appiumVersions.add(APPIUM_VERSION_1_6_3);
             appiumVersions.add(APPIUM_VERSION_1_6_5);
-            appiumVersions.add(APPIUM_VERSION_1_4_16);
+            appiumVersions.add(APPIUM_VERSION_1_7_1);
+            appiumVersions.add(APPIUM_VERSION_1_7_2);
             for (String appiumVersion: appiumVersions) {
                 entries.add(new ListBoxModel.Option(appiumVersion, appiumVersion, appiumVersion.equals(currentAppiumVersion)));
             }
@@ -1652,6 +1699,19 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                 Collections.sort(projectsCache, String.CASE_INSENSITIVE_ORDER);
             }
             return projectsCache;
+        }
+
+        private synchronized List<String> getAWSDeviceFarmVpceConfigurations() {
+            if (vpceCache.isEmpty()) {
+                AWSDeviceFarm adf = getAWSDeviceFarm();
+
+                for (VPCEConfiguration vpceConfig : adf.getVPCEConfigurations()) {
+                    vpceCache.add(vpceConfig.getVpceServiceName());
+                }
+
+                Collections.sort(vpceCache, String.CASE_INSENSITIVE_ORDER);
+            }
+            return vpceCache;
         }
 
         /**

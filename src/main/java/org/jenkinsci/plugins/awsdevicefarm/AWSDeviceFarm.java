@@ -47,6 +47,9 @@ import com.amazonaws.services.devicefarm.model.ScheduleRunRequest;
 import com.amazonaws.services.devicefarm.model.ScheduleRunResult;
 import com.amazonaws.services.devicefarm.model.ScheduleRunTest;
 import com.amazonaws.services.devicefarm.model.Upload;
+import com.amazonaws.services.devicefarm.model.VPCEConfiguration;
+import com.amazonaws.services.devicefarm.model.ListVPCEConfigurationsResult;
+import com.amazonaws.services.devicefarm.model.ListVPCEConfigurationsRequest;
 import hudson.EnvVars;
 import hudson.FilePath;
 import org.apache.commons.lang.RandomStringUtils;
@@ -202,6 +205,24 @@ public class AWSDeviceFarm {
             }
         }
         throw new AWSDeviceFarmException(String.format("Project '%s' not found.", projectName));
+    }
+
+    public List<VPCEConfiguration> getVPCEConfigurations() {
+        ListVPCEConfigurationsResult result = api.listVPCEConfigurations(new ListVPCEConfigurationsRequest());
+        if (result == null) {
+            return new ArrayList<VPCEConfiguration>();
+        } else {
+            return result.getVpceConfigurations();
+        }
+    }
+
+    public VPCEConfiguration getVPCEConfiguration(String vpceServiceName) throws AWSDeviceFarmException {
+        for (VPCEConfiguration v : getVPCEConfigurations()) {
+            if (v.getVpceServiceName().equals(vpceServiceName)) {
+                return v;
+            }
+        }
+        throw new AWSDeviceFarmException(String.format("VPCE Service '%s' not found.", vpceServiceName));
     }
 
     /**

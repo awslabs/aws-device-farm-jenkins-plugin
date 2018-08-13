@@ -162,7 +162,7 @@ public class AWSDeviceFarmTestResult extends TestResult {
     /**
      * Return the AWS Device Farm result of the most recent build which contained an AWS Device Farm run.
      *
-     * @return
+     * @return The result of most recent build
      */
     @SuppressWarnings("unused")
     public AWSDeviceFarmTestResult getPreviousResult() {
