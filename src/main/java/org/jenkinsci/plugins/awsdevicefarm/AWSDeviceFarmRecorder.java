@@ -519,8 +519,6 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                 extraDataArn = extraDataUpload.getArn();
             }
 
-
-
             // Schedule test run.
             TestType testType = TestType.fromValue(testToSchedule.getType());
             writeToLog(log, String.format("Scheduling '%s' run '%s'", testType, deviceFarmRunName));
