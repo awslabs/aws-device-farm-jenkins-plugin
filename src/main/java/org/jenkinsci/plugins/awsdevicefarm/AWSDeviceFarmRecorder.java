@@ -282,11 +282,9 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                                  Boolean ifWebApp,
                                  Boolean extraData,
                                  String extraDataArtifact,
-                                 String vpceServiceName,
                                  Boolean deviceLocation,
                                  Double deviceLatitude,
                                  Double deviceLongitude,
-                                 Boolean ifVpce,
                                  Boolean radioDetails,
                                  Boolean ifBluetooth,
                                  Boolean ifWifi,
@@ -295,7 +293,9 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                                  Integer jobTimeoutMinutes,
                                  Boolean ifVideoRecording,
                                  Boolean ifAppPerformanceMonitoring,
-                                 Boolean ignoreRunError ) {
+                                 Boolean ignoreRunError,
+                                 Boolean ifVpce,
+                                 String vpceServiceName ) {
         this.projectName = projectName;
         this.devicePoolName = devicePoolName;
         this.appArtifact = appArtifact;
