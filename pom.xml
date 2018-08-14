@@ -31,14 +31,14 @@
     <dependency>
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk</artifactId>
-      <version>1.11.126</version>
+      <version>1.11.368</version>
     </dependency>
 
     <!-- TODO: Use Apache HttpComponents Client 4.x API instead: https://plugins.jenkins.io/apache-httpcomponents-client-4-api -->
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpcore</artifactId>
-      <version>4.4.4</version>
+        <version>4.4.9</version>
     </dependency>
   </dependencies>
 
@@ -68,11 +68,6 @@
       <id>nikdabn</id>
       <name>Nikhil Dabhade</name>
       <email>nikdabn@amazon.com</email>
-    </developer>
-    <developer>
-      <id>ahawker</id>
-      <name>Andrew Hawker</name>
-      <email>ahawker@amazon.com</email>
     </developer>
   </developers>
 
