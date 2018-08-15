@@ -90,6 +90,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashSet;
 
+import com.amazonaws.services.devicefarm.model.ServiceAccountException;
+
 /**
  * Post-build step for running tests on AWS Device Farm.
  */
@@ -396,6 +398,19 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     }
 
     /**
+     * Test if the account has VPC configured
+     * @return Whether or not the account has VPC configured.
+     */
+    public Boolean accountHasVPC() {
+        try {
+            return (getAWSDeviceFarm().getVPCEConfigurations() != null) ? true : false;
+        } catch (ServiceAccountException e) {
+            System.out.println("Account does not have a VPC configuration or is not whitelisted for VPC. Note: VPC is a private device only feature");
+        }
+        return false;
+    }
+
+    /**
      * Perform the post-build test action.
      *
      * @param build    The build to follow.
@@ -526,9 +541,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             ScheduleRunConfiguration configuration = getScheduleRunConfiguration(isRunUnmetered, deviceLocation, radioDetails);
             configuration.setExtraDataPackageArn(extraDataArn);
 
-            // Check if VPCE option is enabled
-            if(ifVpce)
-            {
+            // Check if VPCE option is enabled in UI and account has a VPC config
+            if(ifVpce && accountHasVPC()) {
                 // Get AWS Device Farm VPCE.
                 writeToLog(log, String.format("Using VPCE Configuartion '%s'", vpceServiceName));
                 VPCEConfiguration vpceConfiguration = adf.getVPCEConfiguration(vpceServiceName);
@@ -1584,13 +1598,17 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         }
 
         public ListBoxModel doFillVpceServiceNameItems(@QueryParameter String currentVpceServiceName) {
-            // Create ListBoxModel for all VPCE configs for this AWS Device Farm account.
             List<ListBoxModel.Option> entries = new ArrayList<ListBoxModel.Option>();
-            System.out.print("Getting VPCE configs");
-            List<String> vpceServiceNames = getAWSDeviceFarmVpceConfigurations();
-            System.out.print(String.format("VPCE configs length = %d", vpceServiceNames.size()));
-            for (String vpceServiceName : vpceServiceNames) {
-                entries.add(new ListBoxModel.Option(vpceServiceName, vpceServiceName, vpceServiceName.equals(currentVpceServiceName)));
+            // Create ListBoxModel for all VPCE configs for this AWS Device Farm account.
+            try {
+                System.out.print("Getting VPCE configs");
+                List<String> vpceServiceNames = getAWSDeviceFarmVpceConfigurations();
+                System.out.print(String.format("VPCE configs length = %d", vpceServiceNames.size()));
+                for (String vpceServiceName : vpceServiceNames) {
+                    entries.add(new ListBoxModel.Option(vpceServiceName, vpceServiceName, vpceServiceName.equals(currentVpceServiceName)));
+                }
+            } catch (ServiceAccountException e) {
+                System.out.println("Account does not have a VPC configured or has not been whitelisted for VPC. Note: VPC is a private device only feature");
             }
             return new ListBoxModel(entries);
         }
