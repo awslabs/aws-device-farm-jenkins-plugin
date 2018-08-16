@@ -36,13 +36,11 @@
   </f:entry>
 
   <f:section title="Choose VPCE configuration">
-
     <f:optionalBlock name="ifVpce" title="Enable VPCE" checked="${instance.ifVpce}" inline="true">
-        <f:entry title="VPCE" field="vpceServiceName" description="[Optional] Select the VPCE service.">
+        <f:entry title="VPCE" field="vpceServiceName" description="[Optional] Select the VPCE service (only available for private devices)">
           <f:select style="width:100%" inline="true"/>
         </f:entry>
     </f:optionalBlock>
-
   </f:section>
 
   <f:section title="Choose test to run">
@@ -172,6 +170,19 @@
         </f:entry>
       </f:nested>
     </f:radioBlock>
+  </f:section>
+
+ <f:section title="Choose your execution environment">
+    <f:radioBlock name="environmentToRun" value="StandardEnvironment" checked="${instance.isStandardEnvironment('StandardEnvironment')}" title="Standard environment" inline="true">
+      </f:radioBlock>
+
+    <f:radioBlock name="environmentToRun" value="CustomEnvironment" checked="${instance.isCustomEnvironment('CustomEnvironment')}" title="Custom Environment" inline="true">
+      <f:nested>
+        <f:entry title="Select Test Specification file" field="testSpecName" description="Choose the testSpec file.">
+         <f:select style="width:100%" inline="true"/>
+        </f:entry>
+      </f:nested>
+     </f:radioBlock>
   </f:section>
 
   <f:section title="Specify Device State(Optional)">

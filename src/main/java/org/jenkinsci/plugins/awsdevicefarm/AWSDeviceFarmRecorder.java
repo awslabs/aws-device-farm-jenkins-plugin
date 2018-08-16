@@ -90,6 +90,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashSet;
 
+import com.amazonaws.services.devicefarm.model.ServiceAccountException;
+
 /**
  * Post-build step for running tests on AWS Device Farm.
  */
@@ -107,6 +109,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     //// config.jelly fields
     // Radio Button Selection
     public String testToRun;
+    public String testSpecName;
+    public String environmentToRun;
     public Boolean storeResults;
     public Boolean isRunUnmetered;
 
@@ -193,6 +197,10 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
 
     private static final int MAX_EXECUTION_TIMEOUT = 600;
 
+    private static final String STANDARD_ENVIRONMENT = "StandardEnvironment";
+
+    private static final String CUSTOM_ENVIRONMENT = "CustomEnvironment";
+
     //E xecution Configuration
     public Boolean ifVideoRecording;
     public Boolean ifAppPerformanceMonitoring;
@@ -202,6 +210,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
      *
      * @param projectName                   The name of the Device Farm project.
      * @param devicePoolName                The name of the Device Farm device pool.
+     * @param testSpecName                  The Name of the Device Farm TestSpec Upload.
+     * @param environmentToRun              The type of environment used to run the tests.
      * @param appArtifact                   The path to the app to be tested.
      * @param runName                       The name of the run.
      * @param testToRun                     The type of test to be run.
@@ -251,6 +261,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     @SuppressWarnings("unused")
     public AWSDeviceFarmRecorder(String projectName,
                                  String devicePoolName,
+                                 String testSpecName,
+                                 String environmentToRun,
                                  String appArtifact,
                                  String runName,
                                  @Nonnull String testToRun,
@@ -298,6 +310,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                                  String vpceServiceName ) {
         this.projectName = projectName;
         this.devicePoolName = devicePoolName;
+        this.testSpecName = testSpecName;
+        this.environmentToRun = environmentToRun;
         this.appArtifact = appArtifact;
         this.runName = runName;
         this.storeResults = storeResults;
@@ -393,6 +407,54 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     public String isTestType(String testTypeName) {
         testTypeName = transformTestToRunForWebApp(testTypeName);
         return this.testToRun.equalsIgnoreCase(testTypeName) ? "true" : "";
+    }
+
+    /**
+     * Test if the environment selected by Customer is 'Standard' (for marking the radio button).
+     *
+     * @param testTypeName
+     *            The String representation of the environment.
+     * @return Whether or not the test type string matches.
+     */
+    public String isStandardEnvironment(String environmentToRun) {
+
+        if (this.environmentToRun == null) {
+            return "true";
+        } else {
+            return this.environmentToRun.equals(environmentToRun) ? "true" : "";
+        }
+
+    }
+
+    /**
+     * Test if the environment selected by Customer is 'Custom' (for marking the radio button).
+     *
+     * @param testTypeName
+     *            The String representation of the environment.
+     * @return Whether or not the test type string matches.
+     */
+    public String isCustomEnvironment(String environmentToRun) {
+
+        if (this.environmentToRun == null) {
+            return "false";
+        } else {
+            return this.environmentToRun.equals(environmentToRun) ? "true" : "";
+        }
+
+    }
+
+
+     /*
+     * Test if the account has VPC configured
+     * @return Whether or not the account has VPC configured.
+     */
+    public Boolean accountHasVPC() {
+        try {
+            return (getAWSDeviceFarm().getVPCEConfigurations() != null) ? true : false;
+        } catch (ServiceAccountException e) {
+            System.out.println("Account does not have a VPC configuration or is not whitelisted for VPC. Note: VPC is a private device only feature");
+        }
+        return false;
     }
 
     /**
@@ -526,9 +588,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             ScheduleRunConfiguration configuration = getScheduleRunConfiguration(isRunUnmetered, deviceLocation, radioDetails);
             configuration.setExtraDataPackageArn(extraDataArn);
 
-            // Check if VPCE option is enabled
-            if(ifVpce)
-            {
+            // Check if VPCE option is enabled in UI and account has a VPC config
+            if(ifVpce && accountHasVPC()) {
                 // Get AWS Device Farm VPCE.
                 writeToLog(log, String.format("Using VPCE Configuartion '%s'", vpceServiceName));
                 VPCEConfiguration vpceConfiguration = adf.getVPCEConfiguration(vpceServiceName);
@@ -947,6 +1008,17 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
 
         }
 
+        switch (environmentToRun) {
+        case STANDARD_ENVIRONMENT: {
+            break;
+        }
+
+        case CUSTOM_ENVIRONMENT: {
+            Upload testSpec = adf.getTestSpec(project, testSpecName);
+            testToSchedule.setTestSpecArn(testSpec.getArn());
+            break;
+        }
+        }
         return testToSchedule;
     }
 
@@ -1144,6 +1216,10 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             }
         }
 
+        if (CUSTOM_ENVIRONMENT.equals(environmentToRun) && StringUtils.isBlank(testSpecName)) {
+            writeToLog(log, "A test Spec must be selected.");
+            return false;
+        }
         return true;
     }
 
@@ -1236,6 +1312,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         private List<String> projectsCache = new ArrayList<String>();
         private Map<String, List<String>> poolsCache = new HashMap<String, List<String>>();
         private List<String> vpceCache = new ArrayList<String>();
+        private Map<String, List<String>> testSpecCache = new HashMap<String, List<String>>();
 
         public DescriptorImpl() {
             load();
@@ -1561,6 +1638,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             projectsCache.clear();
             poolsCache.clear();
             vpceCache.clear();
+            testSpecCache.clear();
             return FormValidation.ok();
         }
 
@@ -1584,13 +1662,17 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         }
 
         public ListBoxModel doFillVpceServiceNameItems(@QueryParameter String currentVpceServiceName) {
-            // Create ListBoxModel for all VPCE configs for this AWS Device Farm account.
             List<ListBoxModel.Option> entries = new ArrayList<ListBoxModel.Option>();
-            System.out.print("Getting VPCE configs");
-            List<String> vpceServiceNames = getAWSDeviceFarmVpceConfigurations();
-            System.out.print(String.format("VPCE configs length = %d", vpceServiceNames.size()));
-            for (String vpceServiceName : vpceServiceNames) {
-                entries.add(new ListBoxModel.Option(vpceServiceName, vpceServiceName, vpceServiceName.equals(currentVpceServiceName)));
+            // Create ListBoxModel for all VPCE configs for this AWS Device Farm account.
+            try {
+                System.out.print("Getting VPCE configs");
+                List<String> vpceServiceNames = getAWSDeviceFarmVpceConfigurations();
+                System.out.print(String.format("VPCE configs length = %d", vpceServiceNames.size()));
+                for (String vpceServiceName : vpceServiceNames) {
+                    entries.add(new ListBoxModel.Option(vpceServiceName, vpceServiceName, vpceServiceName.equals(currentVpceServiceName)));
+                }
+            } catch (ServiceAccountException e) {
+                System.out.println("Account does not have a VPC configured or has not been whitelisted for VPC. Note: VPC is a private device only feature");
             }
             return new ListBoxModel(entries);
         }
@@ -1613,6 +1695,28 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             for (String devicePoolName : devicePoolNames) {
                 // We don't ignore case because these *should* be unique.
                 entries.add(new ListBoxModel.Option(devicePoolName, devicePoolName, devicePoolName.equals(currentDevicePoolName)));
+            }
+            return new ListBoxModel(entries);
+        }
+
+        /**
+         * Populate the TestSpec drop-down from AWS Device Farm API or local cache.
+         * based on the selected project.
+         *
+         * @param projectName           Name of the project selected.
+         * @param currentTestSpecName Name of the TestSpec selected.
+         * @return The ListBoxModel for the UI.
+         */
+        @SuppressWarnings("unused")
+        public ListBoxModel doFillTestSpecNameItems(@QueryParameter String projectName, @QueryParameter String currentTestSpecName) {
+            List<ListBoxModel.Option> entries = new ArrayList<ListBoxModel.Option>();
+            List<String> testSpecNames = getAWSDeviceFarmTestSpec(projectName);
+            if (testSpecNames == null) {
+                return new ListBoxModel();
+            }
+            for (String testSpecName : testSpecNames) {
+                // We don't ignore case because these *should* be unique.
+                entries.add(new ListBoxModel.Option(testSpecName, testSpecName, testSpecName.equals(currentTestSpecName)));
             }
             return new ListBoxModel(entries);
         }
@@ -1739,6 +1843,35 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             }
             return poolNames;
         }
+
+        /**
+         * Get all TestSpecs for the selected project and store them
+         * in a local cache.
+         *
+         * @param projectName The name of the currently selected project.
+         * @return The List of device pool names associated with that project.
+         */
+        private synchronized List<String> getAWSDeviceFarmTestSpec(String projectName) {
+            List<String> testSpecNames = testSpecCache.get(projectName);
+
+            if (testSpecNames == null || testSpecNames.isEmpty()) {
+                AWSDeviceFarm adf = getAWSDeviceFarm();
+                try {
+                    List<Upload> testSpecFiles = adf.getTestSpecs(projectName);
+                    testSpecNames = new ArrayList<String>();
+                    for (Upload testSpec : testSpecFiles) {
+                        testSpecNames.add(testSpec.getName());
+                    }
+
+                    Collections.sort(testSpecNames, String.CASE_INSENSITIVE_ORDER);
+                } catch (AWSDeviceFarmException e) {
+                }
+
+                testSpecCache.put(projectName, testSpecNames);
+            }
+            return testSpecNames;
+        }
+
 
         /**
          * Bind descriptor object to capture global plugin settings from 'Manage Jenkins'.
