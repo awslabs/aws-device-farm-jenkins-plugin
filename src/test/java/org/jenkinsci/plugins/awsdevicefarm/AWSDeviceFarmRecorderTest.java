@@ -35,7 +35,7 @@ public class AWSDeviceFarmRecorderTest {
     public void dataSerializationSmokeTest() throws Exception {
         FreeStyleProject p = j.createFreeStyleProject();
         AWSDeviceFarmRecorder rec = new AWSDeviceFarmRecorder(
-                "TestProjectName", "TestDevicePool",
+                "TestProjectName", "TestDevicePool", null, null,
                 null, null, "APPIUM_JAVA_JUNIT", false, false, null,
                 null, null, null, null, null, null,
                 null, null, null, null, null, null,
