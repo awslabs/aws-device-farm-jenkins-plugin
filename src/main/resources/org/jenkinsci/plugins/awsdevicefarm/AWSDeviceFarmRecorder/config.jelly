@@ -172,6 +172,19 @@
     </f:radioBlock>
   </f:section>
 
+ <f:section title="Choose your execution environment">
+    <f:radioBlock name="environmentToRun" value="StandardEnvironment" checked="${instance.isStandardEnvironment('StandardEnvironment')}" title="Standard environment" inline="true">
+      </f:radioBlock>
+
+    <f:radioBlock name="environmentToRun" value="CustomEnvironment" checked="${instance.isCustomEnvironment('CustomEnvironment')}" title="Custom Environment" inline="true">
+      <f:nested>
+        <f:entry title="Select Test Specification file" field="testSpecName" description="Choose the testSpec file.">
+         <f:select style="width:100%" inline="true"/>
+        </f:entry>
+      </f:nested>
+     </f:radioBlock>
+  </f:section>
+
   <f:section title="Specify Device State(Optional)">
 
     <f:optionalBlock name="radioDetails" title="Specify Radio Details of Devices. Otherwise, use the default setting." checked="${instance.radioDetails}" inline="true">
