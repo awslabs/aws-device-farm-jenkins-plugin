@@ -40,6 +40,8 @@ import com.amazonaws.services.devicefarm.model.ListSuitesRequest;
 import com.amazonaws.services.devicefarm.model.ListSuitesResult;
 import com.amazonaws.services.devicefarm.model.ListTestsRequest;
 import com.amazonaws.services.devicefarm.model.ListTestsResult;
+import com.amazonaws.services.devicefarm.model.ListUploadsRequest;
+import com.amazonaws.services.devicefarm.model.ListUploadsResult;
 import com.amazonaws.services.devicefarm.model.NotFoundException;
 import com.amazonaws.services.devicefarm.model.Project;
 import com.amazonaws.services.devicefarm.model.ScheduleRunConfiguration;
@@ -183,12 +185,16 @@ public class AWSDeviceFarm {
      * @return A List of the Device Farm projects.
      */
     public List<Project> getProjects() {
+        List<Project> projects = new ArrayList<Project>();
         ListProjectsResult result = api.listProjects(new ListProjectsRequest());
-        if (result == null) {
-            return new ArrayList<Project>();
-        } else {
-            return result.getProjects();
+        projects.addAll(result.getProjects());
+        while (result.getNextToken() != null) {
+            ListProjectsRequest request = new ListProjectsRequest();
+            request.setNextToken(result.getNextToken());
+            result = api.listProjects(request);
+            projects.addAll(result.getProjects());
         }
+        return projects;
     }
 
     /**
@@ -250,6 +256,59 @@ public class AWSDeviceFarm {
     }
 
     /**
+     * Get Device Farm TestSpecs for a given Device Farm project.
+     *
+     * @param projectName String name of the Device Farm project.
+     * @return A List of the Device Farm TestSpecs.
+     * @throws AWSDeviceFarmException
+     */
+    public List<Upload> getTestSpecs(String projectName) throws AWSDeviceFarmException {
+        return getTestSpecs(getProject(projectName));
+    }
+
+    /**
+     * Get Device Farm TestSpecs  for a given Device Farm project.
+     *
+     * @param project Device Farm Project.
+     * @return A List of the Device Farm TestSpecs.
+     * @throws AWSDeviceFarmException
+     */
+    public List<Upload> getTestSpecs(Project project) throws AWSDeviceFarmException {
+        List<Upload> allUploads = getUploads(project);
+        List<Upload> testSpecUploads = new ArrayList<Upload>();
+        for (Upload upload : allUploads) {
+            if (upload.getType().contains("TEST_SPEC")) {
+                testSpecUploads.add(upload);
+
+            }
+        }
+        return testSpecUploads;
+    }
+
+    /**
+     * Get Device Farm uploads for a given Device Farm project.
+     *
+     * @param project
+     *            Device Farm Project.
+     * @return A List of the Device Farm uploads.
+     * @throws AWSDeviceFarmException
+     */
+    public List<Upload> getUploads(Project project) {
+
+        List<Upload> uploads = new ArrayList<Upload>();
+        ListUploadsResult result = api.listUploads(new ListUploadsRequest().withArn(project.getArn()));
+        uploads.addAll(result.getUploads());
+        while (result.getNextToken() != null) {
+            ListUploadsRequest request = new ListUploadsRequest();
+            request.setNextToken(result.getNextToken());
+            result = api.listUploads(request);
+            uploads.addAll(result.getUploads());
+        }
+        return uploads;
+
+    }
+
+    /**
      * Get Device Farm device pool by Device Farm project and device pool name.
      *
      * @param projectName    String name of the Device Farm project.
@@ -279,6 +338,26 @@ public class AWSDeviceFarm {
         }
 
         throw new AWSDeviceFarmException(String.format("DevicePool '%s' not found.", devicePoolName));
+    }
+
+    /**
+     * Get Device Farm TestSpec by Device Farm project and TestSpec name.
+     *
+     * @param project        The Device Farm project.
+     * @param testSpecName String name of the Device Farm testSpec.
+     * @return The TestSpec.
+     * @throws AWSDeviceFarmException
+     */
+    public Upload getTestSpec(Project project, String testSpecName) throws AWSDeviceFarmException {
+        List<Upload> testSpecUploads = getTestSpecs(project);
+
+        for (Upload upload : testSpecUploads) {
+            if (upload.getName().equals(testSpecName)) {
+                return upload;
+            }
+        }
+
+        throw new AWSDeviceFarmException(String.format("TestSpec '%s' not found.", testSpecName));
     }
 
     /**
