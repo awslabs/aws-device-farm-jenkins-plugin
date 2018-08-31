@@ -1008,18 +1008,21 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
 
         }
 
-        switch (environmentToRun) {
-        case STANDARD_ENVIRONMENT: {
-            break;
-        }
+		if (StringUtils.isNotBlank(environmentToRun)) {
+			switch (environmentToRun) {
 
-        case CUSTOM_ENVIRONMENT: {
-            Upload testSpec = adf.getTestSpec(project, testSpecName);
-            testToSchedule.setTestSpecArn(testSpec.getArn());
-            break;
-        }
-        }
-        return testToSchedule;
+			case STANDARD_ENVIRONMENT: {
+				break;
+			}
+
+			case CUSTOM_ENVIRONMENT: {
+				Upload testSpec = adf.getTestSpec(project, testSpecName);
+				testToSchedule.setTestSpecArn(testSpec.getArn());
+				break;
+			}
+			}
+		}
+		return testToSchedule;
     }
 
     /**
