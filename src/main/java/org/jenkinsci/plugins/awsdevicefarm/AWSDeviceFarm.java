@@ -672,7 +672,8 @@ public class AWSDeviceFarm {
                                          String devicePoolArn,
                                          ScheduleRunTest test,
                                          Integer jobTimeoutMinutes,
-                                         ScheduleRunConfiguration configuration) {
+                                         ScheduleRunConfiguration configuration,
+                                         Boolean videoCapture) {
         ScheduleRunRequest request = new ScheduleRunRequest()
                 .withProjectArn(projectArn)
                 .withName(name)
@@ -682,8 +683,9 @@ public class AWSDeviceFarm {
         ExecutionConfiguration exeConfiguration = new ExecutionConfiguration();
         if (!jobTimeoutMinutes.equals(DEFAULT_JOB_TIMEOUT_MINUTE)) {
             exeConfiguration.setJobTimeoutMinutes(jobTimeoutMinutes);
-            request.withExecutionConfiguration(exeConfiguration);
         }
+        exeConfiguration.setVideoCapture(videoCapture);
+        request.withExecutionConfiguration(exeConfiguration);
 
         if (configuration != null) {
             request.withConfiguration(configuration);
