@@ -49,6 +49,7 @@ import com.amazonaws.services.devicefarm.model.ScheduleRunRequest;
 import com.amazonaws.services.devicefarm.model.ScheduleRunResult;
 import com.amazonaws.services.devicefarm.model.ScheduleRunTest;
 import com.amazonaws.services.devicefarm.model.Upload;
+import com.amazonaws.services.devicefarm.model.UploadStatus;
 import com.amazonaws.services.devicefarm.model.VPCEConfiguration;
 import com.amazonaws.services.devicefarm.model.ListVPCEConfigurationsResult;
 import com.amazonaws.services.devicefarm.model.ListVPCEConfigurationsRequest;
@@ -277,10 +278,11 @@ public class AWSDeviceFarm {
         List<Upload> allUploads = getUploads(project);
         List<Upload> testSpecUploads = new ArrayList<Upload>();
         for (Upload upload : allUploads) {
-            if (upload.getType().contains("TEST_SPEC")) {
-                testSpecUploads.add(upload);
+			if (upload.getType().contains("TEST_SPEC")
+					&& UploadStatus.SUCCEEDED.toString().equals(upload.getStatus())) {
+				testSpecUploads.add(upload);
 
-            }
+			}
         }
         return testSpecUploads;
     }
