@@ -556,8 +556,10 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             writeToLog(log, "Getting test to schedule.");
             ScheduleRunTest testToSchedule = getScheduleRunTest(env, adf, project);
 
+            // by default videoCapture is always enabled
+            Boolean videoCapture = true;
             if (ifVideoRecording != null && !ifVideoRecording) {
-                testToSchedule.addParametersEntry("video_recording", "false");
+                videoCapture = false;
             }
             if (ifAppPerformanceMonitoring != null && !ifAppPerformanceMonitoring) {
                 testToSchedule.addParametersEntry("app_performance_monitoring", "false");
@@ -598,7 +600,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                 configuration.setVpceConfigurationArns(vpceConfigurationArns);
             }
 
-            ScheduleRunResult run = adf.scheduleRun(project.getArn(), deviceFarmRunName, appArn, devicePool.getArn(), testToSchedule, jobTimeoutMinutes, configuration);
+            ScheduleRunResult run = adf.scheduleRun(project.getArn(), deviceFarmRunName, appArn, devicePool.getArn(), testToSchedule, jobTimeoutMinutes, configuration, videoCapture);
 
             String runArn = run.getRun().getArn();
             try {
