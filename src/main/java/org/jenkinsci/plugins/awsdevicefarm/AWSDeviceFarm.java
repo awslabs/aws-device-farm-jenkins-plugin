@@ -49,6 +49,7 @@ import com.amazonaws.services.devicefarm.model.ScheduleRunRequest;
 import com.amazonaws.services.devicefarm.model.ScheduleRunResult;
 import com.amazonaws.services.devicefarm.model.ScheduleRunTest;
 import com.amazonaws.services.devicefarm.model.Upload;
+import com.amazonaws.services.devicefarm.model.UploadStatus;
 import com.amazonaws.services.devicefarm.model.VPCEConfiguration;
 import com.amazonaws.services.devicefarm.model.ListVPCEConfigurationsResult;
 import com.amazonaws.services.devicefarm.model.ListVPCEConfigurationsRequest;
@@ -277,10 +278,11 @@ public class AWSDeviceFarm {
         List<Upload> allUploads = getUploads(project);
         List<Upload> testSpecUploads = new ArrayList<Upload>();
         for (Upload upload : allUploads) {
-            if (upload.getType().contains("TEST_SPEC")) {
-                testSpecUploads.add(upload);
+			if (upload.getType().contains("TEST_SPEC")
+					&& UploadStatus.SUCCEEDED.toString().equals(upload.getStatus())) {
+				testSpecUploads.add(upload);
 
-            }
+			}
         }
         return testSpecUploads;
     }
@@ -672,7 +674,8 @@ public class AWSDeviceFarm {
                                          String devicePoolArn,
                                          ScheduleRunTest test,
                                          Integer jobTimeoutMinutes,
-                                         ScheduleRunConfiguration configuration) {
+                                         ScheduleRunConfiguration configuration,
+                                         Boolean videoCapture) {
         ScheduleRunRequest request = new ScheduleRunRequest()
                 .withProjectArn(projectArn)
                 .withName(name)
@@ -682,8 +685,9 @@ public class AWSDeviceFarm {
         ExecutionConfiguration exeConfiguration = new ExecutionConfiguration();
         if (!jobTimeoutMinutes.equals(DEFAULT_JOB_TIMEOUT_MINUTE)) {
             exeConfiguration.setJobTimeoutMinutes(jobTimeoutMinutes);
-            request.withExecutionConfiguration(exeConfiguration);
         }
+        exeConfiguration.setVideoCapture(videoCapture);
+        request.withExecutionConfiguration(exeConfiguration);
 
         if (configuration != null) {
             request.withConfiguration(configuration);
