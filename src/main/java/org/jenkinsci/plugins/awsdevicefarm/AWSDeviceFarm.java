@@ -785,6 +785,20 @@ public class AWSDeviceFarm {
         }
     }
 
+	/*
+	 * Call this method for web apps. IF user has unmetered android or IOS, he
+	 * should be allowed to run web tests
+	 */
+	public int getUnmeteredDevicesForWeb() {
+		AccountSettings accountSettings = getAccountSettings();
+		if (accountSettings == null) {
+			return 0;
+		}
+		int androidCount = getAccountSettings().getUnmeteredDevices().get("ANDROID");
+		int iosCount = getAccountSettings().getUnmeteredDevices().get("IOS");
+		return Math.max(androidCount, iosCount);
+	}
+
     public String getOs(String appArtifact) throws AWSDeviceFarmException {
         if (appArtifact.toLowerCase().endsWith("apk")) {
             return "Android";
