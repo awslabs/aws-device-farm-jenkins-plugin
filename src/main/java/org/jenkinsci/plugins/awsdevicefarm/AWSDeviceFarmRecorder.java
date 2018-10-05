@@ -1,4 +1,5 @@
 //
+
 // Copyright 2015-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License").
@@ -429,7 +430,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     /**
      * Test if the environment selected by Customer is 'Custom' (for marking the radio button).
      *
-     * @param testTypeName
+     * @param environmentToRun
      *            The String representation of the environment.
      * @return Whether or not the test type string matches.
      */
@@ -510,11 +511,22 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
 
             // check for Unmetered Devices on Account
             if (isRunUnmetered != null && isRunUnmetered) {
-                String os = adf.getOs(appArtifact);
-                int unmeteredDeviceCount = adf.getUnmeteredDevices(os);
-                if (unmeteredDeviceCount <= 0) {
-                    throw new AWSDeviceFarmException(String.format("Your account does not have unmetered %s device slots. Please change "
-                            + "your build settings to run on metered devices.", os));
+                int unmeteredDeviceCount = 0;
+                if (ifWebApp != null && ifWebApp) {
+                    unmeteredDeviceCount = adf.getUnmeteredDevicesForWeb();
+                    if (unmeteredDeviceCount <= 0) {
+                        throw new AWSDeviceFarmException(String.format(
+                                "Your account does not have unmetered android or ios device slots. Please change "
+                                        + "your build settings to run on metered devices."));
+                    }
+                } else {
+                    String os = adf.getOs(appArtifact);
+                    unmeteredDeviceCount = adf.getUnmeteredDevices(os);
+                    if (unmeteredDeviceCount <= 0) {
+                        throw new AWSDeviceFarmException(
+                                String.format("Your account does not have unmetered %s device slots. Please change "
+                                        + "your build settings to run on metered devices.", os));
+                    }
                 }
             }
 
@@ -591,7 +603,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             configuration.setExtraDataPackageArn(extraDataArn);
 
             // Check if VPCE option is enabled in UI and account has a VPC config
-            if(ifVpce && accountHasVPC()) {
+            if(ifVpce != null && ifVpce && accountHasVPC()) {
                 // Get AWS Device Farm VPCE.
                 writeToLog(log, String.format("Using VPCE Configuartion '%s'", vpceServiceName));
                 VPCEConfiguration vpceConfiguration = adf.getVPCEConfiguration(vpceServiceName);
@@ -1595,17 +1607,26 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
          * @return Returns whether form validation passed
          */
         @SuppressWarnings("unused")
-        public FormValidation doCheckIsRunUnmetered(@QueryParameter Boolean isRunUnmetered, @QueryParameter String appArtifact) {
+        public FormValidation doCheckIsRunUnmetered(@QueryParameter Boolean isRunUnmetered,
+                @QueryParameter String appArtifact, @QueryParameter Boolean ifWebApp) {
             if (isRunUnmetered != null && isRunUnmetered) {
                 AWSDeviceFarm adf = getAWSDeviceFarm();
-                String os = null;
-                try {
-                    os = adf.getOs(appArtifact);
-                } catch (AWSDeviceFarmException e) {
-                    return FormValidation.error(e.getMessage());
-                }
-                if (adf.getUnmeteredDevices(os) <= 0) {
-                    return FormValidation.error(String.format("Your account does not have unmetered %s device slots.", os));
+                if (ifWebApp != null && !ifWebApp) {
+                    String os = null;
+                    try {
+                        os = adf.getOs(appArtifact);
+                    } catch (AWSDeviceFarmException e) {
+                        return FormValidation.error(e.getMessage());
+                    }
+                    if (adf.getUnmeteredDevices(os) <= 0) {
+                        return FormValidation
+                                .error(String.format("Your account does not have unmetered %s device slots.", os));
+                    }
+                } else {
+                    if (adf.getUnmeteredDevicesForWeb() <= 0) {
+                        return FormValidation.error(
+                                String.format("Your account does not have unmetered Android or IOS device slots."));
+                    }
                 }
             }
             return FormValidation.ok();
