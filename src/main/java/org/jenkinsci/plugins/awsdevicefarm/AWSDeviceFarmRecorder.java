@@ -168,6 +168,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     public String appiumVersionPython;
     public String appiumVersionTestng;
 
+    private static final String APPIUM_VERSION_1_9_1 = "1.9.1";
     private static final String APPIUM_VERSION_1_7_2 = "1.7.2";
     private static final String APPIUM_VERSION_1_7_1 = "1.7.1";
     private static final String APPIUM_VERSION_1_6_3 = "1.6.3";
@@ -1767,6 +1768,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             appiumVersions.add(APPIUM_VERSION_1_6_5);
             appiumVersions.add(APPIUM_VERSION_1_7_1);
             appiumVersions.add(APPIUM_VERSION_1_7_2);
+            appiumVersions.add(APPIUM_VERSION_1_9_1);
             for (String appiumVersion: appiumVersions) {
                 entries.add(new ListBoxModel.Option(appiumVersion, appiumVersion, appiumVersion.equals(currentAppiumVersion)));
             }
@@ -1787,6 +1789,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             appiumVersions.add(APPIUM_VERSION_1_6_5);
             appiumVersions.add(APPIUM_VERSION_1_7_1);
             appiumVersions.add(APPIUM_VERSION_1_7_2);
+            appiumVersions.add(APPIUM_VERSION_1_9_1);
             for (String appiumVersion: appiumVersions) {
                 // We don't ignore case because these *should* be unique.
                 entries.add(new ListBoxModel.Option(appiumVersion, appiumVersion, appiumVersion.equals(currentAppiumVersion)));
@@ -1810,6 +1813,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             appiumVersions.add(APPIUM_VERSION_1_6_5);
             appiumVersions.add(APPIUM_VERSION_1_7_1);
             appiumVersions.add(APPIUM_VERSION_1_7_2);
+            appiumVersions.add(APPIUM_VERSION_1_9_1);
             for (String appiumVersion: appiumVersions) {
                 entries.add(new ListBoxModel.Option(appiumVersion, appiumVersion, appiumVersion.equals(currentAppiumVersion)));
             }
