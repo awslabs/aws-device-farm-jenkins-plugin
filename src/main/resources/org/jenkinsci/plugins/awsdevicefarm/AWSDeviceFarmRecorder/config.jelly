@@ -236,5 +236,10 @@
     <f:entry >
       <f:checkbox name="ifAppPerformanceMonitoring" title="Enable App Performance Monitoring" default="true" checked="${instance.ifAppPerformanceMonitoring}" inline="true"/>
     </f:entry>
+
+    <f:entry >
+      <f:checkbox name="ifSkipAppResigning" title="Enable Skip App Resigning (for private devices only)" default="false" checked="${instance.ifSkipAppResigning}" inline="true"/>
+    </f:entry>
+
   </f:section>
 </j:jelly>

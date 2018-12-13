@@ -205,6 +205,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     //E xecution Configuration
     public Boolean ifVideoRecording;
     public Boolean ifAppPerformanceMonitoring;
+    public Boolean ifSkipAppResigning;
 
     /**
      * The Device Farm recorder class for running post-build steps on Jenkins.
@@ -308,6 +309,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                                  Boolean ifAppPerformanceMonitoring,
                                  Boolean ignoreRunError,
                                  Boolean ifVpce,
+                                 Boolean ifSkipAppResigning,
                                  String vpceServiceName ) {
         this.projectName = projectName;
         this.devicePoolName = devicePoolName;
@@ -348,6 +350,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         this.deviceLatitude = deviceLatitude;
         this.deviceLongitude = deviceLongitude;
         this.ifVpce = ifVpce;
+        this.ifSkipAppResigning = ifSkipAppResigning;
         this.radioDetails = radioDetails;
         this.ifWifi = ifWifi;
         this.ifGPS = ifGPS;
@@ -576,7 +579,10 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             if (ifAppPerformanceMonitoring != null && !ifAppPerformanceMonitoring) {
                 testToSchedule.addParametersEntry("app_performance_monitoring", "false");
             }
-
+            Boolean skipAppResign = false;
+            if (ifSkipAppResigning != null && ifSkipAppResigning) {
+                skipAppResign = true;
+            }
 
             // State the Appium Version.
             if (testToRun.equalsIgnoreCase("APPIUM_JAVA_JUNIT")) writeToLog(log, String.format("Using appium version: %s", appiumVersionJunit));
@@ -612,7 +618,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                 configuration.setVpceConfigurationArns(vpceConfigurationArns);
             }
 
-            ScheduleRunResult run = adf.scheduleRun(project.getArn(), deviceFarmRunName, appArn, devicePool.getArn(), testToSchedule, jobTimeoutMinutes, configuration, videoCapture);
+            ScheduleRunResult run = adf.scheduleRun(project.getArn(), deviceFarmRunName, appArn, devicePool.getArn(), testToSchedule, jobTimeoutMinutes, configuration, videoCapture, skipAppResign);
 
             String runArn = run.getRun().getArn();
             try {
