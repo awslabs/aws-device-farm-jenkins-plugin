@@ -675,7 +675,8 @@ public class AWSDeviceFarm {
                                          ScheduleRunTest test,
                                          Integer jobTimeoutMinutes,
                                          ScheduleRunConfiguration configuration,
-                                         Boolean videoCapture) {
+                                         Boolean videoCapture,
+                                         Boolean skipAppResign) {
         ScheduleRunRequest request = new ScheduleRunRequest()
                 .withProjectArn(projectArn)
                 .withName(name)
@@ -687,6 +688,7 @@ public class AWSDeviceFarm {
             exeConfiguration.setJobTimeoutMinutes(jobTimeoutMinutes);
         }
         exeConfiguration.setVideoCapture(videoCapture);
+        exeConfiguration.setSkipAppResign(skipAppResign);
         request.withExecutionConfiguration(exeConfiguration);
 
         if (configuration != null) {
