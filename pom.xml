@@ -8,7 +8,7 @@
 
   <groupId>org.jenkins-ci.plugins</groupId>
   <artifactId>aws-device-farm</artifactId>
-  <version>1.24-SNAPSHOT</version>
+  <version>1.24</version>
   <packaging>hpi</packaging>
 
   <name>aws-device-farm</name>
@@ -55,7 +55,7 @@
     <connection>scm:git:ssh://github.com/jenkinsci/aws-device-farm-plugin.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/jenkinsci/aws-device-farm-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/aws-device-farm-plugin</url>
-    <tag>HEAD</tag>
+    <tag>aws-device-farm-1.24</tag>
   </scm>
 
   <developers>
