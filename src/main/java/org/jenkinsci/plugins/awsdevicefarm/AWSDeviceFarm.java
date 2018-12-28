@@ -302,6 +302,7 @@ public class AWSDeviceFarm {
         uploads.addAll(result.getUploads());
         while (result.getNextToken() != null) {
             ListUploadsRequest request = new ListUploadsRequest();
+            request.setArn(project.getArn());
             request.setNextToken(result.getNextToken());
             result = api.listUploads(request);
             uploads.addAll(result.getUploads());
