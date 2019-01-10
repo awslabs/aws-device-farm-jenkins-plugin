@@ -38,7 +38,7 @@ public class AWSDeviceFarmRecorderTest {
                 "TestProjectName", "TestDevicePool", null, null,
                 null, null, "APPIUM_JAVA_JUNIT", false, false, null,
                 null, null, null, null, null, null,
-                null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null,
                 null, null, null, null, false, false,
                 null, null, null, null, null, null,
