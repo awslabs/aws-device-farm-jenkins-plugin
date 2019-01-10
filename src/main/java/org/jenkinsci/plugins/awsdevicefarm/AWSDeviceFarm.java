@@ -64,9 +64,13 @@ import org.apache.http.impl.client.HttpClients;
 import org.jenkinsci.plugins.awsdevicefarm.test.AppiumWebJavaJUnitTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.AppiumWebJavaTestNGTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.AppiumWebPythonTest;
+import org.jenkinsci.plugins.awsdevicefarm.test.AppiumWebRubyTest;
+import org.jenkinsci.plugins.awsdevicefarm.test.AppiumWebNodeTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.AppiumJavaJUnitTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.AppiumJavaTestNGTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.AppiumPythonTest;
+import org.jenkinsci.plugins.awsdevicefarm.test.AppiumRubyTest;
+import org.jenkinsci.plugins.awsdevicefarm.test.AppiumNodeTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.CalabashTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.InstrumentationTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.UIAutomationTest;
@@ -521,6 +525,31 @@ public class AWSDeviceFarm {
         return upload(project, test.getTests(), AWSDeviceFarmUploadType.APPIUM_PYTHON);
     }
 
+    /**
+     * Upload a test to Device Farm.
+     *
+     * @param project The Device Farm project to upload to.
+     * @param test    Test object containing relevant test information.
+     * @return The Device Farm Upload object.
+     * @throws IOException
+     * @throws AWSDeviceFarmException
+     */
+    public Upload uploadTest(Project project, AppiumRubyTest test) throws InterruptedException, IOException, AWSDeviceFarmException {
+        return upload(project, test.getTests(), AWSDeviceFarmUploadType.APPIUM_RUBY);
+    }
+
+    /**
+     * Upload a test to Device Farm.
+     *
+     * @param project The Device Farm project to upload to.
+     * @param test    Test object containing relevant test information.
+     * @return The Device Farm Upload object.
+     * @throws IOException
+     * @throws AWSDeviceFarmException
+     */
+    public Upload uploadTest(Project project, AppiumNodeTest test) throws InterruptedException, IOException, AWSDeviceFarmException {
+        return upload(project, test.getTests(), AWSDeviceFarmUploadType.APPIUM_NODE);
+    }
 
     /**
      * Upload a test to Device Farm.
@@ -558,6 +587,32 @@ public class AWSDeviceFarm {
      */
     public Upload uploadTest(Project project, AppiumWebPythonTest test) throws InterruptedException, IOException, AWSDeviceFarmException {
         return upload(project, test.getTests(), AWSDeviceFarmUploadType.APPIUM_WEB_PYTHON);
+    }
+
+    /**
+     * Upload a test to Device Farm.
+     *
+     * @param project The Device Farm project to upload to.
+     * @param test    Test object containing relevant test information.
+     * @return The Device Farm Upload object.
+     * @throws IOException
+     * @throws AWSDeviceFarmException
+     */
+    public Upload uploadTest(Project project, AppiumWebRubyTest test) throws InterruptedException, IOException, AWSDeviceFarmException {
+        return upload(project, test.getTests(), AWSDeviceFarmUploadType.APPIUM_WEB_RUBY);
+    }
+
+    /**
+     * Upload a test to Device Farm.
+     *
+     * @param project The Device Farm project to upload to.
+     * @param test    Test object containing relevant test information.
+     * @return The Device Farm Upload object.
+     * @throws IOException
+     * @throws AWSDeviceFarmException
+     */
+    public Upload uploadTest(Project project, AppiumWebNodeTest test) throws InterruptedException, IOException, AWSDeviceFarmException {
+        return upload(project, test.getTests(), AWSDeviceFarmUploadType.APPIUM_WEB_NODE);
     }
 
     /**

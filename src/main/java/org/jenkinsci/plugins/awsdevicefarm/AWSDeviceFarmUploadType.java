@@ -26,6 +26,8 @@ public enum AWSDeviceFarmUploadType {
     APPIUM_JAVA_TESTNG("APPIUM_JAVA_TESTNG_TEST_PACKAGE"),          // Test
     APPIUM_JAVA_JUNIT("APPIUM_JAVA_JUNIT_TEST_PACKAGE"),            // Test
     APPIUM_PYTHON("APPIUM_PYTHON_TEST_PACKAGE"),                    // Test
+    APPIUM_RUBY("APPIUM_RUBY_TEST_PACKAGE"),                        // Test
+    APPIUM_NODE("APPIUM_NODE_TEST_PACKAGE"),                        // Test
     CALABASH ("CALABASH_TEST_PACKAGE"),                             // Test
     INSTRUMENTATION ("INSTRUMENTATION_TEST_PACKAGE"),               // Test
     UIAUTOMATOR ("UIAUTOMATOR_TEST_PACKAGE"),                       // Test
@@ -35,6 +37,8 @@ public enum AWSDeviceFarmUploadType {
     APPIUM_WEB_PYTHON("APPIUM_WEB_PYTHON_TEST_PACKAGE"),            // Test
     APPIUM_WEB_JAVA_TESTNG("APPIUM_WEB_JAVA_TESTNG_TEST_PACKAGE"),  // Test
     APPIUM_WEB_JAVA_JUNIT("APPIUM_WEB_JAVA_JUNIT_TEST_PACKAGE"),    // Test
+    APPIUM_WEB_NODE("APPIUM_WEB_NODE_TEST_PACKAGE"),                // Test
+    APPIUM_WEB_RUBY("APPIUM_WEB_RUBY_TEST_PACKAGE"),                // Test
     EXTERNAL_DATA("EXTERNAL_DATA");                                 // Extra Data
 
     private final String type;
