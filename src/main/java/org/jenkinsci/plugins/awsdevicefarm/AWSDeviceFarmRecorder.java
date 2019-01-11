@@ -932,7 +932,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                 CalabashTest test = new CalabashTest.Builder()
                         .withFeatures(env.expand(calabashFeatures))
                         .withTags(env.expand(calabashTags))
-                        .withProfile(calabashProfile)
+                        .withProfile(env.expand(calabashProfile))
                         .build();
 
                 Upload upload = adf.uploadTest(project, test);
@@ -954,7 +954,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             case INSTRUMENTATION: {
                 InstrumentationTest test = new InstrumentationTest.Builder()
                         .withArtifact(env.expand(junitArtifact))
-                        .withFilter(junitFilter)
+                        .withFilter(env.expand(junitFilter))
                         .build();
 
                 Upload upload = adf.uploadTest(project, test);
@@ -970,7 +970,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             case UIAUTOMATOR: {
                 UIAutomatorTest test = new UIAutomatorTest.Builder()
                         .withTests(env.expand(uiautomatorArtifact))
-                        .withFilter(uiautomatorFilter)
+                        .withFilter(env.expand(uiautomatorFilter))
                         .build();
 
                 Upload upload = adf.uploadTest(project, test);
@@ -1000,7 +1000,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             case XCTEST: {
                 XCTestTest test = new XCTestTest.Builder()
                         .withTests(xctestArtifact)
-                        .withFilter(xctestFilter)
+                        .withFilter(env.expand(xctestFilter))
                         .build();
 
                 Upload upload = adf.uploadTest(project, test);
@@ -1013,9 +1013,10 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             }
 
             case XCTEST_UI: {
+
                 XCTestUITest test = new XCTestUITest.Builder()
                         .withTests(xctestUiArtifact)
-                        .withFilter(xctestUiFilter)
+                        .withFilter(env.expand(xctestUiFilter))
                         .build();
 
                 Upload upload = adf.uploadTest(project, test);
