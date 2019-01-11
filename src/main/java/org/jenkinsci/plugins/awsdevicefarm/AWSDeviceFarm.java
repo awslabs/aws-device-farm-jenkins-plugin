@@ -272,7 +272,7 @@ public class AWSDeviceFarm {
     }
 
     /**
-     * Get Device Farm TestSpecs  for a given Device Farm project.
+     * Get Device Farm TestSpecs for a given Device Farm project.
      *
      * @param project Device Farm Project.
      * @return A List of the Device Farm TestSpecs.
@@ -283,12 +283,31 @@ public class AWSDeviceFarm {
         List<Upload> testSpecUploads = new ArrayList<Upload>();
         for (Upload upload : allUploads) {
 			if (upload.getType().contains("TEST_SPEC")
-					&& UploadStatus.SUCCEEDED.toString().equals(upload.getStatus())) {
+					&& UploadStatus.SUCCEEDED.toString().equals(upload.getStatus()) && !isRestrictedDefaultSpec(upload)) {
 				testSpecUploads.add(upload);
 
 			}
         }
         return testSpecUploads;
+    }
+
+    /**
+     * Helper function to detect a default testspec file for frameworks that cannot use it.
+     *
+     * @param upload Testspec
+     *
+     * @return true if it is a default spec file.
+     * @throws AWSDeviceFarmException
+     */
+    public Boolean isRestrictedDefaultSpec(Upload testSpec) {
+        if ((testSpec.getType().equals("APPIUM_RUBY_TEST_SPEC") ||
+            testSpec.getType().equals("APPIUM_NODE_TEST_SPEC") ||
+            testSpec.getType().equals("APPIUM_WEB_RUBY_TEST_SPEC") ||
+            testSpec.getType().equals("APPIUM_WEB_NODE_TEST_SPEC")) &&
+            (testSpec.getCategory().equals("CURATED"))) {
+            return true;
+        }
+        return false;
     }
 
     /**
