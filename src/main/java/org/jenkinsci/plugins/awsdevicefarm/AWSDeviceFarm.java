@@ -95,6 +95,11 @@ public class AWSDeviceFarm {
     private EnvVars env;
 
     private static final Integer DEFAULT_JOB_TIMEOUT_MINUTE = 60;
+    private static final String APPIUM_RUBY_TEST_SPEC = "APPIUM_RUBY_TEST_SPEC";
+    private static final String APPIUM_NODE_TEST_SPEC = "APPIUM_NODE_TEST_SPEC";
+    private static final String APPIUM_WEB_RUBY_TEST_SPEC = "APPIUM_WEB_RUBY_TEST_SPEC";
+    private static final String APPIUM_WEB_NODE_TEST_SPEC = "APPIUM_WEB_NODE_TEST_SPEC";
+    private static final String CURATED = "CURATED";
 
     //// Constructors
 
@@ -300,12 +305,14 @@ public class AWSDeviceFarm {
      * @throws AWSDeviceFarmException
      */
     public Boolean isRestrictedDefaultSpec(Upload testSpec) {
-        if ((testSpec.getType().equals("APPIUM_RUBY_TEST_SPEC") ||
-            testSpec.getType().equals("APPIUM_NODE_TEST_SPEC") ||
-            testSpec.getType().equals("APPIUM_WEB_RUBY_TEST_SPEC") ||
-            testSpec.getType().equals("APPIUM_WEB_NODE_TEST_SPEC")) &&
-            (testSpec.getCategory().equals("CURATED"))) {
-            return true;
+        if (testSpec != null) {
+            if ((APPIUM_RUBY_TEST_SPEC.equals(testSpec.getType()) ||
+                APPIUM_NODE_TEST_SPEC.equals(testSpec.getType()) ||
+                APPIUM_WEB_RUBY_TEST_SPEC.equals(testSpec.getType()) ||
+                APPIUM_WEB_NODE_TEST_SPEC.equals(testSpec.getType())) &&
+                (CURATED.equals(testSpec.getCategory()))) {
+                return true;
+            }
         }
         return false;
     }

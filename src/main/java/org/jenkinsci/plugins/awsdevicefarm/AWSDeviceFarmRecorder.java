@@ -411,7 +411,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
      * @return The String should bu input as the parameter of the devicefarm API.
      */
     public String transformTestToRunForWebApp(@Nonnull String testToRun) {
-        if (ifWebApp) {
+        if (testToRun != null && ifWebApp) {
             if (testToRun.equalsIgnoreCase("APPIUM_PYTHON")) return"APPIUM_WEB_PYTHON";
             else if (testToRun.equalsIgnoreCase("APPIUM_JAVA_JUNIT")) return"APPIUM_WEB_JAVA_JUNIT";
             else if (testToRun.equalsIgnoreCase("APPIUM_JAVA_TESTNG")) return"APPIUM_WEB_JAVA_TESTNG";
