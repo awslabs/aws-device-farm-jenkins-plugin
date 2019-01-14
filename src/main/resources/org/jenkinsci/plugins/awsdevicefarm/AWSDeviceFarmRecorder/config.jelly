@@ -105,6 +105,22 @@
       </f:nested>
     </f:radioBlock>
 
+    <f:radioBlock name="testToRun" value="APPIUM_RUBY" checked="${instance.isTestType('APPIUM_RUBY')}" title="Appium Ruby (Available in custom environment only)" inline="true">
+      <f:nested>
+        <f:entry title="Tests" field="appiumRubyTest" description="[Required] Pattern to find Ruby tests.">
+          <f:textbox />
+        </f:entry>
+      </f:nested>
+    </f:radioBlock>
+
+    <f:radioBlock name="testToRun" value="APPIUM_NODE" checked="${instance.isTestType('APPIUM_NODE')}" title="Appium Node (Available in custom environment only)" inline="true">
+      <f:nested>
+        <f:entry title="Tests" field="appiumNodeTest" description="[Required] Pattern to find Node tests.">
+          <f:textbox />
+        </f:entry>
+      </f:nested>
+    </f:radioBlock>
+
     <f:radioBlock name="testToRun" value="CALABASH" checked="${instance.isTestType('CALABASH')}" title="Calabash" inline="true">
       <f:nested>
         <f:entry title="Features" field="calabashFeatures" description="[Required] Pattern to find features.zip.">
@@ -173,9 +189,8 @@
   </f:section>
 
  <f:section title="Choose your execution environment">
-    <f:radioBlock name="environmentToRun" value="StandardEnvironment" checked="${instance.isStandardEnvironment('StandardEnvironment')}" title="Standard environment" inline="true">
-      </f:radioBlock>
-
+      <f:radioBlock name="environmentToRun" value="StandardEnvironment" checked="${instance.isStandardEnvironment('StandardEnvironment')}" title="Standard environment" inline="true">
+        </f:radioBlock>
     <f:radioBlock name="environmentToRun" value="CustomEnvironment" checked="${instance.isCustomEnvironment('CustomEnvironment')}" title="Custom Environment" inline="true">
       <f:nested>
         <f:entry title="Select Test Specification file" field="testSpecName" description="Choose the testSpec file.">

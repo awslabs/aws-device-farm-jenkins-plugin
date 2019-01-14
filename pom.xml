@@ -31,7 +31,7 @@
     <dependency>
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk</artifactId>
-      <version>1.11.466</version>
+      <version>1.11.478</version>
     </dependency>
 
     <!-- TODO: Use Apache HttpComponents Client 4.x API instead: https://plugins.jenkins.io/apache-httpcomponents-client-4-api -->
