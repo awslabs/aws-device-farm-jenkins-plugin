@@ -647,7 +647,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             }
 
             // Attach AWS Device Farm action to poll periodically and update results UI.
-            AWSDeviceFarmTestResultAction action = new AWSDeviceFarmTestResultAction(build, null, log);
+            AWSDeviceFarmTestResultAction action = new AWSDeviceFarmTestResultAction(build, null);
             build.addAction(action);
 
             // Wait for test result to complete will updating status periodically.
