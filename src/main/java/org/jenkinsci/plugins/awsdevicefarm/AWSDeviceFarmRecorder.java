@@ -435,7 +435,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     /**
      * Test if the environment selected by Customer is 'Standard' (for marking the radio button).
      *
-     * @param testTypeName
+     * @param environmentToRun
      *            The String representation of the environment.
      * @return Whether or not the test type string matches.
      */
@@ -486,7 +486,6 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
      * @param build    The build to follow.
      * @param launcher The launcher.
      * @param listener The build launcher.
-     * @return Whether or not the post-build action succeeded.
      * @throws IOException
      * @throws InterruptedException
      */

@@ -44,7 +44,7 @@ public class BuiltinExplorerTest {
          * password setter password to use if explorer encounters a login form.
          *
          * @param password the Builder object.
-         * @return
+         * @return the Builder object.
          */
         public Builder withPassword(String password) {
             this.password = password;
