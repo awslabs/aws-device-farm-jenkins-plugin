@@ -588,7 +588,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
 
             // Upload test content.
             writeToLog(log, "Getting test to schedule.");
-            ScheduleRunTest testToSchedule = getScheduleRunTest(env, adf, project);
+            ScheduleRunTest testToSchedule = getScheduleRunTest(env, adf, project, log);
 
             // by default videoCapture is always enabled
             Boolean videoCapture = true;
@@ -813,7 +813,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
      * @throws IOException
      * @throws AWSDeviceFarmException
      */
-    private ScheduleRunTest getScheduleRunTest(EnvVars env, AWSDeviceFarm adf, Project project) throws InterruptedException, IOException, AWSDeviceFarmException {
+    private ScheduleRunTest getScheduleRunTest(EnvVars env, AWSDeviceFarm adf, Project project, PrintStream log) throws InterruptedException, IOException, AWSDeviceFarmException {
         ScheduleRunTest testToSchedule = null;
         TestType testType = stringToTestType(testToRun);
 
@@ -1100,6 +1100,10 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                         .withFilter(test.getFilter())
                         .withTestPackageArn(upload.getArn());
                 break;
+            }
+
+            default: {
+                writeToLog(log, String.format("Cannot schedule unknown test type '%s'", testType));
             }
 
         }
