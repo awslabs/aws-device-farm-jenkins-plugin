@@ -235,6 +235,15 @@
         <f:textbox default="-122.3941"/>
       </f:entry>
     </f:optionalBlock>
+
+    <f:optionalBlock name="customArtifacts" title="Specify path to custom artifacts." checked="${instance.customArtifacts}" inline="true">
+      <f:entry title="On host machine" field="customArtifactsHostPath" description="[Optional] Paths to your files on the host machine and device." >
+        <f:textbox />
+      </f:entry>
+      <f:entry title="On device" field="customArtifactsDevicePath" description="[Optional] Paths to your files on the device." >
+        <f:textbox />
+      </f:entry>
+    </f:optionalBlock>
   </f:section>
 
   <f:section title="Execution Information">
