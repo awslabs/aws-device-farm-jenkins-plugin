@@ -54,7 +54,6 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
-import hudson.util.IOUtils;
 import hudson.util.ListBoxModel;
 import net.sf.json.JSONObject;
 import javax.annotation.Nonnull;
@@ -675,9 +674,11 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                         String testArn = arn.substring(0, arn.lastIndexOf("/"));
                         String id = arn.substring(arn.lastIndexOf("/") + 1);
                         String extension = artifact.getExtension().replaceFirst("^\\.", "");
-                        FilePath artifactFilePath = new FilePath(tests.get(testArn), String.format("%s-%s.%s", artifact.getName(), id, extension));
-                        URL url = new URL(artifact.getUrl());
-                        artifactFilePath.write().write(IOUtils.toByteArray(url.openStream()));
+
+                        // Copy remote file to local path for archiving
+                        FilePath localArtifact = new FilePath(tests.get(testArn), String.format("%s-%s.%s", artifact.getName(), id, extension));
+                        URL artifactUrl = new URL(artifact.getUrl());
+                        localArtifact.copyFrom(artifactUrl);
                     }
                 }
                 writeToLog(log, String.format("Results archive saved in %s", artifactsDir.getName()));
