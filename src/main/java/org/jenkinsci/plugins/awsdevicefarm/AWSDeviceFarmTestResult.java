@@ -176,8 +176,8 @@ public class AWSDeviceFarmTestResult extends TestResult {
     /**
      * Return a list of up to (n) of the most recent/previous AWS Device Farm results.
      *
-     * @param n
-     * @return
+     * @param n number of results requested
+     * @return list of previous results
      */
     @SuppressWarnings("unused")
     protected List<AWSDeviceFarmTestResult> getPreviousResults(int n) {
@@ -190,7 +190,7 @@ public class AWSDeviceFarmTestResult extends TestResult {
      * Return a list of all AWS Device Farm results from all builds previous to the build that this result is tied to.
      * The list is return in increasing, sequential order.
      *
-     * @return
+     * @return list of previous results
      */
     @SuppressWarnings("unused")
     protected List<AWSDeviceFarmTestResult> getPreviousResults() {
@@ -231,7 +231,7 @@ public class AWSDeviceFarmTestResult extends TestResult {
      * Return true if this result is "completed". A completed result is a result
      * who is both marked as completed and has had its results archived for download.
      *
-     * @return
+     * @return true if completed
      */
     public Boolean isCompleted() {
         return status != null
@@ -241,7 +241,7 @@ public class AWSDeviceFarmTestResult extends TestResult {
     /**
      * Return a Jenkins build result which matches the result status from AWS Device Farm.
      *
-     * @return
+     * @return Jenkins build result
      */
     public Result getBuildResult(Boolean ignoreRunError) {
         if (ignoreRunError != null && ignoreRunError && ExecutionResult.ERRORED.equals(result)) {
@@ -268,8 +268,8 @@ public class AWSDeviceFarmTestResult extends TestResult {
      * test result the ID's match, otherwise scan our previous runs looking for a matching result.
      * If no match is found, return null.
      *
-     * @param id
-     * @return
+     * @param id test result ID
+     * @return the AWS Device Farm test result for the given id
      */
     public TestResult findCorrespondingResult(String id) {
         if (id == null || getId().equalsIgnoreCase(id)) {
@@ -292,9 +292,7 @@ public class AWSDeviceFarmTestResult extends TestResult {
     }
 
     /**
-     * Return number of test passes in this result.
-     *
-     * @return
+     * @return number of test passes in this result
      */
     @Override
     public int getPassCount() {
@@ -302,18 +300,14 @@ public class AWSDeviceFarmTestResult extends TestResult {
     }
 
     /**
-     * Return number of test warnings in this result.
-     *
-     * @return
+     * @return number of test warnings in this result
      */
     public int getWarnCount() {
         return warnCount;
     }
 
     /**
-     * Return number of test failures in this result.
-     *
-     * @return
+     * @return number of test failures in this result
      */
     @Override
     public int getFailCount() {
@@ -321,27 +315,21 @@ public class AWSDeviceFarmTestResult extends TestResult {
     }
 
     /**
-     * Return number of test errors in this result.
-     *
-     * @return
+     * @return number of test errors in this result
      */
     public int getStopCount() {
         return stopCount;
     }
 
     /**
-     * Return number of test errors in this result.
-     *
-     * @return
+     * @return number of test errors in this result
      */
     public int getErrorCount() {
         return errorCount;
     }
 
     /**
-     * Return number of test errors in this result.
-     *
-     * @return
+     * @return number of test skipped in this result
      */
     @Override
     public int getSkipCount() {
@@ -349,9 +337,7 @@ public class AWSDeviceFarmTestResult extends TestResult {
     }
 
     /**
-     * Return total number of tests run in this result.
-     *
-     * @return
+     * @return total number of tests run in this result
      */
     @Override
     public int getTotalCount() {
@@ -359,9 +345,7 @@ public class AWSDeviceFarmTestResult extends TestResult {
     }
 
     /**
-     * Return total number of device minutes used by the run which generated this result.
-     *
-     * @return
+     * @return total number of device minutes used by the run which generated this result
      */
     @Override
     public float getDuration() {
@@ -369,9 +353,7 @@ public class AWSDeviceFarmTestResult extends TestResult {
     }
 
     /**
-     * Return true if there are no tests for this result, false otherwise.
-     *
-     * @return
+     * @return true if there are no tests for this result, false otherwise
      */
     public Boolean isEmpty() {
         return getTotalCount() == 0;
