@@ -299,7 +299,7 @@ public class AWSDeviceFarm {
     /**
      * Helper function to detect a default testspec file for frameworks that cannot use it.
      *
-     * @param upload Testspec
+     * @param testSpec the testspec file to check
      *
      * @return true if it is a default spec file.
      * @throws AWSDeviceFarmException

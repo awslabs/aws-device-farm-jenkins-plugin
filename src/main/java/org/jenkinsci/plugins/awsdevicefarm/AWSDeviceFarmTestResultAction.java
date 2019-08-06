@@ -60,9 +60,7 @@ public class AWSDeviceFarmTestResultAction extends AbstractTestResultAction<AWSD
     }
 
     /**
-     * Returns the Jenkins result which matches the result of this AWS Device Farm run.
-     *
-     * @return
+     * @return the Jenkins result which matches the result of this AWS Device Farm run
      */
     public Result getBuildResult(Boolean ignoreRunError) {
         return getResult().getBuildResult(ignoreRunError);
@@ -99,9 +97,7 @@ public class AWSDeviceFarmTestResultAction extends AbstractTestResultAction<AWSD
     }
 
     /**
-     * Returns the most recent AWS Device Farm test action from the previous build.
-     *
-     * @return
+     * @return the most recent AWS Device Farm test action from the previous build
      */
     @Override
     public AWSDeviceFarmTestResultAction getPreviousResult() {
@@ -113,9 +109,7 @@ public class AWSDeviceFarmTestResultAction extends AbstractTestResultAction<AWSD
     }
 
     /**
-     * Returns a snapshot of the current results for this AWS Device Farm run.
-     *
-     * @return
+     * @return a snapshot of the current results for this AWS Device Farm run
      */
     @Override
     public AWSDeviceFarmTestResult getResult() {
@@ -123,18 +117,14 @@ public class AWSDeviceFarmTestResultAction extends AbstractTestResultAction<AWSD
     }
 
     /**
-     * Returns a snapshot of the current results for this AWS Device Farm run.
-     *
-     * @return
+     * @return a snapshot of the current results for this AWS Device Farm run
      */
     public AWSDeviceFarmTestResult getTarget() {
         return getResult();
     }
 
     /**
-     * Returns the number of failed tests for this AWS Device Farm run.
-     *
-     * @return
+     * @return the number of failed tests for this AWS Device Farm run
      */
     @Override
     public int getFailCount() {
@@ -147,9 +137,7 @@ public class AWSDeviceFarmTestResultAction extends AbstractTestResultAction<AWSD
     }
 
     /**
-     * Returns the total number of tests for this AWS Device Farm run.
-     *
-     * @return
+     * @return the total number of tests for this AWS Device Farm run
      */
     @Override
     public int getTotalCount() {
