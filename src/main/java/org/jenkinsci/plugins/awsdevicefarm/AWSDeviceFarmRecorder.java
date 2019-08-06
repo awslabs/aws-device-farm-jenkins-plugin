@@ -55,6 +55,7 @@ import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import hudson.util.Secret;
 import net.sf.json.JSONObject;
 import javax.annotation.Nonnull;
 import jenkins.tasks.SimpleBuildStep;
@@ -1133,8 +1134,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
      */
     private boolean validateConfiguration(@Nonnull PrintStream log) {
         String roleArn = getRoleArn();
-        String akid = getAkid();
-        String skid = getSkid();
+        String akid = Secret.toString(getAkid());
+        String skid = Secret.toString(getSkid());
 
         // [Required]: Auth Credentials
         if ((roleArn == null || roleArn.isEmpty()) && (akid == null || akid.isEmpty() || skid == null || skid.isEmpty())) {
@@ -1386,7 +1387,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
      *
      * @return The access key ID.
      */
-    public String getAkid() {
+    public Secret getAkid() {
         return getDescriptor().akid;
     }
 
@@ -1395,7 +1396,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
      *
      * @return The secret key ID.
      */
-    public String getSkid() {
+    public Secret getSkid() {
         return getDescriptor().skid;
     }
 
@@ -1445,8 +1446,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     @Symbol("devicefarm")
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         public String roleArn;
-        public String akid;
-        public String skid;
+        public Secret akid;
+        public Secret skid;
 
         private List<String> projectsCache = new ArrayList<String>();
         private Map<String, List<String>> poolsCache = new HashMap<String, List<String>>();
@@ -1472,7 +1473,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
          * @param akidValue
          */
         protected final void setAkid(String akidValue){
-            akid = akidValue;
+            akid = Secret.fromString(akidValue);
         }
 
         /**
@@ -1481,7 +1482,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
          * @param skidValue
          */
         protected final void setSkid(String skidValue){
-            skid = skidValue;
+            skid = Secret.fromString(skidValue);
         }
 
         /**
@@ -1492,7 +1493,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         public AWSDeviceFarm getAWSDeviceFarm() {
             AWSDeviceFarm adf;
             if (roleArn == null || roleArn.isEmpty()) {
-                adf = new AWSDeviceFarm(new BasicAWSCredentials(akid, skid));
+                adf = new AWSDeviceFarm(new BasicAWSCredentials(Secret.toString(akid), Secret.toString(skid)));
             } else {
                 adf = new AWSDeviceFarm(roleArn);
             }
@@ -1507,6 +1508,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
          */
         @SuppressWarnings("unused")
         public FormValidation doCheckRoleArn(@QueryParameter String roleArn) {
+            String skid = Secret.toString(this.skid);
+            String akid = Secret.toString(this.akid);
             if ((roleArn == null || roleArn.isEmpty()) && (akid == null || akid.isEmpty() || skid == null || skid.isEmpty())) {
                 return FormValidation.error("Required if AKID/SKID isn't present!");
             }
@@ -1534,11 +1537,9 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
          */
         @SuppressWarnings("unused")
         public FormValidation doCheckAkid(@QueryParameter String akid) {
+            String skid = Secret.toString(this.skid);
             if ((roleArn == null || roleArn.isEmpty()) && (akid == null || akid.isEmpty())) {
                 return FormValidation.error("Required if IAM Role ARN isn't present!");
-            }
-            if ((roleArn == null || roleArn.isEmpty()) && (akid.length() != 20)) {
-                return FormValidation.error("AWS AKIDs are 20 characters long.");
             }
             if (roleArn != null && !roleArn.isEmpty() && akid != null && !akid.isEmpty() && skid != null && !skid.isEmpty()) {
                 return FormValidation.error("Must specify either IAM Role ARN *OR* AKID/SKID!");
@@ -1554,11 +1555,9 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
          */
         @SuppressWarnings("unused")
         public FormValidation doCheckSkid(@QueryParameter String skid) {
+            String akid = Secret.toString(this.akid);
             if ((roleArn == null || roleArn.isEmpty()) && (skid == null || skid.isEmpty())) {
                 return FormValidation.error("Required if IAM Role ARN isn't present!");
-            }
-            if ((roleArn == null || roleArn.isEmpty()) && (skid.length() != 40)) {
-                return FormValidation.error("AWS SKIDs are 40 characters long.");
             }
             if (roleArn != null && !roleArn.isEmpty() && akid != null && !akid.isEmpty() && skid != null && !skid.isEmpty()) {
                 return FormValidation.error("Must specify either IAM Role ARN *OR* AKID/SKID!");
@@ -1805,6 +1804,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
          */
         @SuppressWarnings("unused")
         public FormValidation doRefresh() {
+            String skid = Secret.toString(this.skid);
+            String akid = Secret.toString(this.akid);
             if (roleArn != null && !roleArn.isEmpty() && akid != null && !akid.isEmpty() && skid != null && !skid.isEmpty()) {
                 return FormValidation.error("AWS Device Farm IAM Role ARN *OR* AKID/SKID must be set!");
             }
