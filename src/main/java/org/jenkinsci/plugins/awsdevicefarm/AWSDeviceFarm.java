@@ -100,6 +100,7 @@ public class AWSDeviceFarm {
     private static final String APPIUM_WEB_RUBY_TEST_SPEC = "APPIUM_WEB_RUBY_TEST_SPEC";
     private static final String APPIUM_WEB_NODE_TEST_SPEC = "APPIUM_WEB_NODE_TEST_SPEC";
     private static final String CURATED = "CURATED";
+    private static final int MAX_ROLE_SESSION_TIMEOUT = 14400;
 
     //// Constructors
 
@@ -132,6 +133,7 @@ public class AWSDeviceFarm {
         if (roleArn != null) {
             STSAssumeRoleSessionCredentialsProvider sts = new STSAssumeRoleSessionCredentialsProvider
                     .Builder(roleArn, RandomStringUtils.randomAlphanumeric(8))
+                    .withRoleSessionDurationSeconds(MAX_ROLE_SESSION_TIMEOUT)
                     .build();
             creds = sts.getCredentials();
         }
