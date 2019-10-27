@@ -1491,78 +1491,57 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
          * @return The AWS Device Farm API object.
          */
         public AWSDeviceFarm getAWSDeviceFarm() {
+            return getDeviceFarmInstance(roleArn, akid, skid);
+        }
+
+        /**
+         * Returns Custom device farm instance based on the params provided.
+         * @param roleArn the role arn
+         * @param akid the access key
+         * @param skid the secret key
+         * @return the AWSDeviceFarm instance
+         */
+        private AWSDeviceFarm getDeviceFarmInstance(final String roleArn,
+                                                    final Secret akid,
+                                                    final Secret skid) {
             AWSDeviceFarm adf;
             if (roleArn == null || roleArn.isEmpty()) {
-                adf = new AWSDeviceFarm(new BasicAWSCredentials(Secret.toString(akid), Secret.toString(skid)));
+                return new AWSDeviceFarm(new BasicAWSCredentials(Secret.toString(akid), Secret.toString(skid)));
             } else {
-                adf = new AWSDeviceFarm(roleArn);
+                return new AWSDeviceFarm(roleArn);
             }
-            return adf;
         }
 
         /**
-         * Validate the user account role ARN.
-         *
-         * @param roleArn The AWS IAM role ARN.
-         * @return Whether or not the form was OK.
+         * Validates if the credentials provided for the verification are valid or not.
+         * @param roleArn the role arn
+         * @param akid the access key
+         * @param skid the secret key
+         * @return result of the validation
          */
-        @SuppressWarnings("unused")
-        public FormValidation doCheckRoleArn(@QueryParameter String roleArn) {
-            String skid = Secret.toString(this.skid);
-            String akid = Secret.toString(this.akid);
-            if ((roleArn == null || roleArn.isEmpty()) && (akid == null || akid.isEmpty() || skid == null || skid.isEmpty())) {
-                return FormValidation.error("Required if AKID/SKID isn't present!");
-            }
+        public FormValidation doValidateCredentials(@QueryParameter("roleArn") final String roleArn,
+                                                    @QueryParameter("akid") final String akid,
+                                                    @QueryParameter("skid") final String skid) {
+            try {
 
-            boolean isValidArn = false;
-            if (roleArn != null) {
-                isValidArn = roleArn.matches("^arn:aws:iam:[^:]*:[0-9]{12}:role/.*");
-            }
+                if ((roleArn == null || roleArn.isEmpty()) && (akid == null || akid.isEmpty() || skid == null || skid.isEmpty())) {
+                    return FormValidation.error("Either RoleArn or AKID,SKID required");
+                }
 
-            if (!isValidArn && (akid == null || akid.isEmpty() || skid == null || skid.isEmpty())) {
-                return FormValidation.error("Doesn't look like a valid IAM Role ARN (e.g. 'arn:aws:iam::123456789012:role/jenkins')!");
+                boolean isValidArn = false;
+                if (roleArn != null) {
+                    isValidArn = roleArn.matches("^arn:aws:iam:[^:]*:[0-9]{12}:role/.*");
+                    if (!isValidArn && (akid == null || akid.isEmpty() || skid == null || skid.isEmpty())) {
+                        return FormValidation.error("Doesn't look like a valid IAM Role ARN (e.g. 'arn:aws:iam::123456789012:role/jenkins')!");
+                    }
+                }
+                AWSDeviceFarm deviceFarm = getDeviceFarmInstance(roleArn, Secret.fromString(akid), Secret.fromString(skid));
+                // This does two things, validates access and secret key are valid and if they have access to device farm.
+                deviceFarm.getProjects();
+            } catch (Exception e) {
+               return FormValidation.errorWithMarkup("Invalid Credentials, please refer to troubleshooting <a href = \\\"https://github.com/awslabs/aws-device-farm-jenkins-plugin#generating-a-proper-iam-user\\\">link</a> ");
             }
-
-            if (roleArn != null && !roleArn.isEmpty() && akid != null && !akid.isEmpty() && skid != null && !skid.isEmpty()) {
-                return FormValidation.error("Must specify either IAM Role ARN *OR* AKID/SKID!");
-            }
-            return FormValidation.ok();
-        }
-
-        /**
-         * Validate the user account AKID.
-         *
-         * @param akid The AWS access key ID.
-         * @return Whether or not the form was ok.
-         */
-        @SuppressWarnings("unused")
-        public FormValidation doCheckAkid(@QueryParameter String akid) {
-            String skid = Secret.toString(this.skid);
-            if ((roleArn == null || roleArn.isEmpty()) && (akid == null || akid.isEmpty())) {
-                return FormValidation.error("Required if IAM Role ARN isn't present!");
-            }
-            if (roleArn != null && !roleArn.isEmpty() && akid != null && !akid.isEmpty() && skid != null && !skid.isEmpty()) {
-                return FormValidation.error("Must specify either IAM Role ARN *OR* AKID/SKID!");
-            }
-            return FormValidation.ok();
-        }
-
-        /**
-         * Validate the user account SKID.
-         *
-         * @param skid The AWS secret key ID.
-         * @return Whether or not the form was ok.
-         */
-        @SuppressWarnings("unused")
-        public FormValidation doCheckSkid(@QueryParameter String skid) {
-            String akid = Secret.toString(this.akid);
-            if ((roleArn == null || roleArn.isEmpty()) && (skid == null || skid.isEmpty())) {
-                return FormValidation.error("Required if IAM Role ARN isn't present!");
-            }
-            if (roleArn != null && !roleArn.isEmpty() && akid != null && !akid.isEmpty() && skid != null && !skid.isEmpty()) {
-                return FormValidation.error("Must specify either IAM Role ARN *OR* AKID/SKID!");
-            }
-            return FormValidation.ok();
+            return FormValidation.ok("Credentials are valid");
         }
 
         /**
