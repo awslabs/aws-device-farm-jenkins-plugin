@@ -1519,21 +1519,19 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
          * @param skid the secret key
          * @return result of the validation
          */
-        public FormValidation doValidateCredentials(@QueryParameter("roleArn") final String roleArn,
-                                                    @QueryParameter("akid") final String akid,
-                                                    @QueryParameter("skid") final String skid) {
+        @SuppressWarnings("unused")
+        public FormValidation doValidateCredentials(@QueryParameter String roleArn,
+                                                    @QueryParameter String akid,
+                                                    @QueryParameter String skid) {
             try {
-
-                if ((roleArn == null || roleArn.isEmpty()) && (akid == null || akid.isEmpty() || skid == null || skid.isEmpty())) {
-                    return FormValidation.error("Either RoleArn or AKID,SKID required");
-                }
-
-                boolean isValidArn = false;
-                if (roleArn != null) {
-                    isValidArn = roleArn.matches("^arn:aws:iam:[^:]*:[0-9]{12}:role/.*");
-                    if (!isValidArn && (akid == null || akid.isEmpty() || skid == null || skid.isEmpty())) {
-                        return FormValidation.error("Doesn't look like a valid IAM Role ARN (e.g. 'arn:aws:iam::123456789012:role/jenkins')!");
+                if (StringUtils.isEmpty(roleArn)) {
+                    if ((StringUtils.isEmpty(akid) || StringUtils.isEmpty(skid))) {
+                        return FormValidation.error("Either RoleArn or AKID,SKID required");
                     }
+                } else {
+                     if (StringUtils.isNotBlank(akid) || StringUtils.isNotBlank(skid)) {
+                        return FormValidation.error("Either RoleArn or AKID,SKID required");
+                     }
                 }
                 AWSDeviceFarm deviceFarm = getDeviceFarmInstance(roleArn, Secret.fromString(akid), Secret.fromString(skid));
                 // This does two things, validates access and secret key are valid and if they have access to device farm.

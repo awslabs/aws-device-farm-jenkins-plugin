@@ -157,7 +157,7 @@ Open the new role you have created in console and then click on "Trust Relations
 
 # "Invalid Credentials" Error while validating Credentials
 
-We check 2 things here. The credentials are valid and they have access to device farm
+We validate two things: 1) If the credentials are valid, 2) and if they have access to AWS Device Farm
 
 1. Log in to your jenkins host.
 2. If using access and secret key,
