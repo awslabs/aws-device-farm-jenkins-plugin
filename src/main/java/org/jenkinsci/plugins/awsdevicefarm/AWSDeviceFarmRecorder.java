@@ -1523,13 +1523,29 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         public FormValidation doValidateCredentials(@QueryParameter String roleArn,
                                                     @QueryParameter String akid,
                                                     @QueryParameter String skid) {
+            /**
+             * For fields that deal with password (in this skid) Jenkins deals it in the following way
+             * 1. When the user enters the password, raw value is passed on to the backend consumers
+             * 2. When a re-render happens encrypted value is shown in UI (security purposes) and passed to backend.
+             * Following code section addresses to find the correct value to check against.
+             * Attempt to decrypt the Secret class decrypt method, current implementation returns null for invalid value.
+             * Added a safety exception catch in case this behaviour changes in future.
+             */
+            String skidDecryptedValue = skid;
+            try {
+                Secret eSkid = Secret.decrypt(skid);
+                if (null != eSkid) {
+                    skidDecryptedValue = eSkid.getPlainText();
+                }
+            } catch (Exception ignored) {
+            }
             try {
                 if (StringUtils.isEmpty(roleArn)) {
-                    if ((StringUtils.isEmpty(akid) || StringUtils.isEmpty(skid))) {
+                    if ((StringUtils.isEmpty(akid) || StringUtils.isEmpty(skidDecryptedValue))) {
                         return FormValidation.error("Either RoleArn or AKID,SKID required");
                     }
                 } else {
-                     if (StringUtils.isNotBlank(akid) || StringUtils.isNotBlank(skid)) {
+                     if (StringUtils.isNotBlank(akid) || StringUtils.isNotBlank(skidDecryptedValue)) {
                         return FormValidation.error("Either RoleArn or AKID,SKID required");
                      }
                 }
@@ -1537,7 +1553,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                 // This does two things, validates access and secret key are valid and if they have access to device farm.
                 deviceFarm.getProjects();
             } catch (Exception e) {
-               return FormValidation.errorWithMarkup("Invalid Credentials, please refer to troubleshooting <a href = \\\"https://github.com/awslabs/aws-device-farm-jenkins-plugin#generating-a-proper-iam-user\\\">link</a> ");
+               return FormValidation.errorWithMarkup("Invalid Credentials, please refer to troubleshooting " +
+                       "<a href = \"https://github.com/awslabs/aws-device-farm-jenkins-plugin#invalid-credentials-error-while-validating-credentials\" target=\"_blank \">link</a> ");
             }
             return FormValidation.ok("Credentials are valid");
         }

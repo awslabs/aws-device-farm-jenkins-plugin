@@ -5,7 +5,7 @@
         <f:block>
             <div>
                 We support Role arn or Access and Secret Key as means to access Device Farm.Please provide details for one of these below and click on Validate Credentials to ensure they work.
-                Setup details is available <a href = "https://github.com/awslabs/aws-device-farm-jenkins-plugin#generating-a-proper-iam-user">here</a>
+                Setup details is available <a href = "https://github.com/awslabs/aws-device-farm-jenkins-plugin#generating-a-proper-iam-user" target="_blank">here</a>
             </div>
             <br/>
         </f:block>
