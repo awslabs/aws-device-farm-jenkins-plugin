@@ -4,8 +4,8 @@
     <f:section title="AWS Device Farm">
         <f:block>
             <div>
-                We support Role arn or Access and Secret Key as means to access Device Farm.Please provide details for one of these below and click on Validate Credentials to ensure they work.
-                Setup details is available <a href = "https://github.com/awslabs/aws-device-farm-jenkins-plugin#generating-a-proper-iam-user" target="_blank">here</a>
+                We support Role ARN or Access and Secret Key as means to access Device Farm. Please provide details for one of these below and click on Validate to ensure they work.
+                Setup details are available <a href = "https://github.com/awslabs/aws-device-farm-jenkins-plugin#generating-a-proper-iam-user" target="_blank">here</a>
             </div>
             <br/>
         </f:block>
@@ -19,7 +19,7 @@
             <f:password />
         </f:entry>
 
-        <f:validateButton title="ValidateCredentials" method="validateCredentials" progress="Checking..." inline="true"
+        <f:validateButton title="Validate" method="validateCredentials" progress="Checking..." inline="true"
         with="roleArn,akid,skid"/>
     </f:section>
 </j:jelly>

@@ -100,7 +100,7 @@ public class AWSDeviceFarm {
     private static final String APPIUM_WEB_RUBY_TEST_SPEC = "APPIUM_WEB_RUBY_TEST_SPEC";
     private static final String APPIUM_WEB_NODE_TEST_SPEC = "APPIUM_WEB_NODE_TEST_SPEC";
     private static final String CURATED = "CURATED";
-    private static final int MAX_ROLE_SESSION_TIMEOUT = 14400;
+    private static final int MAX_ROLE_SESSION_TIMEOUT = 28800;
 
     //// Constructors
 
