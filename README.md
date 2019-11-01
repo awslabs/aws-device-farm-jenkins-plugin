@@ -59,7 +59,7 @@ If you want to access Device Farm using IAM Role, refer to "Generating a proper 
 8. View or optionally download the User security credentials that were created; you will them them later.
 9. Click “Close” to return to the IAM screen.
 10. Click your user name in the list.
-11. Under the Inline Policies header,click the “AWS IAM role ARN for your AWS Device Farm account. click here” link to create a new inline policy.
+11. Under the Inline Policies header, click the “AWS IAM role ARN for your AWS Device Farm account” link to create a new inline policy.
 12. Select the “Custom Policy” radio button.
 13. Click “Select”.
 14. Give your policy a name under “Policy Name”.
