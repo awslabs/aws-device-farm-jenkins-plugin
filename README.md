@@ -46,6 +46,8 @@ Usage
 8. Wait for Jenkins to restart.
 
 ## Generating a proper IAM user:
+Note : Follow these steps if you are using Secret and Access key to access Device Farm.
+If you want to access Device Farm using IAM Role, refer to "Generating a proper IAM role" section
 
 1. Log into your AWS web console UI.
 2. Click “Identity & Access Management”.
@@ -57,7 +59,7 @@ Usage
 8. View or optionally download the User security credentials that were created; you will them them later.
 9. Click “Close” to return to the IAM screen.
 10. Click your user name in the list.
-11. Under the Inline Policies header, click the “click here” link to create a new inline policy.
+11. Under the Inline Policies header, click the “AWS IAM role ARN for your AWS Device Farm account” link to create a new inline policy.
 12. Select the “Custom Policy” radio button.
 13. Click “Select”.
 14. Give your policy a name under “Policy Name”.
@@ -77,14 +79,55 @@ Usage
 ```
 16. Click “Apply Policy”.
 
+## Generating a proper IAM role
+Note : Only applies when you want to access Device Farm through an IAM Role.
+
+You need to create one Device Farm access role to access the Device Farm Resource and one User or Role depending upon how you are running Jenkins.
+
+- Creating Device Farm Role.
+1. Log into your AWS web console UI.
+2. Click “Identity & Access Management”.
+3. On the left-hand side of the screen, click “Roles”.
+4. Click “Create Role”.
+5. In the AWS service section select Ec2 and click on Next.
+6. Under the Inline Policies header, search and click the “AWSDeviceFarmFullAccess ” policy.This will give complete device farm access.
+7. Go the the summary page of the role and click on edit next to "Maximum CLI/API session duration" and select 8hrs.
+This sets the expiration of the session associated with the IAM role to 8 hrs.
+8. Now you want to give the access to the role/user to assume this role
+Open the new role you have created in console and then click on "Trust Relationships" tab. Click on "Edit Trust Relationship" and enter the following policy :
+```
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "To be replace by Arn of user/role running on the Jenkins machine"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+```
+
+- Setting up Role/User running Jenkins
+
+1. We need to also give access 
+2. Go to the user or role that you want to add policy to.
+3. In the permission tab click on Create Policy.
+4. Select STS in the service name, search for assume role in actions and select it.
+5. In the Resources section enter the arn for the device farm role.
+6. Click on review policy and then enter name and description and click on Create policy.
+
 ## First-time configuration instructions:
 
 1. Log into your Jenkins web UI.
 2. On the left-hand side of the screen, click “Manage Jenkins”
 3. Click “Configure System”.
 4. Scroll down to the “AWS Device Farm” header.
-5. Copy/paste your AKID and SKID you created previously into their respective boxes.
-6. Click “Save”.
+5. If you are using IAM Role to configure the Jenkins Plugin, add the ARN for the role here.
+6. If not, Copy/paste your AKID and SKID you created previously into their respective boxes.
+7. Click “Save”.
 
 ## Using the plugin in Jenkins job:
 
@@ -109,6 +152,27 @@ Usage
 2. Select "devicefarm" sample step or "step: General Build Step" > "Run Tests on AWS Device Farm"
 3. Input the [Device Farm Run Configuration](https://docs.aws.amazon.com/devicefarm/latest/developerguide/test-runs.html#test-runs-configuration)
 4. Click "Generate Pipeline Script"
+
+## TroubleShooting
+
+# "Invalid Credentials" Error while validating Credentials
+
+We validate two things: 1) If the credentials are valid, 2) and if they have access to AWS Device Farm
+
+1. Log in to your Jenkins host.
+2. If using access and secret key,
+Run "aws devicefarm list-projects" on the host running Jenkins using the AWS CLI.
+If this fails, first check you credentials. If they are correct, refer to the "Generating a proper IAM user" section to ensure that you have given Device Farm necessary credentials.
+3. If you are using role ARN
+Run "aws sts assume-role --role-arn "EnterRoleArnHere --duration-seconds 28800" using the AWS CLI.
+If this fails, refer to the "Generating a proper IAM role" section to verify if the role has correct assume role permissions.
+Run "aws devicefarm list-projects" using the AWS CLI.
+If this fails, your role doesn't have access to device farm. Please re-verify the steps above.
+
+# Project section not being populated with the latest data
+
+1. Verify that the Project you are looking for is visible by logging in to the Device Farm console.
+2. If yes, go to the Jenkins -> Manage Jenkins -> Configure System -> AWS Device Farm section and click on Validate.
 
 Dependencies
 ============

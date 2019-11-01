@@ -2,16 +2,24 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 
     <f:section title="AWS Device Farm">
-        <!--
+        <f:block>
+            <div>
+                We support Role ARN or Access and Secret Key as means to access Device Farm. Please provide details for one of these below and click on Validate to ensure they work.
+                Setup details are available <a href = "https://github.com/awslabs/aws-device-farm-jenkins-plugin#generating-a-proper-iam-user" target="_blank">here</a>
+            </div>
+            <br/>
+        </f:block>
         <f:entry title="IAM Role ARN" field="roleArn" description="AWS IAM Role ARN.">
             <f:textbox />
         </f:entry>
-        -->
         <f:entry title="AKID" field="akid" description="AWS Access Key ID.">
             <f:textbox />
         </f:entry>
         <f:entry title="SKID" field="skid" description="AWS Secret Key ID.">
             <f:password />
         </f:entry>
+
+        <f:validateButton title="Validate" method="validateCredentials" progress="Checking..." inline="true"
+        with="roleArn,akid,skid"/>
     </f:section>
 </j:jelly>

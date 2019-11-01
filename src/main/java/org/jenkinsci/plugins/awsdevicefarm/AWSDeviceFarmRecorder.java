@@ -1491,78 +1491,72 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
          * @return The AWS Device Farm API object.
          */
         public AWSDeviceFarm getAWSDeviceFarm() {
+            return getDeviceFarmInstance(roleArn, akid, skid);
+        }
+
+        /**
+         * Returns Custom device farm instance based on the params provided.
+         * @param roleArn the role arn
+         * @param akid the access key
+         * @param skid the secret key
+         * @return the AWSDeviceFarm instance
+         */
+        private AWSDeviceFarm getDeviceFarmInstance(final String roleArn,
+                                                    final Secret akid,
+                                                    final Secret skid) {
             AWSDeviceFarm adf;
             if (roleArn == null || roleArn.isEmpty()) {
-                adf = new AWSDeviceFarm(new BasicAWSCredentials(Secret.toString(akid), Secret.toString(skid)));
+                return new AWSDeviceFarm(new BasicAWSCredentials(Secret.toString(akid), Secret.toString(skid)));
             } else {
-                adf = new AWSDeviceFarm(roleArn);
+                return new AWSDeviceFarm(roleArn);
             }
-            return adf;
         }
 
         /**
-         * Validate the user account role ARN.
-         *
-         * @param roleArn The AWS IAM role ARN.
-         * @return Whether or not the form was OK.
+         * Validates if the credentials provided for the verification are valid or not.
+         * @param roleArn the role arn
+         * @param akid the access key
+         * @param skid the secret key
+         * @return result of the validation
          */
         @SuppressWarnings("unused")
-        public FormValidation doCheckRoleArn(@QueryParameter String roleArn) {
-            String skid = Secret.toString(this.skid);
-            String akid = Secret.toString(this.akid);
-            if ((roleArn == null || roleArn.isEmpty()) && (akid == null || akid.isEmpty() || skid == null || skid.isEmpty())) {
-                return FormValidation.error("Required if AKID/SKID isn't present!");
+        public FormValidation doValidateCredentials(@QueryParameter String roleArn,
+                                                    @QueryParameter String akid,
+                                                    @QueryParameter String skid) {
+            /**
+             * For fields that deal with password (in this skid) Jenkins deals it in the following way
+             * 1. When the user enters the password, raw value is passed on to the backend consumers
+             * 2. When a re-render happens encrypted value is shown in UI (security purposes) and passed to backend.
+             * Following code section addresses to find the correct value to check against.
+             * Attempt to decrypt the Secret class decrypt method, current implementation returns null for invalid value.
+             * Added a safety exception catch in case this behaviour changes in future.
+             */
+            String skidDecryptedValue = skid;
+            try {
+                Secret eSkid = Secret.decrypt(skid);
+                if (null != eSkid) {
+                    skidDecryptedValue = eSkid.getPlainText();
+                }
+            } catch (Exception ignored) {
             }
-
-            boolean isValidArn = false;
-            if (roleArn != null) {
-                isValidArn = roleArn.matches("^arn:aws:iam:[^:]*:[0-9]{12}:role/.*");
+            try {
+                if (StringUtils.isEmpty(roleArn)) {
+                    if ((StringUtils.isEmpty(akid) || StringUtils.isEmpty(skidDecryptedValue))) {
+                        return FormValidation.error("Either RoleArn or AKID,SKID required");
+                    }
+                } else {
+                     if (StringUtils.isNotBlank(akid) || StringUtils.isNotBlank(skidDecryptedValue)) {
+                        return FormValidation.error("Either RoleArn or AKID,SKID required");
+                     }
+                }
+                AWSDeviceFarm deviceFarm = getDeviceFarmInstance(roleArn, Secret.fromString(akid), Secret.fromString(skid));
+                // This does two things, validates access and secret key are valid and if they have access to device farm.
+                deviceFarm.getProjects();
+            } catch (Exception e) {
+               return FormValidation.errorWithMarkup("Invalid Credentials, please refer to troubleshooting " +
+                       "<a href = \"https://github.com/awslabs/aws-device-farm-jenkins-plugin#invalid-credentials-error-while-validating-credentials\" target=\"_blank \">link</a> ");
             }
-
-            if (!isValidArn && (akid == null || akid.isEmpty() || skid == null || skid.isEmpty())) {
-                return FormValidation.error("Doesn't look like a valid IAM Role ARN (e.g. 'arn:aws:iam::123456789012:role/jenkins')!");
-            }
-
-            if (roleArn != null && !roleArn.isEmpty() && akid != null && !akid.isEmpty() && skid != null && !skid.isEmpty()) {
-                return FormValidation.error("Must specify either IAM Role ARN *OR* AKID/SKID!");
-            }
-            return FormValidation.ok();
-        }
-
-        /**
-         * Validate the user account AKID.
-         *
-         * @param akid The AWS access key ID.
-         * @return Whether or not the form was ok.
-         */
-        @SuppressWarnings("unused")
-        public FormValidation doCheckAkid(@QueryParameter String akid) {
-            String skid = Secret.toString(this.skid);
-            if ((roleArn == null || roleArn.isEmpty()) && (akid == null || akid.isEmpty())) {
-                return FormValidation.error("Required if IAM Role ARN isn't present!");
-            }
-            if (roleArn != null && !roleArn.isEmpty() && akid != null && !akid.isEmpty() && skid != null && !skid.isEmpty()) {
-                return FormValidation.error("Must specify either IAM Role ARN *OR* AKID/SKID!");
-            }
-            return FormValidation.ok();
-        }
-
-        /**
-         * Validate the user account SKID.
-         *
-         * @param skid The AWS secret key ID.
-         * @return Whether or not the form was ok.
-         */
-        @SuppressWarnings("unused")
-        public FormValidation doCheckSkid(@QueryParameter String skid) {
-            String akid = Secret.toString(this.akid);
-            if ((roleArn == null || roleArn.isEmpty()) && (skid == null || skid.isEmpty())) {
-                return FormValidation.error("Required if IAM Role ARN isn't present!");
-            }
-            if (roleArn != null && !roleArn.isEmpty() && akid != null && !akid.isEmpty() && skid != null && !skid.isEmpty()) {
-                return FormValidation.error("Must specify either IAM Role ARN *OR* AKID/SKID!");
-            }
-            return FormValidation.ok();
+            return FormValidation.ok("Credentials are valid");
         }
 
         /**
