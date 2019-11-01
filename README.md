@@ -125,7 +125,7 @@ Open the new role you have created in console and then click on "Trust Relations
 2. On the left-hand side of the screen, click “Manage Jenkins”
 3. Click “Configure System”.
 4. Scroll down to the “AWS Device Farm” header.
-5. If you are using I AM Role to configure the Jenkins Plugin, add the arn for the role here.
+5. If you are using IAM Role to configure the Jenkins Plugin, add the ARN for the role here.
 6. If not, Copy/paste your AKID and SKID you created previously into their respective boxes.
 7. Click “Save”.
 
