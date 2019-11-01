@@ -46,8 +46,8 @@ Usage
 8. Wait for Jenkins to restart.
 
 ## Generating a proper IAM user:
-Note : The following steps need to be followed if you are using Secret and Access key to access Device Farm.
-In case you want to access Device Farm using IAM Role, refer to "Generating a proper IAM role" section
+Note : Follow these steps if you are using Secret and Access key to access Device Farm.
+If you want to access Device Farm using IAM Role, refer to "Generating a proper IAM role" section
 
 1. Log into your AWS web console UI.
 2. Click “Identity & Access Management”.
@@ -59,7 +59,7 @@ In case you want to access Device Farm using IAM Role, refer to "Generating a pr
 8. View or optionally download the User security credentials that were created; you will them them later.
 9. Click “Close” to return to the IAM screen.
 10. Click your user name in the list.
-11. Under the Inline Policies header, click the “AWS IAM role ARN for your AWS Device Farm account. click here” link to create a new inline policy.
+11. Under the Inline Policies header,click the “AWS IAM role ARN for your AWS Device Farm account. click here” link to create a new inline policy.
 12. Select the “Custom Policy” radio button.
 13. Click “Select”.
 14. Give your policy a name under “Policy Name”.
@@ -91,10 +91,10 @@ You need to create one Device Farm access role to access the Device Farm Resourc
 4. Click “Create Role”.
 5. In the AWS service section select Ec2 and click on Next.
 6. Under the Inline Policies header, search and click the “AWSDeviceFarmFullAccess ” policy.This will give complete device farm access.
-7. Now we need to update the maximum expiration of the credentials to 4hrs.
-8. Go the the summary page of the role and click on edit next to "Maximum CLI/API session duration" and select 4hrs.
-9. Now you want to give the access to the role/user to assume this role
-Open the new role you have created in console and then click on "Trust Relationships" tab.Click on "Edit Trust Relationship" and enter the following policy.
+7. Go the the summary page of the role and click on edit next to "Maximum CLI/API session duration" and select 8hrs.
+This sets the expiration of the session associated with the IAM role to 8 hrs.
+8. Now you want to give the access to the role/user to assume this role
+Open the new role you have created in console and then click on "Trust Relationships" tab. Click on "Edit Trust Relationship" and enter the following policy :
 ```
 {
   "Version": "2012-10-17",
@@ -159,20 +159,20 @@ Open the new role you have created in console and then click on "Trust Relations
 
 We validate two things: 1) If the credentials are valid, 2) and if they have access to AWS Device Farm
 
-1. Log in to your jenkins host.
+1. Log in to your Jenkins host.
 2. If using access and secret key,
-Run "aws devicefarm list-projects" on the host running jenkins.
-If this fails, first check you credentials.Is they are correct, refer to the "Generating a proper IAM user" to ensure that you have given Device Farm necessary Credentials.
-3. If you are using role arn
-Run "aws sts assume-role --role-arn "EnterRoleArnHere --duration-seconds 14400".
-If this fails refer to "Generating a proper IAM role" to verify is role has correct assume role permissions.
-Run "aws devicefarm list-projects"
-If this fails your role doesn't have access to device farm, please add those.
+Run "aws devicefarm list-projects" on the host running Jenkins using the AWS CLI.
+If this fails, first check you credentials. If they are correct, refer to the "Generating a proper IAM user" section to ensure that you have given Device Farm necessary credentials.
+3. If you are using role ARN
+Run "aws sts assume-role --role-arn "EnterRoleArnHere --duration-seconds 28800" using the AWS CLI.
+If this fails, refer to the "Generating a proper IAM role" section to verify if the role has correct assume role permissions.
+Run "aws devicefarm list-projects" using the AWS CLI.
+If this fails, your role doesn't have access to device farm. Please re-verify the steps above.
 
-# Project section not being populated with latest Data
+# Project section not being populated with the latest data
 
-1. Verify by logging in Device Farm console that the Project is visible.
-2. If yes, go to the Jenkins -> Manage Jenkins -> Configure System -> AWS Device Farm section and click on Validate Credentials.
+1. Verify that the Project you are looking for is visible by logging in to the Device Farm console.
+2. If yes, go to the Jenkins -> Manage Jenkins -> Configure System -> AWS Device Farm section and click on Validate.
 
 Dependencies
 ============
