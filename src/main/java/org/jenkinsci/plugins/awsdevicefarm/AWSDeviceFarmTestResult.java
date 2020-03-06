@@ -249,8 +249,6 @@ public class AWSDeviceFarmTestResult extends TestResult {
                 result = ExecutionResult.SKIPPED;
             } else if (stopCount > 0) {
                 result = ExecutionResult.STOPPED;
-            } else if (errorCount > 0) {
-                result = ExecutionResult.ERRORED;
             } else if (failCount > 0) {
                 result = ExecutionResult.FAILED;
             } else if (warnCount > 0) {
