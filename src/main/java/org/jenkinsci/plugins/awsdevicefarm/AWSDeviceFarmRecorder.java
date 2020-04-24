@@ -41,6 +41,7 @@ import com.amazonaws.services.devicefarm.model.Test;
 import com.amazonaws.services.devicefarm.model.TestType;
 import com.amazonaws.services.devicefarm.model.Upload;
 import com.amazonaws.services.devicefarm.model.VPCEConfiguration;
+import com.amazonaws.services.devicefarm.model.CustomerArtifactPaths;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
@@ -189,6 +190,11 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     public Boolean extraData;
     public String extraDataArtifact;
 
+    // Custom artifacts
+    Boolean customArtifacts;
+    String customArtifactsHostPath;
+    String customArtifactsDevicePath;
+
     // VPCE Configuration
     public String vpceServiceName;
     public Boolean ifVpce;
@@ -270,6 +276,9 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
      * @param jobTimeoutMinutes            The max execution time per job.
      * @param ifAppPerformanceMonitoring   Whether the performance would be monitored.
      * @param ifVideoRecording             Whether the video would be recorded.
+     * @param customArtifacts
+     * @param customArtifactsHostPath
+     * @param customArtifactsDevicePath
      *
      */
     @DataBoundConstructor
@@ -311,6 +320,9 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                                  Boolean ifWebApp,
                                  Boolean extraData,
                                  String extraDataArtifact,
+                                 Boolean customArtifacts,
+                                 String customArtifactsHostPath,
+                                 String customArtifactsDevicePath,
                                  Boolean deviceLocation,
                                  Double deviceLatitude,
                                  Double deviceLongitude,
@@ -362,6 +374,9 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         this.appiumVersionTestng = appiumVersionTestng;
         this.extraData = extraData;
         this.extraDataArtifact = extraDataArtifact;
+        this.customArtifacts = customArtifacts;
+        this.customArtifactsHostPath = customArtifactsHostPath;
+        this.customArtifactsDevicePath = customArtifactsDevicePath;
         this.vpceServiceName = vpceServiceName;
         this.deviceLocation = deviceLocation;
         this.deviceLatitude = deviceLatitude;
@@ -567,6 +582,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             DevicePool devicePool = adf.getDevicePool(project, devicePoolName);
 
             // Upload app.
+            Boolean isAndroidApp = false;
+            Boolean isIOSApp = false;
             String appArn = null;
             if (ifWebApp != null && ifWebApp){
                 writeToLog(log, "Tesing a Web App.");
@@ -574,6 +591,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             }
             else {
                 writeToLog(log, String.format("Using App '%s'", env.expand(appArtifact)));
+                isAndroidApp = appArtifact.toLowerCase().endsWith("apk") ? true : false;
+                isIOSApp = appArtifact.toLowerCase().endsWith("apk") ? true : false;
                 Upload appUpload = adf.uploadApp(project, appArtifact);
                 appArn = appUpload.getArn();
             }
@@ -619,12 +638,27 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                 extraDataArn = extraDataUpload.getArn();
             }
 
+            CustomerArtifactPaths cArtifactPaths = null;
+            if (customArtifacts != null && customArtifacts) {
+                writeToLog(log, String.format("Using custom artifacts path on host '%s'", env.expand(customArtifactsHostPath)));
+                writeToLog(log, String.format("Using custom artifacts path on device '%s'", env.expand(customArtifactsDevicePath)));
+                cArtifactPaths = new CustomerArtifactPaths();
+                Collection<String> listDevicePaths = new ArrayList<String>();
+                Collection<String> listHostPaths = new ArrayList<String>();
+                listDevicePaths.add(customArtifactsDevicePath);
+                listHostPaths.add(customArtifactsHostPath);
+                if (isAndroidApp || isIOSApp) {
+                    cArtifactPaths.setAndroidPaths(listDevicePaths);
+                }
+            }
+
             // Schedule test run.
             TestType testType = TestType.fromValue(testToSchedule.getType());
             writeToLog(log, String.format("Scheduling '%s' run '%s'", testType, deviceFarmRunName));
 
             ScheduleRunConfiguration configuration = getScheduleRunConfiguration(isRunUnmetered, deviceLocation, radioDetails);
             configuration.setExtraDataPackageArn(extraDataArn);
+            configuration.setCustomerArtifactPaths(cArtifactPaths);
 
             // Check if VPCE option is enabled in UI and account has a VPC config
             if(ifVpce != null && ifVpce && accountHasVPC()) {
