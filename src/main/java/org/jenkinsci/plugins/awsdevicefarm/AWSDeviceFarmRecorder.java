@@ -1436,7 +1436,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
      * @return The BuildStepMonitor.
      */
     public BuildStepMonitor getRequiredMonitorService() {
-        return BuildStepMonitor.BUILD;
+        return BuildStepMonitor.NONE;
     }
 
     /**
