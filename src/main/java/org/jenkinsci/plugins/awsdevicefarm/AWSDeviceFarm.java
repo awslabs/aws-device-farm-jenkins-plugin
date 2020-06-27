@@ -717,7 +717,7 @@ public class AWSDeviceFarm {
 
         CloseableHttpClient httpClient = HttpClients.createSystem();
 
-        if (!proxyConfig.getHttpProxyFQDN().isEmpty()) {
+        if (proxyConfig != null && !proxyConfig.getHttpProxyFQDN().isEmpty()) {
             CredentialsProvider credentialProvider = new BasicCredentialsProvider();
             credentialProvider.setCredentials(
                 new AuthScope(proxyConfig.getHttpProxyFQDN(), proxyConfig.getHttpProxyPort()),
