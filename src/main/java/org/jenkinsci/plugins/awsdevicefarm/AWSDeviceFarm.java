@@ -141,7 +141,7 @@ public class AWSDeviceFarm {
 
         ClientConfiguration clientConfiguration = new ClientConfiguration().withUserAgent("AWS Device Farm - Jenkins v1.0");
 
-        if (!proxyConfig.getHttpProxyFQDN().isEmpty()) {
+        if (proxyConfig != null && !proxyConfig.getHttpProxyFQDN().isEmpty()) {
             clientConfiguration.setProxyHost(proxyConfig.getHttpProxyFQDN());
             clientConfiguration.setProxyPort(proxyConfig.getHttpProxyPort());
             clientConfiguration.setProxyUsername(proxyConfig.getHttpProxyUser());

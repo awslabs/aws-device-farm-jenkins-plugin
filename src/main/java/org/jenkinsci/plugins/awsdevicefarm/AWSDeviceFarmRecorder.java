@@ -1571,7 +1571,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
          * @return The AWS Device Farm API object.
          */
         public AWSDeviceFarm getAWSDeviceFarm() {
-            return getDeviceFarmInstance(roleArn, akid, skid);
+            return getDeviceFarmInstance(roleArn, akid, skid, null);
         }
 
         /**
@@ -1583,10 +1583,11 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
          */
         private AWSDeviceFarm getDeviceFarmInstance(final String roleArn,
                                                     final Secret akid,
-                                                    final Secret skid) {
+                                                    final Secret skid,
+                                                    final AWSDeviceFarmProxy proxyConfig) {
             AWSDeviceFarm adf;
             if (roleArn == null || roleArn.isEmpty()) {
-                return new AWSDeviceFarm(new BasicAWSCredentials(Secret.toString(akid), Secret.toString(skid)), getProxy());
+                return new AWSDeviceFarm(new BasicAWSCredentials(Secret.toString(akid), Secret.toString(skid)), proxyConfig);
             } else {
                 return new AWSDeviceFarm(roleArn, getProxy());
             }
@@ -1597,13 +1598,21 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
          * @param roleArn the role arn
          * @param akid the access key
          * @param skid the secret key
+         * @param httpProxyUrl the proxy url
+         * @param httpProxyPort the proxy port
+         * @param httpProxyUser the proxy user
+         * @param httpProxyPass the proxy pass
          * @return result of the validation
          */
         @SuppressWarnings("unused")
         public FormValidation doValidateCredentials(@QueryParameter String roleArn,
                                                     @QueryParameter String akid,
-                                                    @QueryParameter String skid) {
-            /**
+                                                    @QueryParameter String skid,
+                                                    @QueryParameter String httpProxyUrl,
+                                                    @QueryParameter int httpProxyPort,
+                                                    @QueryParameter String httpProxyUser,
+                                                    @QueryParameter String httpProxyPass) {
+            /*
              * For fields that deal with password (in this skid) Jenkins deals it in the following way
              * 1. When the user enters the password, raw value is passed on to the backend consumers
              * 2. When a re-render happens encrypted value is shown in UI (security purposes) and passed to backend.
@@ -1629,7 +1638,9 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                         return FormValidation.error("Either RoleArn or AKID,SKID required");
                      }
                 }
-                AWSDeviceFarm deviceFarm = getDeviceFarmInstance(roleArn, Secret.fromString(akid), Secret.fromString(skid));
+
+                AWSDeviceFarmProxy proxyConfig = new AWSDeviceFarmProxy(httpProxyUrl, httpProxyPort, httpProxyUser, httpProxyPass);
+                AWSDeviceFarm deviceFarm = getDeviceFarmInstance(roleArn, Secret.fromString(akid), Secret.fromString(skid), proxyConfig);
                 // This does two things, validates access and secret key are valid and if they have access to device farm.
                 deviceFarm.getProjects();
             } catch (Exception e) {

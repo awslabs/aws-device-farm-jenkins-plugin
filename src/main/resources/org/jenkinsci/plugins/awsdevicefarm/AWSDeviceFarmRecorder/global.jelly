@@ -36,6 +36,6 @@
         </f:entry>
 
         <f:validateButton title="Validate" method="validateCredentials" progress="Checking..." inline="true"
-        with="roleArn,akid,skid,httpProxyUrl,httpProxyUser,httpProxyPass"/>
+        with="roleArn,akid,skid,httpProxyUrl,httpProxyPort,httpProxyUser,httpProxyPass"/>
     </f:section>
 </j:jelly>
