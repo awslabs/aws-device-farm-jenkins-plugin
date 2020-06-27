@@ -109,8 +109,8 @@ public class AWSDeviceFarm {
      *
      * @param roleArn Role ARN to use for authentication.
      */
-    public AWSDeviceFarm(String roleArn) {
-        this(null, roleArn);
+    public AWSDeviceFarm(String roleArn, AWSDeviceFarmProxy proxyConfig) {
+        this(null, roleArn, proxyConfig);
     }
 
     /**
@@ -118,8 +118,8 @@ public class AWSDeviceFarm {
      *
      * @param creds AWSCredentials to use for authentication.
      */
-    public AWSDeviceFarm(AWSCredentials creds) {
-        this(creds, null);
+    public AWSDeviceFarm(AWSCredentials creds, AWSDeviceFarmProxy proxyConfig) {
+        this(creds, null, proxyConfig);
     }
 
     /**
@@ -128,8 +128,9 @@ public class AWSDeviceFarm {
      *
      * @param creds   AWSCredentials creds to use for authentication.
      * @param roleArn Role ARN to use for authentication.
+     * @param proxyConfig Proxy Custom Config for communicate with external services.
      */
-    private AWSDeviceFarm(AWSCredentials creds, String roleArn) {
+    private AWSDeviceFarm(AWSCredentials creds, String roleArn, AWSDeviceFarmProxy proxyConfig) {
         if (roleArn != null) {
             STSAssumeRoleSessionCredentialsProvider sts = new STSAssumeRoleSessionCredentialsProvider
                     .Builder(roleArn, RandomStringUtils.randomAlphanumeric(8))
@@ -139,6 +140,15 @@ public class AWSDeviceFarm {
         }
 
         ClientConfiguration clientConfiguration = new ClientConfiguration().withUserAgent("AWS Device Farm - Jenkins v1.0");
+
+        if (!proxyConfig.getHttpProxyFQDN().isEmpty()) {
+            clientConfiguration.setProxyHost(proxyConfig.getHttpProxyFQDN());
+            clientConfiguration.setProxyPort(proxyConfig.getHttpProxyPort());
+            clientConfiguration.setProxyUsername(proxyConfig.getHttpProxyUser());
+            clientConfiguration.setProxyPassword(proxyConfig.getHttpProxyPass());
+            clientConfiguration.setDisableSocketProxy(true);
+        }
+
         api = new AWSDeviceFarmClient(creds, clientConfiguration);
         api.setServiceNameIntern("devicefarm");
     }

@@ -1588,7 +1588,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             if (roleArn == null || roleArn.isEmpty()) {
                 return new AWSDeviceFarm(new BasicAWSCredentials(Secret.toString(akid), Secret.toString(skid)), getProxy());
             } else {
-                return new AWSDeviceFarm(roleArn);
+                return new AWSDeviceFarm(roleArn, getProxy());
             }
         }
 
