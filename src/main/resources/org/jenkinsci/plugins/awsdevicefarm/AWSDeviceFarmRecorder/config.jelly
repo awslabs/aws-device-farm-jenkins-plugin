@@ -38,7 +38,7 @@
   <f:section title="Choose VPCE configuration">
     <f:optionalBlock name="ifVpce" title="Enable VPCE" checked="${instance.ifVpce}" inline="true">
         <f:entry title="VPCE" field="vpceServiceName" description="[Optional] Select the VPCE service (only available for private devices)">
-          <f:select style="width:100%" inline="true"/>
+          <f:select style="width:100%" multiple="multiple" inline="true"/>
         </f:entry>
     </f:optionalBlock>
   </f:section>
