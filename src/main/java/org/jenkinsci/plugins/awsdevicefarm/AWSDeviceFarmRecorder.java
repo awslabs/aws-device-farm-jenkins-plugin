@@ -1835,7 +1835,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             return new ListBoxModel(entries);
         }
 
-        public ListBoxModel doFillVpceServiceNameItems(@QueryParameter String[] currentVpceServiceNames) {
+        public ListBoxModel doFillVpceServiceNamesItems(@QueryParameter String[] currentVpceServiceNames) {
             List<ListBoxModel.Option> entries = new ArrayList<ListBoxModel.Option>();
             // Create ListBoxModel for all VPCE configs for this AWS Device Farm account.
             try {
