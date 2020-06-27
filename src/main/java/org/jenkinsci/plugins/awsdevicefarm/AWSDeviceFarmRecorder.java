@@ -1526,6 +1526,47 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         }
 
         /**
+         * httpProxyUrl Setter
+         *
+         * @param httpProxyUrlValue
+         */
+        protected final void setHttpProxyUrl(String httpProxyUrlValue){
+            httpProxyUrl = httpProxyUrlValue;
+        }
+
+        /**
+         * httpProxyUrl Setter
+         *
+         * @param httpProxyPortValue
+         */
+        protected final void setHttpProxyUrl(int httpProxyPortValue){
+            httpProxyPort = httpProxyPortValue;
+        }
+
+        /**
+         * httpProxyUrl Setter
+         *
+         * @param httpProxyUserValue
+         */
+        protected final void setHttpProxyUser(String httpProxyUserValue){
+            httpProxyUser = httpProxyUserValue;
+        }
+
+        /**
+         * httpProxyPassword Setter
+         *
+         * @param httpProxyPassValue
+         */
+        protected final void setHttpProxyPass(String httpProxyPassValue){
+            httpProxyPass = Secret.fromString(httpProxyPassValue);
+        }
+
+        public AWSDeviceFarmProxy getProxy() {
+            AWSDeviceFarmProxy proxyConfig = new AWSDeviceFarmProxy(httpProxyUrl, httpProxyPort, httpProxyUser, httpProxyPass.getPlainText());
+            return proxyConfig;
+        }
+
+        /**
          * Return configured instance of the AWS Device Farm client.
          *
          * @return The AWS Device Farm API object.
@@ -1546,7 +1587,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                                                     final Secret skid) {
             AWSDeviceFarm adf;
             if (roleArn == null || roleArn.isEmpty()) {
-                return new AWSDeviceFarm(new BasicAWSCredentials(Secret.toString(akid), Secret.toString(skid)));
+                return new AWSDeviceFarm(new BasicAWSCredentials(Secret.toString(akid), Secret.toString(skid)), getProxy());
             } else {
                 return new AWSDeviceFarm(roleArn);
             }
