@@ -19,7 +19,7 @@
             <f:password />
         </f:entry>
 
-        <f:entry title="HTTP Proxy FQDN" field="httpProxyFQDN" description="Http Proxy URL (proxytest.com)">
+        <f:entry title="HTTP Proxy FQDN" field="httpProxyFQDN" description="Http Proxy FQDN (proxytest.com)">
             <f:textbox />
         </f:entry>
 
