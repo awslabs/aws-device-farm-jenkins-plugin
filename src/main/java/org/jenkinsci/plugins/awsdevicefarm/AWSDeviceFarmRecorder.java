@@ -1571,7 +1571,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
          * @return The AWS Device Farm API object.
          */
         public AWSDeviceFarm getAWSDeviceFarm() {
-            return getDeviceFarmInstance(roleArn, akid, skid, new AWSDeviceFarmProxy());
+            AWSDeviceFarmProxy proxyConfig = new AWSDeviceFarmProxy(httpProxyUrl, httpProxyPort, httpProxyUser, httpProxyPass.getPlainText());
+            return getDeviceFarmInstance(roleArn, akid, skid, proxyConfig);
         }
 
         /**

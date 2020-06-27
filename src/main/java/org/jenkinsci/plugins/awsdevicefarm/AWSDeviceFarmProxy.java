@@ -16,10 +16,6 @@ public class AWSDeviceFarmProxy {
     private String httpProxyPass;
     private boolean active = false;
 
-    AWSDeviceFarmProxy() {
-        this("", 0, "", "");
-    }
-
     AWSDeviceFarmProxy(String httpProxyFQDN, int httpProxyPort, String httpProxyUser, String httpProxyPass) {
         this.setHttpProxyFQDN(httpProxyFQDN);
         this.setHttpProxyPort(httpProxyPort);
