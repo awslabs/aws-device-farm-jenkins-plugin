@@ -1835,7 +1835,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             return new ListBoxModel(entries);
         }
 
-        public ListBoxModel doFillVpceServiceNameItems(@QueryParameter String currentVpceServiceName) {
+        public ListBoxModel doFillVpceServiceNameItems(@QueryParameter String[] currentVpceServiceNames) {
             List<ListBoxModel.Option> entries = new ArrayList<ListBoxModel.Option>();
             // Create ListBoxModel for all VPCE configs for this AWS Device Farm account.
             try {
@@ -1843,7 +1843,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                 List<String> vpceServiceNames = getAWSDeviceFarmVpceConfigurations();
                 System.out.print(String.format("VPCE configs length = %d", vpceServiceNames.size()));
                 for (String vpceServiceName : vpceServiceNames) {
-                    entries.add(new ListBoxModel.Option(vpceServiceName, vpceServiceName, vpceServiceName.equals(currentVpceServiceName)));
+                    entries.add(new ListBoxModel.Option(vpceServiceName, vpceServiceName, Arrays.asList(currentVpceServiceNames).contains(vpceServiceName)));
                 }
             } catch (ServiceAccountException e) {
                 System.out.println("Account does not have a VPC configured or has not been whitelisted for VPC. Note: VPC is a private device only feature");
