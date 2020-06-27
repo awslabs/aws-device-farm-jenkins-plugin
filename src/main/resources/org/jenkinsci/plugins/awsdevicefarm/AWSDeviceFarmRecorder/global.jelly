@@ -19,7 +19,7 @@
             <f:password />
         </f:entry>
 
-        <f:entry title="HTTP Proxy URL" field="httpProxyUrl" description="Http Proxy URL (proxytest.com)">
+        <f:entry title="HTTP Proxy URL" field="httpProxyFQDN" description="Http Proxy URL (proxytest.com)">
             <f:textbox />
         </f:entry>
 
@@ -36,6 +36,6 @@
         </f:entry>
 
         <f:validateButton title="Validate" method="validateCredentials" progress="Checking..." inline="true"
-        with="roleArn,akid,skid,httpProxyUrl,httpProxyPort,httpProxyUser,httpProxyPass"/>
+        with="roleArn,akid,skid,httpProxyFQDN,httpProxyPort,httpProxyUser,httpProxyPass"/>
     </f:section>
 </j:jelly>
