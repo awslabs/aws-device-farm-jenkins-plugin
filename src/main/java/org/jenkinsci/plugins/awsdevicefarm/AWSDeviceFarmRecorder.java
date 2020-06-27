@@ -1484,6 +1484,10 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         public String roleArn;
         public Secret akid;
         public Secret skid;
+        public String httpProxyUrl;
+        public int httpProxyPort;
+        public String httpProxyUser;
+        public Secret httpProxyPass;
 
         private List<String> projectsCache = new ArrayList<String>();
         private Map<String, List<String>> poolsCache = new HashMap<String, List<String>>();
