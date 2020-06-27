@@ -1599,7 +1599,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
          * @param roleArn the role arn
          * @param akid the access key
          * @param skid the secret key
-         * @param httpProxyFQDN the proxy url
+         * @param httpProxyFQDN the proxy fqdn
          * @param httpProxyPort the proxy port
          * @param httpProxyUser the proxy user
          * @param httpProxyPass the proxy pass
