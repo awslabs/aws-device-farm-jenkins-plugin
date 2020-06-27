@@ -1562,8 +1562,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         }
 
         public AWSDeviceFarmProxy getProxy() {
-            AWSDeviceFarmProxy proxyConfig = new AWSDeviceFarmProxy(httpProxyUrl, httpProxyPort, httpProxyUser, httpProxyPass.getPlainText());
-            return proxyConfig;
+            return new AWSDeviceFarmProxy(httpProxyUrl, httpProxyPort, httpProxyUser, httpProxyPass.getPlainText());
         }
 
         /**
