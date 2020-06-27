@@ -1401,11 +1401,11 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     }
 
     /**
-     * Proxy URL getter.
+     * Proxy FQDN getter.
      *
-     * @return The proxy URL.
+     * @return The proxy FQDN.
      */
-    public String getProxyUrl() {
+    public String getProxyFQDN() {
         return getDescriptor().httpProxyFQDN;
     }
 
