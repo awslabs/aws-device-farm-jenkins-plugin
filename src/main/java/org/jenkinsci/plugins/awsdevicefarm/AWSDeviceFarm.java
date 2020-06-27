@@ -56,11 +56,7 @@ import com.amazonaws.services.devicefarm.model.ListVPCEConfigurationsRequest;
 import hudson.EnvVars;
 import hudson.FilePath;
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.impl.client.*;
@@ -146,13 +142,10 @@ public class AWSDeviceFarm {
         ClientConfiguration clientConfiguration = new ClientConfiguration().withUserAgent("AWS Device Farm - Jenkins v1.0");
         this.proxyConfig = proxyConfig;
 
-        if (this.proxyConfig != null && !this.proxyConfig.getHttpProxyFQDN().isEmpty()) {
-            clientConfiguration.setProxyHost(this.proxyConfig.getHttpProxyFQDN());
-            clientConfiguration.setProxyPort(this.proxyConfig.getHttpProxyPort());
-            clientConfiguration.setProxyUsername(this.proxyConfig.getHttpProxyUser());
-            clientConfiguration.setProxyPassword(this.proxyConfig.getHttpProxyPass());
-            clientConfiguration.setDisableSocketProxy(true);
-        }
+        clientConfiguration.setProxyHost(this.proxyConfig.getHttpProxyFQDN());
+        clientConfiguration.setProxyPort(this.proxyConfig.getHttpProxyPort());
+        clientConfiguration.setProxyUsername(this.proxyConfig.getHttpProxyUser());
+        clientConfiguration.setProxyPassword(this.proxyConfig.getHttpProxyPass());
 
         api = new AWSDeviceFarmClient(creds, clientConfiguration);
         api.setServiceNameIntern("devicefarm");
@@ -717,21 +710,8 @@ public class AWSDeviceFarm {
 
         CloseableHttpClient httpClient = HttpClients.createSystem();
 
-        if (proxyConfig != null && !proxyConfig.getHttpProxyFQDN().isEmpty()) {
-            CredentialsProvider credentialProvider = new BasicCredentialsProvider();
-            credentialProvider.setCredentials(
-                new AuthScope(proxyConfig.getHttpProxyFQDN(), proxyConfig.getHttpProxyPort()),
-                new UsernamePasswordCredentials(proxyConfig.getHttpProxyUser(), proxyConfig.getHttpProxyPass())
-            );
-
-            HttpHost customProxy = new HttpHost(proxyConfig.getHttpProxyFQDN(), proxyConfig.getHttpProxyPort());
-            HttpClientBuilder clientBuilder = HttpClientBuilder.create();
-            clientBuilder
-                .setProxy(customProxy)
-                .setProxyAuthenticationStrategy(new ProxyAuthenticationStrategy())
-                .setDefaultCredentialsProvider(credentialProvider);
-
-            httpClient = clientBuilder.build();
+        if (proxyConfig.getActive()) {
+            httpClient = proxyConfig.httpClientWithProxy();
         }
 
         HttpPut httpPut = new HttpPut(upload.getUrl());
