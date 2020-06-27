@@ -56,11 +56,14 @@ import com.amazonaws.services.devicefarm.model.ListVPCEConfigurationsRequest;
 import hudson.EnvVars;
 import hudson.FilePath;
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.FileEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.*;
 import org.jenkinsci.plugins.awsdevicefarm.test.AppiumWebJavaJUnitTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.AppiumWebJavaTestNGTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.AppiumWebPythonTest;
@@ -89,6 +92,7 @@ import java.util.List;
  */
 public class AWSDeviceFarm {
     private AWSDeviceFarmClient api;
+    private AWSDeviceFarmProxy proxyConfig;
     private PrintStream log;
     private FilePath workspace;
     private FilePath artifactsDir;
@@ -140,12 +144,13 @@ public class AWSDeviceFarm {
         }
 
         ClientConfiguration clientConfiguration = new ClientConfiguration().withUserAgent("AWS Device Farm - Jenkins v1.0");
+        this.proxyConfig = proxyConfig;
 
-        if (proxyConfig != null && !proxyConfig.getHttpProxyFQDN().isEmpty()) {
-            clientConfiguration.setProxyHost(proxyConfig.getHttpProxyFQDN());
-            clientConfiguration.setProxyPort(proxyConfig.getHttpProxyPort());
-            clientConfiguration.setProxyUsername(proxyConfig.getHttpProxyUser());
-            clientConfiguration.setProxyPassword(proxyConfig.getHttpProxyPass());
+        if (this.proxyConfig != null && !this.proxyConfig.getHttpProxyFQDN().isEmpty()) {
+            clientConfiguration.setProxyHost(this.proxyConfig.getHttpProxyFQDN());
+            clientConfiguration.setProxyPort(this.proxyConfig.getHttpProxyPort());
+            clientConfiguration.setProxyUsername(this.proxyConfig.getHttpProxyUser());
+            clientConfiguration.setProxyPassword(this.proxyConfig.getHttpProxyPass());
             clientConfiguration.setDisableSocketProxy(true);
         }
 
@@ -711,6 +716,24 @@ public class AWSDeviceFarm {
         Upload upload = api.createUpload(appUploadRequest).getUpload();
 
         CloseableHttpClient httpClient = HttpClients.createSystem();
+
+        if (!proxyConfig.getHttpProxyFQDN().isEmpty()) {
+            CredentialsProvider credentialProvider = new BasicCredentialsProvider();
+            credentialProvider.setCredentials(
+                new AuthScope(proxyConfig.getHttpProxyFQDN(), proxyConfig.getHttpProxyPort()),
+                new UsernamePasswordCredentials(proxyConfig.getHttpProxyUser(), proxyConfig.getHttpProxyPass())
+            );
+
+            HttpHost customProxy = new HttpHost(proxyConfig.getHttpProxyFQDN(), proxyConfig.getHttpProxyPort());
+            HttpClientBuilder clientBuilder = HttpClientBuilder.create();
+            clientBuilder
+                .setProxy(customProxy)
+                .setProxyAuthenticationStrategy(new ProxyAuthenticationStrategy())
+                .setDefaultCredentialsProvider(credentialProvider);
+
+            httpClient = clientBuilder.build();
+        }
+
         HttpPut httpPut = new HttpPut(upload.getUrl());
         httpPut.setHeader("Content-Type", upload.getContentType());
 
