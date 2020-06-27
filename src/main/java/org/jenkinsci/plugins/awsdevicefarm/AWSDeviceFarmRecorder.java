@@ -1401,6 +1401,42 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     }
 
     /**
+     * Proxy URL getter.
+     *
+     * @return The proxy URL.
+     */
+    public String getProxyUrl() {
+        return getDescriptor().httpProxyUrl;
+    }
+
+    /**
+     * Proxy Port getter.
+     *
+     * @return The proxy Port.
+     */
+    public int getProxyPort() {
+        return getDescriptor().httpProxyPort;
+    }
+
+    /**
+     * Proxy User getter.
+     *
+     * @return The proxy user.
+     */
+    public String getProxyUser() {
+        return getDescriptor().httpProxyUser;
+    }
+
+    /**
+     * Proxy Password getter.
+     *
+     * @return The proxy password.
+     */
+    public Secret getProxyPass() {
+        return getDescriptor().httpProxyPass;
+    }
+
+    /**
      * Getter for the Device Farm API.
      *
      * @return The Device Farm API.
