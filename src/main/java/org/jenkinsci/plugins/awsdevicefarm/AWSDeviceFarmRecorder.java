@@ -1443,6 +1443,14 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         return BuildStepMonitor.BUILD;
     }
 
+    public List<String> getVPCEs() {
+        return getDescriptor().getAWSDeviceFarmVpceConfigurations();
+    }
+
+    public List<String> getVPCEsSelected() {
+        return Arrays.asList(vpceServiceNames);
+    }
+
     /**
      * Descriptor for AWSDeviceFarmRecorder.
      */
