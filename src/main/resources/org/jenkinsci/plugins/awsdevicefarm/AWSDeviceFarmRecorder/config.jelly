@@ -49,7 +49,7 @@
               </j:otherwise>
             </j:choose>
           </j:forEach>
-        </select>'
+        </select>
       </f:entry>
     </f:optionalBlock>
   </f:section>
