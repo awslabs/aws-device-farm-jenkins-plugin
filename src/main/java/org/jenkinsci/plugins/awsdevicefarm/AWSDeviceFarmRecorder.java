@@ -190,7 +190,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     public String extraDataArtifact;
 
     // VPCE Configuration
-    public String vpceServiceName;
+    public String[] vpceServiceNames;
     public Boolean ifVpce;
 
     public Boolean deviceLocation;
@@ -257,7 +257,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
      * @param ifWebApp                      Whether it is a web app.
      * @param extraData                     Whether it has extra data.
      * @param extraDataArtifact             The path to the extra data.
-     * @param vpceServiceName               The name of the VPCE configuration.
+     * @param vpceServiceNames               The name of the VPCE configuration.
      * @param deviceLocation                True when device location is specified.
      * @param deviceLatitude                The specified device latitude.
      * @param deviceLongitude               The specified device longitude.
@@ -325,7 +325,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                                  Boolean ignoreRunError,
                                  Boolean ifVpce,
                                  Boolean ifSkipAppResigning,
-                                 String vpceServiceName ) {
+                                 String[] vpceServiceNames ) {
         this.projectName = projectName;
         this.devicePoolName = devicePoolName;
         this.testSpecName = testSpecName;
@@ -362,7 +362,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         this.appiumVersionTestng = appiumVersionTestng;
         this.extraData = extraData;
         this.extraDataArtifact = extraDataArtifact;
-        this.vpceServiceName = vpceServiceName;
+        this.vpceServiceNames = vpceServiceNames;
         this.deviceLocation = deviceLocation;
         this.deviceLatitude = deviceLatitude;
         this.deviceLongitude = deviceLongitude;
@@ -629,10 +629,14 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             // Check if VPCE option is enabled in UI and account has a VPC config
             if(ifVpce != null && ifVpce && accountHasVPC()) {
                 // Get AWS Device Farm VPCE.
-                writeToLog(log, String.format("Using VPCE Configuartion '%s'", vpceServiceName));
-                VPCEConfiguration vpceConfiguration = adf.getVPCEConfiguration(vpceServiceName);
+                writeToLog(log, String.format("Using VPCE Configuration '%s'", Arrays.toString(vpceServiceNames)));
+                String[] vpcEndpoints = vpceServiceNames;
+
                 Collection vpceConfigurationArns = new HashSet();
-                vpceConfigurationArns.add(vpceConfiguration.getArn());
+                for (String vpcEndpointName : vpcEndpoints) {
+                    VPCEConfiguration vpceConfiguration = adf.getVPCEConfiguration(vpcEndpointName);
+                    vpceConfigurationArns.add(vpceConfiguration.getArn());
+                }
                 configuration.setVpceConfigurationArns(vpceConfigurationArns);
             }
 
@@ -1439,6 +1443,14 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         return BuildStepMonitor.BUILD;
     }
 
+    public List<String> getVPCEs() {
+        return getDescriptor().getAWSDeviceFarmVpceConfigurations();
+    }
+
+    public List<String> getVPCEsSelected() {
+        return Arrays.asList(vpceServiceNames);
+    }
+
     /**
      * Descriptor for AWSDeviceFarmRecorder.
      */
@@ -1831,7 +1843,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             return new ListBoxModel(entries);
         }
 
-        public ListBoxModel doFillVpceServiceNameItems(@QueryParameter String currentVpceServiceName) {
+        public ListBoxModel doFillVpceServiceNamesItems(@QueryParameter String[] currentVpceServiceNames) {
             List<ListBoxModel.Option> entries = new ArrayList<ListBoxModel.Option>();
             // Create ListBoxModel for all VPCE configs for this AWS Device Farm account.
             try {
@@ -1839,7 +1851,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                 List<String> vpceServiceNames = getAWSDeviceFarmVpceConfigurations();
                 System.out.print(String.format("VPCE configs length = %d", vpceServiceNames.size()));
                 for (String vpceServiceName : vpceServiceNames) {
-                    entries.add(new ListBoxModel.Option(vpceServiceName, vpceServiceName, vpceServiceName.equals(currentVpceServiceName)));
+                    entries.add(new ListBoxModel.Option(vpceServiceName, vpceServiceName, Arrays.asList(currentVpceServiceNames).contains(vpceServiceName)));
                 }
             } catch (ServiceAccountException e) {
                 System.out.println("Account does not have a VPC configured or has not been whitelisted for VPC. Note: VPC is a private device only feature");

@@ -37,9 +37,20 @@
 
   <f:section title="Choose VPCE configuration">
     <f:optionalBlock name="ifVpce" title="Enable VPCE" checked="${instance.ifVpce}" inline="true">
-        <f:entry title="VPCE" field="vpceServiceName" description="[Optional] Select the VPCE service (only available for private devices)">
-          <f:select style="width:100%" inline="true"/>
-        </f:entry>
+      <f:entry title="VPCE" field="vpceServiceNames" description="[Optional] Select the VPCE service (only available for private devices)">
+        <select style="width:100%" name="vpceServiceNames" multiple="multiple" inline="true" size="10">
+          <j:forEach var="vpceServiceName" items="${instance.getVPCEs()}" varStatus="loop">
+            <j:choose>
+              <j:when test="${instance.getVPCEsSelected().contains(vpceServiceName)}">
+                <option value="${vpceServiceName}" selected="selected">${vpceServiceName}</option>
+              </j:when>
+              <j:otherwise>
+                <option value="${vpceServiceName}">${vpceServiceName}</option>
+              </j:otherwise>
+            </j:choose>
+          </j:forEach>
+        </select>
+      </f:entry>
     </f:optionalBlock>
   </f:section>
 
