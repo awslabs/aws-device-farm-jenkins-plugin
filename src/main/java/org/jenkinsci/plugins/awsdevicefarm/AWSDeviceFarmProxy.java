@@ -17,10 +17,10 @@ public class AWSDeviceFarmProxy {
     private boolean active = false;
 
     AWSDeviceFarmProxy(String httpProxyFQDN, int httpProxyPort, String httpProxyUser, String httpProxyPass) {
-        this.setHttpProxyFQDN(httpProxyFQDN);
+        this.setHttpProxyFQDN(httpProxyFQDN != null ? httpProxyFQDN : "");
         this.setHttpProxyPort(httpProxyPort);
-        this.setHttpProxyUser(httpProxyUser);
-        this.setHttpProxyPass(httpProxyPass);
+        this.setHttpProxyUser(httpProxyUser != null ? httpProxyUser : "");
+        this.setHttpProxyPass(httpProxyPass != null ? httpProxyPass : "");
     }
 
     public void setHttpProxyFQDN(String value) {
