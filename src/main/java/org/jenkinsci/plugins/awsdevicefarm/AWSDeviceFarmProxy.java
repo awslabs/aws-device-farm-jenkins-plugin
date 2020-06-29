@@ -25,7 +25,9 @@ public class AWSDeviceFarmProxy {
 
     public void setHttpProxyFQDN(String value) {
         this.httpProxyFQDN = value;
-        this.setActive(true);
+        if (!value.isEmpty()) {
+            this.setActive(true);
+        }
     }
 
     public void setActive(boolean value) {
