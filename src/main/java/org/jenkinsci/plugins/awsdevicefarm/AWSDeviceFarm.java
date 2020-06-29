@@ -711,7 +711,6 @@ public class AWSDeviceFarm {
         CloseableHttpClient httpClient = HttpClients.createSystem();
 
         if (proxyConfig.getActive()) {
-            writeToLog(String.format("Using proxy %s to upload", proxyConfig.getHttpProxyFQDN()));
             httpClient = proxyConfig.httpClientWithProxy();
         }
 
