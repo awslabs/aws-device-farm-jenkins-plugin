@@ -1401,6 +1401,42 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     }
 
     /**
+     * Proxy FQDN getter.
+     *
+     * @return The proxy FQDN.
+     */
+    public String getProxyFQDN() {
+        return getDescriptor().httpProxyFQDN;
+    }
+
+    /**
+     * Proxy Port getter.
+     *
+     * @return The proxy Port.
+     */
+    public int getProxyPort() {
+        return getDescriptor().httpProxyPort;
+    }
+
+    /**
+     * Proxy User getter.
+     *
+     * @return The proxy user.
+     */
+    public String getProxyUser() {
+        return getDescriptor().httpProxyUser;
+    }
+
+    /**
+     * Proxy Password getter.
+     *
+     * @return The proxy password.
+     */
+    public Secret getProxyPass() {
+        return getDescriptor().httpProxyPass;
+    }
+
+    /**
      * Getter for the Device Farm API.
      *
      * @return The Device Farm API.
@@ -1448,6 +1484,10 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         public String roleArn;
         public Secret akid;
         public Secret skid;
+        public String httpProxyFQDN;
+        public int httpProxyPort;
+        public String httpProxyUser;
+        public Secret httpProxyPass;
 
         private List<String> projectsCache = new ArrayList<String>();
         private Map<String, List<String>> poolsCache = new HashMap<String, List<String>>();
@@ -1486,12 +1526,53 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         }
 
         /**
+         * httpProxyFQDN Setter
+         *
+         * @param httpProxyFQDNValue
+         */
+        protected final void setHttpProxyFQDN(String httpProxyFQDNValue){
+            httpProxyFQDN = httpProxyFQDNValue;
+        }
+
+        /**
+         * httpProxyPort Setter
+         *
+         * @param httpProxyPortValue
+         */
+        protected final void setHttpProxyPort(int httpProxyPortValue){
+            httpProxyPort = httpProxyPortValue;
+        }
+
+        /**
+         * httpProxyUser Setter
+         *
+         * @param httpProxyUserValue
+         */
+        protected final void setHttpProxyUser(String httpProxyUserValue){
+            httpProxyUser = httpProxyUserValue;
+        }
+
+        /**
+         * httpProxyPassword Setter
+         *
+         * @param httpProxyPassValue
+         */
+        protected final void setHttpProxyPass(String httpProxyPassValue){
+            httpProxyPass = Secret.fromString(httpProxyPassValue);
+        }
+
+        public AWSDeviceFarmProxy getProxy() {
+            return new AWSDeviceFarmProxy(httpProxyFQDN, httpProxyPort, httpProxyUser, httpProxyPass.getPlainText());
+        }
+
+        /**
          * Return configured instance of the AWS Device Farm client.
          *
          * @return The AWS Device Farm API object.
          */
         public AWSDeviceFarm getAWSDeviceFarm() {
-            return getDeviceFarmInstance(roleArn, akid, skid);
+            AWSDeviceFarmProxy proxyConfig = new AWSDeviceFarmProxy(httpProxyFQDN, httpProxyPort, httpProxyUser, httpProxyPass.getPlainText());
+            return getDeviceFarmInstance(roleArn, akid, skid, proxyConfig);
         }
 
         /**
@@ -1503,12 +1584,13 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
          */
         private AWSDeviceFarm getDeviceFarmInstance(final String roleArn,
                                                     final Secret akid,
-                                                    final Secret skid) {
+                                                    final Secret skid,
+                                                    final AWSDeviceFarmProxy proxyConfig) {
             AWSDeviceFarm adf;
             if (roleArn == null || roleArn.isEmpty()) {
-                return new AWSDeviceFarm(new BasicAWSCredentials(Secret.toString(akid), Secret.toString(skid)));
+                return new AWSDeviceFarm(new BasicAWSCredentials(Secret.toString(akid), Secret.toString(skid)), proxyConfig);
             } else {
-                return new AWSDeviceFarm(roleArn);
+                return new AWSDeviceFarm(roleArn, getProxy());
             }
         }
 
@@ -1517,13 +1599,21 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
          * @param roleArn the role arn
          * @param akid the access key
          * @param skid the secret key
+         * @param httpProxyFQDN the proxy fqdn
+         * @param httpProxyPort the proxy port
+         * @param httpProxyUser the proxy user
+         * @param httpProxyPass the proxy pass
          * @return result of the validation
          */
         @SuppressWarnings("unused")
         public FormValidation doValidateCredentials(@QueryParameter String roleArn,
                                                     @QueryParameter String akid,
-                                                    @QueryParameter String skid) {
-            /**
+                                                    @QueryParameter String skid,
+                                                    @QueryParameter String httpProxyFQDN,
+                                                    @QueryParameter int httpProxyPort,
+                                                    @QueryParameter String httpProxyUser,
+                                                    @QueryParameter String httpProxyPass) {
+            /*
              * For fields that deal with password (in this skid) Jenkins deals it in the following way
              * 1. When the user enters the password, raw value is passed on to the backend consumers
              * 2. When a re-render happens encrypted value is shown in UI (security purposes) and passed to backend.
@@ -1549,7 +1639,9 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                         return FormValidation.error("Either RoleArn or AKID,SKID required");
                      }
                 }
-                AWSDeviceFarm deviceFarm = getDeviceFarmInstance(roleArn, Secret.fromString(akid), Secret.fromString(skid));
+
+                AWSDeviceFarmProxy proxyConfig = new AWSDeviceFarmProxy(httpProxyFQDN, httpProxyPort, httpProxyUser, httpProxyPass);
+                AWSDeviceFarm deviceFarm = getDeviceFarmInstance(roleArn, Secret.fromString(akid), Secret.fromString(skid), proxyConfig);
                 // This does two things, validates access and secret key are valid and if they have access to device farm.
                 deviceFarm.getProjects();
             } catch (Exception e) {

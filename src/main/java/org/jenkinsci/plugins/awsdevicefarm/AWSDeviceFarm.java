@@ -59,8 +59,7 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.FileEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.*;
 import org.jenkinsci.plugins.awsdevicefarm.test.AppiumWebJavaJUnitTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.AppiumWebJavaTestNGTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.AppiumWebPythonTest;
@@ -89,6 +88,7 @@ import java.util.List;
  */
 public class AWSDeviceFarm {
     private AWSDeviceFarmClient api;
+    private AWSDeviceFarmProxy proxyConfig;
     private PrintStream log;
     private FilePath workspace;
     private FilePath artifactsDir;
@@ -109,8 +109,8 @@ public class AWSDeviceFarm {
      *
      * @param roleArn Role ARN to use for authentication.
      */
-    public AWSDeviceFarm(String roleArn) {
-        this(null, roleArn);
+    public AWSDeviceFarm(String roleArn, AWSDeviceFarmProxy proxyConfig) {
+        this(null, roleArn, proxyConfig);
     }
 
     /**
@@ -118,8 +118,8 @@ public class AWSDeviceFarm {
      *
      * @param creds AWSCredentials to use for authentication.
      */
-    public AWSDeviceFarm(AWSCredentials creds) {
-        this(creds, null);
+    public AWSDeviceFarm(AWSCredentials creds, AWSDeviceFarmProxy proxyConfig) {
+        this(creds, null, proxyConfig);
     }
 
     /**
@@ -128,8 +128,9 @@ public class AWSDeviceFarm {
      *
      * @param creds   AWSCredentials creds to use for authentication.
      * @param roleArn Role ARN to use for authentication.
+     * @param proxyConfig Proxy Custom Config for communicate with external services.
      */
-    private AWSDeviceFarm(AWSCredentials creds, String roleArn) {
+    private AWSDeviceFarm(AWSCredentials creds, String roleArn, AWSDeviceFarmProxy proxyConfig) {
         if (roleArn != null) {
             STSAssumeRoleSessionCredentialsProvider sts = new STSAssumeRoleSessionCredentialsProvider
                     .Builder(roleArn, RandomStringUtils.randomAlphanumeric(8))
@@ -139,6 +140,13 @@ public class AWSDeviceFarm {
         }
 
         ClientConfiguration clientConfiguration = new ClientConfiguration().withUserAgent("AWS Device Farm - Jenkins v1.0");
+        this.proxyConfig = proxyConfig;
+
+        clientConfiguration.setProxyHost(this.proxyConfig.getHttpProxyFQDN());
+        clientConfiguration.setProxyPort(this.proxyConfig.getHttpProxyPort());
+        clientConfiguration.setProxyUsername(this.proxyConfig.getHttpProxyUser());
+        clientConfiguration.setProxyPassword(this.proxyConfig.getHttpProxyPass());
+
         api = new AWSDeviceFarmClient(creds, clientConfiguration);
         api.setServiceNameIntern("devicefarm");
     }
@@ -701,6 +709,11 @@ public class AWSDeviceFarm {
         Upload upload = api.createUpload(appUploadRequest).getUpload();
 
         CloseableHttpClient httpClient = HttpClients.createSystem();
+
+        if (proxyConfig.getActive()) {
+            httpClient = proxyConfig.httpClientWithProxy();
+        }
+
         HttpPut httpPut = new HttpPut(upload.getUrl());
         httpPut.setHeader("Content-Type", upload.getContentType());
 
