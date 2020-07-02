@@ -16,7 +16,11 @@ package org.jenkinsci.plugins.awsdevicefarm;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.AWSCredentialsProviderChain;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
+import com.amazonaws.services.devicefarm.AWSDeviceFarmClientBuilder;
 import com.amazonaws.services.devicefarm.AWSDeviceFarmClient;
 import com.amazonaws.services.devicefarm.model.AccountSettings;
 import com.amazonaws.services.devicefarm.model.ArtifactCategory;
@@ -88,7 +92,7 @@ import java.util.List;
  * AWS Device Farm API wrapper class.
  */
 public class AWSDeviceFarm {
-    private AWSDeviceFarmClient api;
+    private com.amazonaws.services.devicefarm.AWSDeviceFarm api;
     private PrintStream log;
     private FilePath workspace;
     private FilePath artifactsDir;
@@ -100,7 +104,7 @@ public class AWSDeviceFarm {
     private static final String APPIUM_WEB_RUBY_TEST_SPEC = "APPIUM_WEB_RUBY_TEST_SPEC";
     private static final String APPIUM_WEB_NODE_TEST_SPEC = "APPIUM_WEB_NODE_TEST_SPEC";
     private static final String CURATED = "CURATED";
-    private static final int MAX_ROLE_SESSION_TIMEOUT = 28800;
+    private static final int MAX_ROLE_SESSION_TIMEOUT = 3600;
 
     //// Constructors
 
@@ -130,17 +134,22 @@ public class AWSDeviceFarm {
      * @param roleArn Role ARN to use for authentication.
      */
     private AWSDeviceFarm(AWSCredentials creds, String roleArn) {
-        if (roleArn != null) {
-            STSAssumeRoleSessionCredentialsProvider sts = new STSAssumeRoleSessionCredentialsProvider
+    	AWSCredentialsProvider credProvider = null; 
+    	if (roleArn != null) {
+    		credProvider = new STSAssumeRoleSessionCredentialsProvider
                     .Builder(roleArn, RandomStringUtils.randomAlphanumeric(8))
                     .withRoleSessionDurationSeconds(MAX_ROLE_SESSION_TIMEOUT)
                     .build();
-            creds = sts.getCredentials();
+        } else {
+        	credProvider = new AWSCredentialsProviderChain(new AWSStaticCredentialsProvider(creds));
         }
 
         ClientConfiguration clientConfiguration = new ClientConfiguration().withUserAgent("AWS Device Farm - Jenkins v1.0");
-        api = new AWSDeviceFarmClient(creds, clientConfiguration);
-        api.setServiceNameIntern("devicefarm");
+        AWSDeviceFarmClientBuilder builder = AWSDeviceFarmClientBuilder.standard();
+        builder.setClientConfiguration(clientConfiguration);
+        builder.setCredentials(credProvider);
+        api = builder.build();
+        ((AWSDeviceFarmClient) api).setServiceNameIntern("devicefarm");
     }
 
     //// Builder Methods
