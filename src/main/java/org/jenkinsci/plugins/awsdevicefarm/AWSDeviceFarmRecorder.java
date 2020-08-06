@@ -1553,7 +1553,9 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                 // This does two things, validates access and secret key are valid and if they have access to device farm.
                 deviceFarm.getProjects();
             } catch (Exception e) {
-               return FormValidation.errorWithMarkup("Invalid Credentials, please refer to troubleshooting " +
+                System.out.println("Error validating credentials");
+                e.printStackTrace();
+                return FormValidation.errorWithMarkup("Invalid Credentials, please refer to troubleshooting " +
                        "<a href = \"https://github.com/awslabs/aws-device-farm-jenkins-plugin#invalid-credentials-error-while-validating-credentials\" target=\"_blank \">link</a> ");
             }
             return FormValidation.ok("Credentials are valid");
