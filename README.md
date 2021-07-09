@@ -56,7 +56,7 @@ If you want to access Device Farm using IAM Role, refer to "Generating a proper 
 5. Enter a user name of your choice.
 6. Leave the “Generate an access key for each user” checkbox checked.
 7. Click “Create”.
-8. View or optionally download the User security credentials that were created; you will them them later.
+8. View or optionally download the User security credentials that were created; you will need them later.
 9. Click “Close” to return to the IAM screen.
 10. Click your user name in the list.
 11. Under the Inline Policies header, click the “AWS IAM role ARN for your AWS Device Farm account” link to create a new inline policy.
