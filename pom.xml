@@ -91,6 +91,11 @@
       <name>Nikhil Dabhade</name>
       <email>nikdabn@amazon.com</email>
     </developer>
+    <developer>
+      <id>wrydane</id>
+      <name>Dane Wrye</name>
+      <email>wrydane@amazon.com</email>
+    </developer>
   </developers>
 
   <repositories>
