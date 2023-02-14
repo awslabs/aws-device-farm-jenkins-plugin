@@ -31,14 +31,30 @@
     <dependency>
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk</artifactId>
-      <version>1.11.478</version>
+      <version>1.12.395</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.dataformat</groupId>
+          <artifactId>jackson-dataformat-cbor</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-databind</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- TODO: Use Apache HttpComponents Client 4.x API instead: https://plugins.jenkins.io/apache-httpcomponents-client-4-api -->
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpcore</artifactId>
-        <version>4.4.9</version>
+        <version>4.4.13</version>
+    </dependency>
+
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+        <version>1.15</version>
     </dependency>
   </dependencies>
 
@@ -68,6 +84,11 @@
       <id>nikdabn</id>
       <name>Nikhil Dabhade</name>
       <email>nikdabn@amazon.com</email>
+    </developer>
+    <developer>
+      <id>wrydane</id>
+      <name>Dane Wrye</name>
+      <email>wrydane@amazon.com</email>
     </developer>
   </developers>
 

@@ -19,5 +19,8 @@ vagrant_ansible_inventory_*
 .idea
 *.iml
 
+# VSCode
+.vscode
+
 # OS X
 .DS_Store
