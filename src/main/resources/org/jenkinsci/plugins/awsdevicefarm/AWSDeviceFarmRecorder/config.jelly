@@ -4,7 +4,7 @@
   <f:validateButton title="refresh" method="refresh" progress="Checking..." inline="true" />
 
   <f:entry title="Project" field="projectName" description="[Required] Select your AWS Device Farm project.">
-    <f:select default="Select your project" style="width:100%; padding-right:5px; margin-right:5px" inline="true" />
+    <f:select default="Select your project" style="width:100%; padding-right:5px; margin-right:5px" inline="true" clazz="projectSelect"/>
   </f:entry>
 
   <f:entry title="Device Pool" field="devicePoolName" description="[Required] Select your AWS Device Farm device pool.">
@@ -41,6 +41,17 @@
           <f:select style="width:100%" inline="true"/>
         </f:entry>
     </f:optionalBlock>
+    <f:entry title="VPC ENI" description="[Optional] VPC config for your selected project. Note - you may need to refresh your browser after applying a new project selection to see updated VPC">
+      <f:entry title="VPC ID" field="vpcId">
+        <f:readOnlyTextbox clazz="vpcId" value="${instance.vpcString}"/>
+      </f:entry>
+      <f:entry title="Security Groups" field="securityGroups">
+        <f:readOnlyTextbox value="${instance.securityGroupString}"/>
+      </f:entry>
+      <f:entry title="Subnet IDs" field="subnetIds">
+        <f:readOnlyTextbox value="${instance.subnetString}"/>
+      </f:entry>
+    </f:entry>
   </f:section>
 
   <f:section title="Choose test to run">
@@ -257,4 +268,5 @@
     </f:entry>
 
   </f:section>
+  <script src="${rootURL}/plugin/aws-device-farm/config.js"/>
 </j:jelly>
