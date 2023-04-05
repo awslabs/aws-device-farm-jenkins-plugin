@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>3.6</version>
+    <version>3.7</version>
   </parent>
 
   <groupId>org.jenkins-ci.plugins</groupId>
@@ -16,7 +16,11 @@
   <description>AWS Device Farm Jenkins Plugin</description>
 
   <properties>
+<<<<<<< HEAD
     <jenkins.version>2.138.4</jenkins.version>
+=======
+    <jenkins.version>1.625.3</jenkins.version>
+>>>>>>> 174b718 (Dynamically update textboxes, rework UI, fix tests and build issues)
     <java.level>8</java.level>
   </properties>
 
