@@ -31,7 +31,7 @@
     <dependency>
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk</artifactId>
-      <version>1.12.395</version>
+      <version>1.12.407</version>
       <exclusions>
         <exclusion>
           <groupId>com.fasterxml.jackson.dataformat</groupId>
