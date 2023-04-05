@@ -83,6 +83,7 @@ import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 import java.io.File;
 import java.io.IOException;
@@ -195,7 +196,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     public Boolean ifVpce;
 
     // VPC ENI Configuration
-    public String vpcId = projectName;
+    public String vpcId;
     public String securityGroups;
     public String subnetIds;
 
@@ -2117,6 +2118,56 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             return testSpecNames;
         }
 
+        /**
+         * Called from javascript as a proxy. Gets vpcId of a project
+         *
+         * @return vpcId associated with a project.
+         */
+        @JavaScriptMethod
+        public String fetchVpcIdFromProjectName(String projectName) {
+            AWSDeviceFarm adf = getAWSDeviceFarm();
+            try {
+                Project proj = adf.getProject(projectName);
+                VpcConfig vpcSettings = proj.getVpcConfig();
+                return vpcSettings.getVpcId();
+            } catch (Exception error) {
+                return "";
+            }
+        }
+
+        /**
+         * Called from javascript as a proxy. Gets subnetIds of a project
+         *
+         * @return subnetIds associated with a project.
+         */
+        @JavaScriptMethod
+        public String fetchSubnetIdsFromProjectName(String projectName) {
+            AWSDeviceFarm adf = getAWSDeviceFarm();
+            try {
+                Project proj = adf.getProject(projectName);
+                VpcConfig vpcSettings = proj.getVpcConfig();
+                return vpcSettings.getSubnetIds().toString();
+            } catch (Exception error) {
+                return "";
+            }
+        }
+
+        /**
+         * Called from javascript as a proxy. Gets securityGroupIds of a project
+         *
+         * @return securityGroupIds associated with a project.
+         */
+        @JavaScriptMethod
+        public String fetchSecurityGroupIdsFromProjectName(String projectName) {
+            AWSDeviceFarm adf = getAWSDeviceFarm();
+            try {
+                Project proj = adf.getProject(projectName);
+                VpcConfig vpcSettings = proj.getVpcConfig();
+                return vpcSettings.getSecurityGroupIds().toString();
+            } catch (Exception error) {
+                return "";
+            }
+        }
 
         /**
          * Bind descriptor object to capture global plugin settings from 'Manage Jenkins'.
