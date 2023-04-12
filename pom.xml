@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>3.7</version>
+    <version>3.6</version>
   </parent>
 
   <groupId>org.jenkins-ci.plugins</groupId>
@@ -90,11 +90,6 @@
       <id>nikdabn</id>
       <name>Nikhil Dabhade</name>
       <email>nikdabn@amazon.com</email>
-    </developer>
-    <developer>
-      <id>wrydane</id>
-      <name>Dane Wrye</name>
-      <email>wrydane@amazon.com</email>
     </developer>
   </developers>
 
