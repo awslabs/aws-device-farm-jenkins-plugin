@@ -16,7 +16,11 @@ package org.jenkinsci.plugins.awsdevicefarm;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.AWSCredentialsProviderChain;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
+import com.amazonaws.services.devicefarm.AWSDeviceFarmClientBuilder;
 import com.amazonaws.services.devicefarm.AWSDeviceFarmClient;
 import com.amazonaws.services.devicefarm.model.AccountSettings;
 import com.amazonaws.services.devicefarm.model.ArtifactCategory;
@@ -44,6 +48,7 @@ import com.amazonaws.services.devicefarm.model.ListUploadsRequest;
 import com.amazonaws.services.devicefarm.model.ListUploadsResult;
 import com.amazonaws.services.devicefarm.model.NotFoundException;
 import com.amazonaws.services.devicefarm.model.Project;
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.devicefarm.model.ScheduleRunConfiguration;
 import com.amazonaws.services.devicefarm.model.ScheduleRunRequest;
 import com.amazonaws.services.devicefarm.model.ScheduleRunResult;
@@ -88,7 +93,7 @@ import java.util.List;
  * AWS Device Farm API wrapper class.
  */
 public class AWSDeviceFarm {
-    private AWSDeviceFarmClient api;
+    private com.amazonaws.services.devicefarm.AWSDeviceFarm api;
     private PrintStream log;
     private FilePath workspace;
     private FilePath artifactsDir;
@@ -100,7 +105,10 @@ public class AWSDeviceFarm {
     private static final String APPIUM_WEB_RUBY_TEST_SPEC = "APPIUM_WEB_RUBY_TEST_SPEC";
     private static final String APPIUM_WEB_NODE_TEST_SPEC = "APPIUM_WEB_NODE_TEST_SPEC";
     private static final String CURATED = "CURATED";
-    private static final int MAX_ROLE_SESSION_TIMEOUT = 28800;
+    // The max timeout is set to 1 hr as roles provided as input can be chained or unchained.
+    // Chained roles have a hard limit of 1 hr. After 1 hr the tokens are refreshed.
+    // Requesting a session with timneout higher than 1 hr by default does not allow chained roles to be used
+    private static final int MAX_ROLE_SESSION_TIMEOUT = 3600;
 
     //// Constructors
 
@@ -130,17 +138,24 @@ public class AWSDeviceFarm {
      * @param roleArn Role ARN to use for authentication.
      */
     private AWSDeviceFarm(AWSCredentials creds, String roleArn) {
+        AWSCredentialsProvider credProvider = null;
         if (roleArn != null) {
-            STSAssumeRoleSessionCredentialsProvider sts = new STSAssumeRoleSessionCredentialsProvider
+            credProvider = new STSAssumeRoleSessionCredentialsProvider
                     .Builder(roleArn, RandomStringUtils.randomAlphanumeric(8))
                     .withRoleSessionDurationSeconds(MAX_ROLE_SESSION_TIMEOUT)
                     .build();
-            creds = sts.getCredentials();
+        } else {
+            credProvider = new AWSCredentialsProviderChain(new AWSStaticCredentialsProvider(creds));
         }
 
         ClientConfiguration clientConfiguration = new ClientConfiguration().withUserAgent("AWS Device Farm - Jenkins v1.0");
-        api = new AWSDeviceFarmClient(creds, clientConfiguration);
-        api.setServiceNameIntern("devicefarm");
+        AWSDeviceFarmClientBuilder builder = AWSDeviceFarmClientBuilder.standard();
+        builder.setClientConfiguration(clientConfiguration);
+        // Device Farm endpoint is only available in us-west-2 region
+        builder.withRegion(Regions.US_WEST_2);
+        builder.setCredentials(credProvider);
+        api = builder.build();
+        ((AWSDeviceFarmClient) api).setServiceNameIntern("devicefarm");
     }
 
     //// Builder Methods
