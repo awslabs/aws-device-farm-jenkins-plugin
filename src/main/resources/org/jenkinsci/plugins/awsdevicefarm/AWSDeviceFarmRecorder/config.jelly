@@ -2,6 +2,12 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 <st:bind var="backend" value="${descriptor}"/>
 
+  <style>
+    .readOnlyStyle {
+      background-color: #F1F1F1;
+    }
+  </style>
+
   <f:validateButton title="refresh" method="refresh" progress="Checking..." inline="true" />
 
   <f:entry title="Project" field="projectName" description="[Required] Select your AWS Device Farm project.">
@@ -40,13 +46,13 @@
     <f:nested>
       <f:section title="VPC ENI configuration [Recommended]">
         <f:entry title="VPC ID">
-          <f:textbox clazz="vpcId" value="${instance.vpcString}"/>
+          <f:textbox clazz="vpcId readOnlyStyle" value="${instance.vpcString}"/>
         </f:entry>
         <f:entry title="Subnet IDs" field="subnetIds">
-          <f:readOnlyTextbox clazz="subnetId" value="${instance.subnetString}"/>
+          <f:readOnlyTextbox clazz="subnetId readOnlyStyle" value="${instance.subnetString}"/>
         </f:entry>
         <f:entry title="Security Groups" field="securityGroups">
-          <f:readOnlyTextbox clazz="securityGroupId" value="${instance.securityGroupString}"/>
+          <f:readOnlyTextbox clazz="securityGroupId readOnlyStyle" value="${instance.securityGroupString}"/>
         </f:entry>
       </f:section>
     </f:nested>
