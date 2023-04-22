@@ -566,6 +566,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                     }
                 }
             }
+            
             // Get AWS Device Farm project from user provided name.
             writeToLog(log, String.format("Using Project '%s'", projectName));
             Project project = adf.getProject(projectName);
