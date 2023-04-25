@@ -43,6 +43,7 @@
   </f:entry>
 
   <f:section title="VPC Settings">
+  <f:entry description="[Optional] Select one of the following VPC connectivity options"/>
     <f:nested>
       <f:section title="VPC ENI configuration [Recommended]">
         <f:entry title="VPC ID">
