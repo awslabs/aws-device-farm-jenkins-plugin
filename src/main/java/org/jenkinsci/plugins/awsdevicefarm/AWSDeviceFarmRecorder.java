@@ -195,11 +195,6 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     public String vpceServiceName;
     public Boolean ifVpce;
 
-    // VPC ENI Configuration
-    public String vpcId;
-    public String securityGroups;
-    public String subnetIds;
-
     public Boolean deviceLocation;
     public Double deviceLatitude;
     public Double deviceLongitude;
@@ -269,9 +264,6 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
      * @param deviceLatitude                The specified device latitude.
      * @param deviceLongitude               The specified device longitude.
      * @param ifVpce                        Checked if VPCE config is enabled.
-     * @param vpcId                         The id of the VPC config
-     * @param securityGroups                The security groups associated with the VPC config
-     * @param subnetIds                     The ids of the subnets associated with the VPC config
      * @param radioDetails                  Whether the radio details would be specified.
      * @param ifWifi
      * @param ifNfc
@@ -334,9 +326,6 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                                  Boolean ifAppPerformanceMonitoring,
                                  Boolean ignoreRunError,
                                  Boolean ifVpce,
-                                 String vpcId,
-                                 String securityGroups,
-                                 String subnetIds,
                                  Boolean ifSkipAppResigning,
                                  String vpceServiceName ) {
         this.projectName = projectName;
@@ -380,9 +369,6 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         this.deviceLatitude = deviceLatitude;
         this.deviceLongitude = deviceLongitude;
         this.ifVpce = ifVpce;
-        this.vpcId = vpcId;
-        this.securityGroups = securityGroups;
-        this.subnetIds = subnetIds;
         this.ifSkipAppResigning = ifSkipAppResigning;
         this.radioDetails = radioDetails;
         this.ifWifi = ifWifi;
@@ -566,17 +552,10 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                     }
                 }
             }
-            
+
             // Get AWS Device Farm project from user provided name.
             writeToLog(log, String.format("Using Project '%s'", projectName));
             Project project = adf.getProject(projectName);
-
-            VpcConfig vpcSettings = project.getVpcConfig();
-            if (vpcSettings != null) {
-                securityGroups = vpcSettings.getSecurityGroupIds().toString();
-                subnetIds = vpcSettings.getSubnetIds().toString();
-                project.setVpcConfig(null);
-            }
 
             // Accept 'ADF_DEVICE_POOL' build parameter as an overload from job configuration.
             String devicePoolParameter = parameters.get("AWSDEVICEFARM_DEVICE_POOL");
