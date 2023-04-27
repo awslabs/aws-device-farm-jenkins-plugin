@@ -41,6 +41,7 @@ import com.amazonaws.services.devicefarm.model.Test;
 import com.amazonaws.services.devicefarm.model.TestType;
 import com.amazonaws.services.devicefarm.model.Upload;
 import com.amazonaws.services.devicefarm.model.VPCEConfiguration;
+import com.amazonaws.services.devicefarm.model.VpcConfig;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
@@ -82,6 +83,7 @@ import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 import java.io.File;
 import java.io.IOException;
@@ -1383,6 +1385,54 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     }
 
     /**
+     * Gets vpcId for textbox
+     *
+     * @return The role ARN.
+     */
+    public String getVpcString() {
+        AWSDeviceFarm adf = getAWSDeviceFarm();
+        try {
+            Project proj = adf.getProject(projectName);
+            VpcConfig vpcSettings = proj.getVpcConfig();
+            return vpcSettings.getVpcId();
+        } catch (Exception error) {
+            return "";
+        }
+    }
+
+    /**
+     * Gets string representing subnet ids for textbox
+     *
+     * @return The role ARN.
+     */
+    public String getSubnetString() {
+        AWSDeviceFarm adf = getAWSDeviceFarm();
+        try {
+            Project proj = adf.getProject(projectName);
+            VpcConfig vpcSettings = proj.getVpcConfig();
+            return vpcSettings.getSubnetIds().toString();
+        } catch (Exception error) {
+            return "";
+        }
+    }
+
+    /**
+     * Gets string representing security groups for textbox
+     *
+     * @return The role ARN.
+     */
+    public String getSecurityGroupString() {
+        AWSDeviceFarm adf = getAWSDeviceFarm();
+        try {
+            Project proj = adf.getProject(projectName);
+            VpcConfig vpcSettings = proj.getVpcConfig();
+            return vpcSettings.getSecurityGroupIds().toString();
+        } catch (Exception error) {
+            return "";
+        }
+    }
+
+    /**
      * Access key ID getter.
      *
      * @return The access key ID.
@@ -2048,6 +2098,56 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             return testSpecNames;
         }
 
+        /**
+         * Called from javascript as a proxy. Gets vpcId of a project
+         *
+         * @return vpcId associated with a project.
+         */
+        @JavaScriptMethod
+        public String fetchVpcIdFromProjectName(String projectName) {
+            AWSDeviceFarm adf = getAWSDeviceFarm();
+            try {
+                Project proj = adf.getProject(projectName);
+                VpcConfig vpcSettings = proj.getVpcConfig();
+                return vpcSettings.getVpcId();
+            } catch (Exception error) {
+                return "";
+            }
+        }
+
+        /**
+         * Called from javascript as a proxy. Gets subnetIds of a project
+         *
+         * @return subnetIds associated with a project.
+         */
+        @JavaScriptMethod
+        public String fetchSubnetIdsFromProjectName(String projectName) {
+            AWSDeviceFarm adf = getAWSDeviceFarm();
+            try {
+                Project proj = adf.getProject(projectName);
+                VpcConfig vpcSettings = proj.getVpcConfig();
+                return vpcSettings.getSubnetIds().toString();
+            } catch (Exception error) {
+                return "";
+            }
+        }
+
+        /**
+         * Called from javascript as a proxy. Gets securityGroupIds of a project
+         *
+         * @return securityGroupIds associated with a project.
+         */
+        @JavaScriptMethod
+        public String fetchSecurityGroupIdsFromProjectName(String projectName) {
+            AWSDeviceFarm adf = getAWSDeviceFarm();
+            try {
+                Project proj = adf.getProject(projectName);
+                VpcConfig vpcSettings = proj.getVpcConfig();
+                return vpcSettings.getSecurityGroupIds().toString();
+            } catch (Exception error) {
+                return "";
+            }
+        }
 
         /**
          * Bind descriptor object to capture global plugin settings from 'Manage Jenkins'.
