@@ -65,33 +65,17 @@ If you want to access Device Farm using IAM Role, refer to "Generating a proper 
 14. Give your policy a name under “Policy Name”.
 15. Copy/paste the following policy into “Policy Document”:
 ```
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-      "Effect": "Allow",
-      "Action": [
-        "devicefarm:*",
-        "ec2:DescribeVpcs",
-        "ec2:DescribeSubnets",
-        "ec2:DescribeSecurityGroups",
-        "ec2:CreateNetworkInterface"
-      ],
-      "Resource": [
-        "*"
-      ]
-    },
     {
-      "Effect": "Allow",
-      "Action": "iam:CreateServiceLinkedRole",
-      "Resource": "arn:aws:iam::*:role/aws-service-role/devicefarm.amazonaws.com/AWSServiceRoleForDeviceFarm",
-      "Condition": {
-        "StringLike": {
-          "iam:AWSServiceName": "devicefarm.amazonaws.com"
-        }
-      }
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Sid": "DeviceFarmAll",
+                "Effect": "Allow",
+                "Action": [ "devicefarm:*" ],
+                "Resource": [ "*" ]
+            }
+        ]
     }
-  ]
-}
 ```
 16. Click “Apply Policy”.
 
@@ -118,8 +102,7 @@ Open the new role you have created in console and then click on "Trust Relations
     {
       "Effect": "Allow",
       "Principal": {
-        "AWS": "To be replaced by Arn of user/role running on the Jenkins machine",
-        "Service": "devicefarm.amazonaws.com"
+        "AWS": "To be replace by Arn of user/role running on the Jenkins machine"
       },
       "Action": "sts:AssumeRole"
     }
@@ -157,12 +140,11 @@ Open the new role you have created in console and then click on "Trust Relations
 7. Select the device pool you would like to use.
 8. Select if you'd like to have the test artifacts (such as the logs and screenshots) archived locally.
 9. In “Application”, fill in the path to your compiled application for testing native or hybrid app. Check "It is a web application." for testing web app.
-10. Optional: If you are using VPC, then confirm your VPC Settings are correct by a.) ensuring you have the desired VPC ENI configuration [read only] or b.) Enabling VPCE
-11. Choose the test framework, provide the path to your test package location and other relavent details.
-12. Configure device state parameters like radio details, extra data and device locations.
-13. Configure the maximum execution timeout. The default execution timeout is 60 minutes.
-14. Set the execution configuration parameters: video recording and app performance monitoring.
-15. Click “Save”.
+10. Choose the test framework, provide the path to your test package location and other relavent details.
+11. Configure device state parameters like radio details, extra data and device locations.
+12. Configure the maximum execution timeout. The default execution timeout is 60 minutes.
+13. Set the execution configuration parameters: video recording and app performance monitoring.
+14. Click “Save”.
 
 ## Using the plugin in Jenkins Pipeline
 

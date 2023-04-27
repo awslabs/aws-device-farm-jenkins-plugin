@@ -1,17 +1,10 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-<st:bind var="backend" value="${descriptor}"/>
-
-  <style>
-    .readOnlyStyle {
-      background-color: #F1F1F1;
-    }
-  </style>
 
   <f:validateButton title="refresh" method="refresh" progress="Checking..." inline="true" />
 
   <f:entry title="Project" field="projectName" description="[Required] Select your AWS Device Farm project.">
-    <f:select default="Select your project" style="width:100%; padding-right:5px; margin-right:5px" inline="true" clazz="projectSelect"/>
+    <f:select default="Select your project" style="width:100%; padding-right:5px; margin-right:5px" inline="true" />
   </f:entry>
 
   <f:entry title="Device Pool" field="devicePoolName" description="[Required] Select your AWS Device Farm device pool.">
@@ -42,32 +35,13 @@
     <f:checkbox name="ignoreRunError" field="ignoreRunError" title="Ignore Device Farm errors in build result." checked="${instance.ignoreRunError}" inline="true" />
   </f:entry>
 
-  <f:section title="VPC Settings">
-  <f:entry description="[Optional] Select one of the following VPC connectivity options"/>
-    <f:nested>
-      <f:section title="VPC ENI configuration [Recommended]">
-        <f:entry title="VPC ID">
-          <f:textbox clazz="vpcId readOnlyStyle" value="${instance.vpcString}"/>
+  <f:section title="Choose VPCE configuration">
+    <f:optionalBlock name="ifVpce" title="Enable VPCE" checked="${instance.ifVpce}" inline="true">
+        <f:entry title="VPCE" field="vpceServiceName" description="[Optional] Select the VPCE service (only available for private devices)">
+          <f:select style="width:100%" inline="true"/>
         </f:entry>
-        <f:entry title="Subnet IDs" field="subnetIds">
-          <f:readOnlyTextbox clazz="subnetId readOnlyStyle" value="${instance.subnetString}"/>
-        </f:entry>
-        <f:entry title="Security Groups" field="securityGroups">
-          <f:readOnlyTextbox clazz="securityGroupId readOnlyStyle" value="${instance.securityGroupString}"/>
-        </f:entry>
-      </f:section>
-    </f:nested>
-    <f:nested>
-      <f:section title="VPCE configuration">
-        <f:optionalBlock name="ifVpce" title="Enable VPCE" checked="${instance.ifVpce}" inline="true">
-          <f:entry title="VPCE" field="vpceServiceName" description="[Optional] Select the VPCE service (only available for private devices)">
-            <f:select style="width:100%" inline="true"/>
-          </f:entry>
-        </f:optionalBlock>
-      </f:section>
-    </f:nested>
+    </f:optionalBlock>
   </f:section>
-
 
   <f:section title="Choose test to run">
     <f:radioBlock name="testToRun" value="BUILTIN_EXPLORER" checked="${instance.isTestType('BUILTIN_EXPLORER')}" title="Android Built-in Explorer" inline="true">
@@ -283,5 +257,4 @@
     </f:entry>
 
   </f:section>
-  <script src="${rootURL}/plugin/aws-device-farm/config.js"/>
 </j:jelly>
