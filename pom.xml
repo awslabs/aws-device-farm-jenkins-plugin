@@ -45,7 +45,6 @@
           <groupId>com.amazonaws</groupId>
           <artifactId>aws-java-sdk-kinesisvideo</artifactId>
         </exclusion>
-
       </exclusions>
     </dependency>
 
