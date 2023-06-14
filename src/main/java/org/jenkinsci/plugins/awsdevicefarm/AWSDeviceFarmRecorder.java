@@ -36,6 +36,7 @@ import com.amazonaws.services.devicefarm.model.Radios;
 import com.amazonaws.services.devicefarm.model.ScheduleRunConfiguration;
 import com.amazonaws.services.devicefarm.model.ScheduleRunResult;
 import com.amazonaws.services.devicefarm.model.ScheduleRunTest;
+import com.amazonaws.services.devicefarm.model.CustomerArtifactPaths;
 import com.amazonaws.services.devicefarm.model.Suite;
 import com.amazonaws.services.devicefarm.model.Test;
 import com.amazonaws.services.devicefarm.model.TestType;
@@ -81,6 +82,7 @@ import org.jenkinsci.plugins.awsdevicefarm.test.XCTestTest;
 import org.jenkinsci.plugins.awsdevicefarm.test.XCTestUITest;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
@@ -190,6 +192,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     // Device States Specification
     public Boolean extraData;
     public String extraDataArtifact;
+    public String androidPathField;
+    public String iosPathField;
 
     // VPCE Configuration
     public String vpceServiceName;
@@ -204,6 +208,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     public Boolean ifGPS;
     public Boolean ifNfc;
     public Boolean ifBluetooth;
+    public Boolean ifPullDataPath;
 
     public Integer jobTimeoutMinutes;
 
@@ -327,7 +332,10 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                                  Boolean ignoreRunError,
                                  Boolean ifVpce,
                                  Boolean ifSkipAppResigning,
-                                 String vpceServiceName ) {
+                                 String vpceServiceName,
+                                 Boolean ifPullDataPath,
+                                 String androidPathField,
+                                 String iosPathField) {
         this.projectName = projectName;
         this.devicePoolName = devicePoolName;
         this.testSpecName = testSpecName;
@@ -380,6 +388,9 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         this.ifAppPerformanceMonitoring = ifAppPerformanceMonitoring;
         this.ifWebApp = ifWebApp;
         this.testToRun = transformTestToRunForWebApp(testToRun);
+        this.ifPullDataPath = ifPullDataPath;
+        this.androidPathField = androidPathField;
+        this.iosPathField = iosPathField;
 
         // This is a hack because I have to get the service icon locally, but it's copy-righted. So I pull it when I need it.
         Path pluginIconPath = Paths.get(System.getenv("HOME"), "plugins", "aws-device-farm", "service-icon.svg").toAbsolutePath();
@@ -394,6 +405,21 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                 e.printStackTrace();
             }
         }
+    }
+
+    @DataBoundSetter
+    public void setIfPullDataPath(boolean ifPullDataPath) {
+        this.ifPullDataPath = ifPullDataPath;
+    }
+
+    @DataBoundSetter
+    public void setIosPathField(String iosPathField) {
+        this.iosPathField = iosPathField;
+    }
+
+    @DataBoundSetter
+    public void setAndroidPathField(String androidPathField) {
+        this.androidPathField = androidPathField;
     }
 
     /**
@@ -739,6 +765,17 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         // set a bunch of other default values as Device Farm expect these
         configuration.setAuxiliaryApps(new ArrayList<String>());
         configuration.setLocale("en_US");
+
+        if (ifPullDataPath != null && ifPullDataPath) {
+            CustomerArtifactPaths paths = new CustomerArtifactPaths();
+            if (androidPathField != null) {
+                paths.setAndroidPaths(Arrays.asList(androidPathField.split("\\s*,\\s*")));
+            }
+            if (iosPathField != null) {
+                paths.setIosPaths(Arrays.asList(iosPathField.split("\\s*,\\s*")));
+            }
+            configuration.setCustomerArtifactPaths(paths);
+        }
 
         Location location = getScheduleRunConfigurationLocation(deviceLocation);
         configuration.setLocation(location);

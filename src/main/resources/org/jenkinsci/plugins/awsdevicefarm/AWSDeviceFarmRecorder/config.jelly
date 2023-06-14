@@ -282,6 +282,14 @@
       <f:checkbox name="ifSkipAppResigning" title="Enable Skip App Resigning (for private devices only)" default="false" checked="${instance.ifSkipAppResigning}" inline="true"/>
     </f:entry>
 
+    <f:optionalBlock name="ifPullDataPath" title="Pull data from device." checked="${instance.ifPullDataPath}" inline="true">
+      <f:entry title="Android Path" field="androidPathField" description="[Optional] Pull specified directory from device to the workspace." >
+        <f:textbox />
+      </f:entry>
+      <f:entry title="iOS Path" field="iosPathField" description="[Optional] Pull specified directory from device to the workspace." >
+        <f:textbox />
+      </f:entry>
+    </f:optionalBlock>
   </f:section>
   <script src="${rootURL}/plugin/aws-device-farm/config.js"/>
 </j:jelly>
