@@ -33,10 +33,15 @@
   <f:entry>
     <f:checkbox name="isRunUnmetered" field="isRunUnmetered" title="Run on Unmetered Device Slots." checked="${instance.isRunUnmetered}" inline="true" />
   </f:entry>
-  
-  <f:entry>
-    <f:checkbox name="storeResults" title="Store test results locally." checked="${instance.storeResults}"/>
-  </f:entry>
+
+  <f:optionalBlock name="storeResults" title="Store test results locally." checked="${instance.storeResults}" inline="true">
+    <f:entry title="Results path" field="resultsPath" description="Path to where the results will be saved to.">
+      <f:textbox default="AWS Device Farm Results"/>
+    </f:entry>
+    <f:entry title="Archive results" description="Whether to save results directly to the artifacts folder, saving them as build artifacts, or use the workspace folder.">
+      <f:checkbox field="archiveResults" name="archiveResults" checked="${instance.archiveResults}" default="true"/>
+    </f:entry>
+  </f:optionalBlock>
 
   <f:entry>
     <f:checkbox name="ignoreRunError" field="ignoreRunError" title="Ignore Device Farm errors in build result." checked="${instance.ignoreRunError}" inline="true" />
