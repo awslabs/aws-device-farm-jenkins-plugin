@@ -119,6 +119,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     public String testSpecName;
     public String environmentToRun;
     public Boolean storeResults;
+    public String resultsPath;
+    public Boolean archiveResults;
     public Boolean isRunUnmetered;
 
     // Built-in Fuzz
@@ -231,8 +233,10 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
      * @param runName                       The name of the run.
      * @param testToRun                     The type of test to be run.
      * @param storeResults                  Download the results to a local archive.
+     * @param resultsPath                   Path to where the results will be saved to.
+     * @param archiveResults                Whether to save results directly to the artifacts folder, saving them as build artifacts, or use the workspace folder.
      * @param eventCount                    The number of fuzz events to run.
-     * @param eventThrottle                 The the fuzz event throttle count.
+     * @param eventThrottle                 The fuzz event throttle count.
      * @param seed                          The initial seed of fuzz events.
      * @param username                      Username to use if explorer encounters a login form.
      * @param password                      Password to use if explorer encounters a login form.
@@ -284,6 +288,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                                  String runName,
                                  @Nonnull String testToRun,
                                  Boolean storeResults,
+                                 String resultsPath,
+                                 Boolean archiveResults,
                                  Boolean isRunUnmetered,
                                  String eventCount,
                                  String eventThrottle,
@@ -335,6 +341,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         this.appArtifact = appArtifact;
         this.runName = runName;
         this.storeResults = storeResults;
+        this.resultsPath = resultsPath;
+        this.archiveResults = archiveResults;
         this.isRunUnmetered = isRunUnmetered;
         this.eventCount = eventCount;
         this.eventThrottle = eventThrottle;
@@ -660,7 +668,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             // Download results archive and store it.
             if (storeResults) {
                 // Create results storage directory which will contain the unzip logs/screenshots pulled from AWS Device Farm.
-                FilePath resultsDir = new FilePath(artifactsDir, "AWS Device Farm Results");
+                FilePath resultsRootDir = archiveResults == null || archiveResults ? artifactsDir : workspace;
+                FilePath resultsDir = new FilePath(resultsRootDir, StringUtils.isBlank(resultsPath) ? "AWS Device Farm Results" : resultsPath);
                 resultsDir.mkdirs();
                 writeToLog(log, String.format("Storing AWS Device Farm results in directory %s", resultsDir));
 
@@ -684,7 +693,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                         localArtifact.copyFrom(artifactUrl);
                     }
                 }
-                writeToLog(log, String.format("Results archive saved in %s", artifactsDir.getName()));
+                writeToLog(log, String.format("Results archive saved in %s", resultsRootDir.getName()));
             }
 
             // Set Jenkins build result based on AWS Device Farm test result.
