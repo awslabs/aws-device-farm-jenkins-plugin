@@ -18,6 +18,14 @@
     <f:select style="width:100%" inline="true"/>
   </f:entry>
 
+  <f:entry title="Device Selection" field="deviceSelection" description="[Optional] Add the filters for device selection">
+    <f:textbox default="" />
+  </f:entry>
+
+  <f:entry title="Max Devices For Device Selection Filters" field="maxDevicesForDeviceSelection" description="[Optional] Add the max no of devices to choose that match the filters">
+    <f:textbox default="" />
+  </f:entry>
+
   <f:entry title="Application" field="appArtifact" description="[Required for native and hybrid apps] Pattern to find newly built application. Leave it blank if it is a web application.">
     <f:textbox />
   </f:entry>
@@ -29,14 +37,19 @@
   <f:entry title="Run Name" field="runName" description="[Optional] Name of your AWS Device Farm Run. Defaults to Environment variable BUILD_TAG.">
     <f:textbox default="$${BUILD_TAG}" />
   </f:entry>
-
+  
   <f:entry>
     <f:checkbox name="isRunUnmetered" field="isRunUnmetered" title="Run on Unmetered Device Slots." checked="${instance.isRunUnmetered}" inline="true" />
   </f:entry>
-  
-  <f:entry>
-    <f:checkbox name="storeResults" title="Store test results locally." checked="${instance.storeResults}"/>
-  </f:entry>
+
+  <f:optionalBlock name="storeResults" title="Store test results locally." checked="${instance.storeResults}" inline="true">
+    <f:entry title="Results path" field="resultsPath" description="Path to where the results will be saved to.">
+      <f:textbox default="AWS Device Farm Results"/>
+    </f:entry>
+    <f:entry title="Archive results" description="Whether to save results directly to the artifacts folder, saving them as build artifacts, or use the workspace folder.">
+      <f:checkbox field="archiveResults" name="archiveResults" checked="${instance.archiveResults}" default="true"/>
+    </f:entry>
+  </f:optionalBlock>
 
   <f:entry>
     <f:checkbox name="ignoreRunError" field="ignoreRunError" title="Ignore Device Farm errors in build result." checked="${instance.ignoreRunError}" inline="true" />

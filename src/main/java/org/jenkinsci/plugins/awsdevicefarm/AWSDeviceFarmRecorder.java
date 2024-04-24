@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.alexaforbusiness.model.Device;
 import com.amazonaws.services.devicefarm.model.Artifact;
 import com.amazonaws.services.devicefarm.model.ArtifactCategory;
 import com.amazonaws.services.devicefarm.model.BillingMethod;
@@ -34,6 +35,8 @@ import com.amazonaws.services.devicefarm.model.Location;
 import com.amazonaws.services.devicefarm.model.Project;
 import com.amazonaws.services.devicefarm.model.Radios;
 import com.amazonaws.services.devicefarm.model.ScheduleRunConfiguration;
+import com.amazonaws.services.devicefarm.model.DeviceSelectionConfiguration;
+import com.amazonaws.services.devicefarm.model.DeviceFilter;
 import com.amazonaws.services.devicefarm.model.ScheduleRunResult;
 import com.amazonaws.services.devicefarm.model.ScheduleRunTest;
 import com.amazonaws.services.devicefarm.model.Suite;
@@ -119,6 +122,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     public String testSpecName;
     public String environmentToRun;
     public Boolean storeResults;
+    public String resultsPath;
+    public Boolean archiveResults;
     public Boolean isRunUnmetered;
 
     // Built-in Fuzz
@@ -220,6 +225,10 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     public Boolean ifAppPerformanceMonitoring;
     public Boolean ifSkipAppResigning;
 
+    // Device Selection
+    public String deviceSelection;
+    public Integer maxDevicesForDeviceSelection;
+
     /**
      * The Device Farm recorder class for running post-build steps on Jenkins.
      *
@@ -231,8 +240,10 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
      * @param runName                       The name of the run.
      * @param testToRun                     The type of test to be run.
      * @param storeResults                  Download the results to a local archive.
+     * @param resultsPath                   Path to where the results will be saved to.
+     * @param archiveResults                Whether to save results directly to the artifacts folder, saving them as build artifacts, or use the workspace folder.
      * @param eventCount                    The number of fuzz events to run.
-     * @param eventThrottle                 The the fuzz event throttle count.
+     * @param eventThrottle                 The fuzz event throttle count.
      * @param seed                          The initial seed of fuzz events.
      * @param username                      Username to use if explorer encounters a login form.
      * @param password                      Password to use if explorer encounters a login form.
@@ -272,6 +283,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
      * @param jobTimeoutMinutes            The max execution time per job.
      * @param ifAppPerformanceMonitoring   Whether the performance would be monitored.
      * @param ifVideoRecording             Whether the video would be recorded.
+     * @param deviceSelection              The device selection filter.
+     * @param maxDevicesForDeviceSelection The max number of devices to be selected.
      *
      */
     @DataBoundConstructor
@@ -284,6 +297,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                                  String runName,
                                  @Nonnull String testToRun,
                                  Boolean storeResults,
+                                 String resultsPath,
+                                 Boolean archiveResults,
                                  Boolean isRunUnmetered,
                                  String eventCount,
                                  String eventThrottle,
@@ -327,7 +342,10 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                                  Boolean ignoreRunError,
                                  Boolean ifVpce,
                                  Boolean ifSkipAppResigning,
-                                 String vpceServiceName ) {
+                                 String vpceServiceName,
+                                 String deviceSelection,
+                                 Integer maxDevicesForDeviceSelection) {
+
         this.projectName = projectName;
         this.devicePoolName = devicePoolName;
         this.testSpecName = testSpecName;
@@ -335,6 +353,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         this.appArtifact = appArtifact;
         this.runName = runName;
         this.storeResults = storeResults;
+        this.resultsPath = resultsPath;
+        this.archiveResults = archiveResults;
         this.isRunUnmetered = isRunUnmetered;
         this.eventCount = eventCount;
         this.eventThrottle = eventThrottle;
@@ -380,6 +400,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         this.ifAppPerformanceMonitoring = ifAppPerformanceMonitoring;
         this.ifWebApp = ifWebApp;
         this.testToRun = transformTestToRunForWebApp(testToRun);
+        this.deviceSelection = deviceSelection;
+        this.maxDevicesForDeviceSelection = maxDevicesForDeviceSelection;
 
         // This is a hack because I have to get the service icon locally, but it's copy-righted. So I pull it when I need it.
         Path pluginIconPath = Paths.get(System.getenv("HOME"), "plugins", "aws-device-farm", "service-icon.svg").toAbsolutePath();
@@ -557,6 +579,46 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             writeToLog(log, String.format("Using Project '%s'", projectName));
             Project project = adf.getProject(projectName);
 
+            // Device Selection logic
+            DeviceSelectionConfiguration deviceSelectionConfig = null;
+            ArrayList<DeviceFilter> deviceFilterList = null;
+            DeviceFilter deviceFilter = null;
+
+            if (deviceSelection != null && !deviceSelection.isEmpty()) {
+                deviceSelectionConfig = new DeviceSelectionConfiguration();
+                deviceFilter = new DeviceFilter();
+                deviceFilterList = new ArrayList<DeviceFilter>();
+
+                String deviceSelectionStr = null;
+                deviceSelectionStr = String.format("%s", env.expand(deviceSelection));
+                String[] deviceSelectionList = deviceSelectionStr.split(",");
+                writeToLog(log, String.format("Using Device Selection Filters '%s'", Arrays.toString(deviceSelectionList)));
+
+                for (String deviceFilterString : deviceSelectionList) {
+                    String[] filterElements = deviceFilterString.split(" ", 3);
+                    if (filterElements.length != 3) {
+                        writeToLog(log, String.format("Invalid Device Selection Filter '%s'", deviceFilterString));
+                        build.setResult(Result.FAILURE);
+                        return;
+                    }
+                    deviceFilter  = new DeviceFilter();
+                    deviceFilter.setAttribute(filterElements[0]);
+                    deviceFilter.setOperator(filterElements[1]);
+                    ArrayList<String> testValues = new ArrayList<String>();
+                    testValues.add(filterElements[2]);
+                    deviceFilter.setValues(testValues);
+                    deviceFilterList.add(deviceFilter);
+                    writeToLog(log, String.format("Device Selection Filter List '%s'", deviceFilterList.toString()));
+                }
+
+
+                writeToLog(log, String.format("Updated Device Filters '%s'", deviceSelectionConfig.toString()));
+                deviceSelectionConfig.setFilters(deviceFilterList);
+                if(maxDevicesForDeviceSelection != null && maxDevicesForDeviceSelection > 0) {
+                    deviceSelectionConfig.setMaxDevices((maxDevicesForDeviceSelection));
+                }
+            }
+
             // Accept 'ADF_DEVICE_POOL' build parameter as an overload from job configuration.
             String devicePoolParameter = parameters.get("AWSDEVICEFARM_DEVICE_POOL");
             if (devicePoolParameter != null) {
@@ -638,7 +700,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                 configuration.setVpceConfigurationArns(vpceConfigurationArns);
             }
 
-            ScheduleRunResult run = adf.scheduleRun(project.getArn(), deviceFarmRunName, appArn, devicePool.getArn(), testToSchedule, jobTimeoutMinutes, configuration, videoCapture, skipAppResign);
+            ScheduleRunResult run = adf.scheduleRun(project.getArn(), deviceFarmRunName, appArn, devicePool.getArn(), testToSchedule, jobTimeoutMinutes, configuration, videoCapture, skipAppResign, deviceSelectionConfig);
 
             String runArn = run.getRun().getArn();
             try {
@@ -660,7 +722,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             // Download results archive and store it.
             if (storeResults) {
                 // Create results storage directory which will contain the unzip logs/screenshots pulled from AWS Device Farm.
-                FilePath resultsDir = new FilePath(artifactsDir, "AWS Device Farm Results");
+                FilePath resultsRootDir = archiveResults == null || archiveResults ? artifactsDir : workspace;
+                FilePath resultsDir = new FilePath(resultsRootDir, StringUtils.isBlank(resultsPath) ? "AWS Device Farm Results" : resultsPath);
                 resultsDir.mkdirs();
                 writeToLog(log, String.format("Storing AWS Device Farm results in directory %s", resultsDir));
 
@@ -684,7 +747,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                         localArtifact.copyFrom(artifactUrl);
                     }
                 }
-                writeToLog(log, String.format("Results archive saved in %s", artifactsDir.getName()));
+                writeToLog(log, String.format("Results archive saved in %s", resultsRootDir.getName()));
             }
 
             // Set Jenkins build result based on AWS Device Farm test result.
