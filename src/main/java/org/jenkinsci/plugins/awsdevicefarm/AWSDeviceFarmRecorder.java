@@ -595,7 +595,6 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             if (deviceSelectionFilters != null && !deviceSelectionFilters.isEmpty() && maxDevicesForDeviceFilters != null && maxDevicesForDeviceFilters > 0) {
                 //Retrieve the device selection filters.
                 deviceSelectionConfig = new DeviceSelectionConfiguration();
-                deviceFilter = new DeviceFilter();
                 deviceFilterList = new ArrayList<DeviceFilter>();
 
                 String deviceSelectionStr = null;
