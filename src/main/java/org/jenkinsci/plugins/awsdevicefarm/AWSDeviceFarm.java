@@ -50,6 +50,7 @@ import com.amazonaws.services.devicefarm.model.NotFoundException;
 import com.amazonaws.services.devicefarm.model.Project;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.devicefarm.model.ScheduleRunConfiguration;
+import com.amazonaws.services.devicefarm.model.DeviceSelectionConfiguration;
 import com.amazonaws.services.devicefarm.model.ScheduleRunRequest;
 import com.amazonaws.services.devicefarm.model.ScheduleRunResult;
 import com.amazonaws.services.devicefarm.model.ScheduleRunTest;
@@ -766,6 +767,7 @@ public class AWSDeviceFarm {
      * @param test          The run test.
      * @param configuration The run configuration.
      * @return The result of the schedle run.
+     * @throws AWSDeviceFarmException
      */
     public ScheduleRunResult scheduleRun(String projectArn,
                                          String name,
@@ -775,11 +777,11 @@ public class AWSDeviceFarm {
                                          Integer jobTimeoutMinutes,
                                          ScheduleRunConfiguration configuration,
                                          Boolean videoCapture,
-                                         Boolean skipAppResign) {
+                                         Boolean skipAppResign,
+                                         DeviceSelectionConfiguration deviceSelectionConfiguration) throws AWSDeviceFarmException {
         ScheduleRunRequest request = new ScheduleRunRequest()
                 .withProjectArn(projectArn)
                 .withName(name)
-                .withDevicePoolArn(devicePoolArn)
                 .withTest(test);
 
         ExecutionConfiguration exeConfiguration = new ExecutionConfiguration();
@@ -789,6 +791,19 @@ public class AWSDeviceFarm {
         exeConfiguration.setVideoCapture(videoCapture);
         exeConfiguration.setSkipAppResign(skipAppResign);
         request.withExecutionConfiguration(exeConfiguration);
+
+         if (deviceSelectionConfiguration != null && (deviceSelectionConfiguration.getMaxDevices() == null || deviceSelectionConfiguration.getMaxDevices() == 0)) {
+             throw new IllegalArgumentException("Max devices must be set when using device selection configuration.");
+        }
+
+        if (deviceSelectionConfiguration != null) {
+            request.withDeviceSelectionConfiguration(deviceSelectionConfiguration);
+            writeToLog(String.format("Setting device selection config"));
+        } else {
+            request.withDevicePoolArn(devicePoolArn);
+            writeToLog(String.format("Setting device pool"));
+        }
+
 
         if (configuration != null) {
             request.withConfiguration(configuration);
@@ -807,7 +822,7 @@ public class AWSDeviceFarm {
     }
 
     /**
-     * Gets a local File instance of a glob file pattern, pulling it from a slave if necessary.
+     * Gets a local File instance of a glob file pattern, pulling it from a worker node if necessary.
      *
      * @param pattern Glob pattern to find artifacts
      * @return File found by the glob.
@@ -834,7 +849,7 @@ public class AWSDeviceFarm {
             FilePath artifact = matches[0];
             writeToLog(String.format("Archiving artifact '%s'", artifact.getName()));
 
-            // Copy file (master or slave) to the build artifact directory on the master.
+            // Copy file (main or worker) to the build artifact directory on the main.
             FilePath localArtifact = new FilePath(artifactsDir, artifact.getName());
             artifact.copyTo(localArtifact);
             return new File(localArtifact.getRemote());
