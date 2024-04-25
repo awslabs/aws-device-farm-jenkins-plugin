@@ -792,10 +792,8 @@ public class AWSDeviceFarm {
         exeConfiguration.setSkipAppResign(skipAppResign);
         request.withExecutionConfiguration(exeConfiguration);
 
-        if (deviceSelectionConfiguration != null && devicePoolArn!=null) {
-            throw new AWSDeviceFarmException(String.format(
-                                "Either deviceSelectionConfiguration or devicePoolArn can be set when scheduling a run."
-                                        + "Please update your configuration to have only one of them set."));
+         if (deviceSelectionConfiguration != null && (deviceSelectionConfiguration.getMaxDevices() == null || deviceSelectionConfiguration.getMaxDevices() == 0)) {
+             throw new IllegalArgumentException("Max devices must be set when using device selection configuration.");
         }
 
         if (deviceSelectionConfiguration != null) {

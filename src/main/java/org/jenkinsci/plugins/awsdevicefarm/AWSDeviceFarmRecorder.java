@@ -226,8 +226,9 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     public Boolean ifSkipAppResigning;
 
     // Device Selection
-    public String deviceSelection;
-    public Integer maxDevicesForDeviceSelection;
+    //Boolean ifDeviceSelectionFilter;
+    public String deviceSelectionFilters;
+    public Integer maxDevicesForDeviceFilters;
 
     /**
      * The Device Farm recorder class for running post-build steps on Jenkins.
@@ -283,8 +284,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
      * @param jobTimeoutMinutes            The max execution time per job.
      * @param ifAppPerformanceMonitoring   Whether the performance would be monitored.
      * @param ifVideoRecording             Whether the video would be recorded.
-     * @param deviceSelection              The device selection filter.
-     * @param maxDevicesForDeviceSelection The max number of devices to be selected.
+     * @param deviceSelectionFilters       The device selection filter.
+     * @param maxDevicesForDeviceFilters The max number of devices to be selected.
      *
      */
     @DataBoundConstructor
@@ -343,8 +344,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                                  Boolean ifVpce,
                                  Boolean ifSkipAppResigning,
                                  String vpceServiceName,
-                                 String deviceSelection,
-                                 Integer maxDevicesForDeviceSelection) {
+                                 String deviceSelectionFilters,
+                                 Integer maxDevicesForDeviceFilters) {
 
         this.projectName = projectName;
         this.devicePoolName = devicePoolName;
@@ -400,8 +401,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         this.ifAppPerformanceMonitoring = ifAppPerformanceMonitoring;
         this.ifWebApp = ifWebApp;
         this.testToRun = transformTestToRunForWebApp(testToRun);
-        this.deviceSelection = deviceSelection;
-        this.maxDevicesForDeviceSelection = maxDevicesForDeviceSelection;
+        this.deviceSelectionFilters = deviceSelectionFilters;
+        this.maxDevicesForDeviceFilters = maxDevicesForDeviceFilters;
 
         // This is a hack because I have to get the service icon locally, but it's copy-righted. So I pull it when I need it.
         Path pluginIconPath = Paths.get(System.getenv("HOME"), "plugins", "aws-device-farm", "service-icon.svg").toAbsolutePath();
@@ -583,19 +584,27 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             DeviceSelectionConfiguration deviceSelectionConfig = null;
             ArrayList<DeviceFilter> deviceFilterList = null;
             DeviceFilter deviceFilter = null;
+            String devicePoolArn = null;
 
-            if (deviceSelection != null && !deviceSelection.isEmpty()) {
+
+            // if (ifDeviceSelectionFilter != null && ifDeviceSelectionFilter) {
+            //     devicePoolName = null;
+            //     writeToLog(log, String.format("Using Device Selection Filters '%s'", deviceSelection));
+            // }
+
+            if (deviceSelectionFilters != null && !deviceSelectionFilters.isEmpty() && maxDevicesForDeviceFilters != null && maxDevicesForDeviceFilters > 0) {
+                //Retrieve the device selection filters.
                 deviceSelectionConfig = new DeviceSelectionConfiguration();
                 deviceFilter = new DeviceFilter();
                 deviceFilterList = new ArrayList<DeviceFilter>();
 
                 String deviceSelectionStr = null;
-                deviceSelectionStr = String.format("%s", env.expand(deviceSelection));
+                deviceSelectionStr = String.format("%s", env.expand(deviceSelectionFilters));
                 String[] deviceSelectionList = deviceSelectionStr.split(",");
                 writeToLog(log, String.format("Using Device Selection Filters '%s'", Arrays.toString(deviceSelectionList)));
 
                 for (String deviceFilterString : deviceSelectionList) {
-                    String[] filterElements = deviceFilterString.split(" ", 3);
+                    String[] filterElements = deviceFilterString.trim().split(" ", 3);
                     if (filterElements.length != 3) {
                         writeToLog(log, String.format("Invalid Device Selection Filter '%s'", deviceFilterString));
                         build.setResult(Result.FAILURE);
@@ -611,12 +620,9 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                     writeToLog(log, String.format("Device Selection Filter List '%s'", deviceFilterList.toString()));
                 }
 
-
                 writeToLog(log, String.format("Updated Device Filters '%s'", deviceSelectionConfig.toString()));
                 deviceSelectionConfig.setFilters(deviceFilterList);
-                if(maxDevicesForDeviceSelection != null && maxDevicesForDeviceSelection > 0) {
-                    deviceSelectionConfig.setMaxDevices((maxDevicesForDeviceSelection));
-                }
+                deviceSelectionConfig.setMaxDevices((maxDevicesForDeviceFilters));
             }
 
             // Accept 'ADF_DEVICE_POOL' build parameter as an overload from job configuration.
@@ -626,9 +632,14 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                 devicePoolName = devicePoolParameter;
             }
 
+            if (devicePoolName != null && !devicePoolName.isEmpty()) {
+                devicePoolArn = adf.getDevicePool(project, devicePoolName).getArn();
+                writeToLog(log, String.format("Using DevicePool '%s'", devicePoolName));
+            }
+
             // Get AWS Device Farm device pool from user provided name.
-            writeToLog(log, String.format("Using DevicePool '%s'", devicePoolName));
-            DevicePool devicePool = adf.getDevicePool(project, devicePoolName);
+            //writeToLog(log, String.format("Using DevicePool '%s'", devicePoolName));
+            //DevicePool devicePool = adf.getDevicePool(project, devicePoolName);
 
             // Upload app.
             String appArn = null;
@@ -700,7 +711,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                 configuration.setVpceConfigurationArns(vpceConfigurationArns);
             }
 
-            ScheduleRunResult run = adf.scheduleRun(project.getArn(), deviceFarmRunName, appArn, devicePool.getArn(), testToSchedule, jobTimeoutMinutes, configuration, videoCapture, skipAppResign, deviceSelectionConfig);
+            ScheduleRunResult run = adf.scheduleRun(project.getArn(), deviceFarmRunName, appArn, devicePoolArn, testToSchedule, jobTimeoutMinutes, configuration, videoCapture, skipAppResign, deviceSelectionConfig);
 
             String runArn = run.getRun().getArn();
             try {
@@ -1213,11 +1224,47 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             writeToLog(log, "Project must be set.");
             return false;
         }
-        // [Required]: DevicePool
-        if (devicePoolName == null || devicePoolName.isEmpty()) {
-            writeToLog(log, "DevicePool must be set.");
+        // [Required]: DevicePool or deviceSelectionConfig
+        if ((devicePoolName == null || devicePoolName.isEmpty()) && deviceSelectionFilters == null) {
+            writeToLog(log, "Either devicePoolName or deviceSelectionFilters must be set.");
             return false;
         }
+
+        // If BOTH devicePoolName and deviceSelectionFilters are set then return false
+        if ((devicePoolName != null && !devicePoolName.isEmpty()) && deviceSelectionFilters != null && !deviceSelectionFilters.isEmpty()) {
+            writeToLog(log, "Both devicePoolName and deviceSelectionFilters cannot be used at the same time. Please remove one of them.");
+            return false;
+        }
+
+        // If BOTH devicePoolName and deviceSelection are set and ifDeviceSelectionFilter is false, then return false
+        // if ((devicePoolName != null && !devicePoolName.isEmpty()) && deviceSelection != null && !deviceSelectionFilters.isEmpty() && ifDeviceSelectionFilter == false) {
+        //     writeToLog(log, "Both devicePoolName and deviceSelectionFilters cannot be used at the same time. Please remove one of them.");
+        //     return false;
+        // }
+
+        // If BOTH devicePoolName and deviceSelectionFilters are set use deviceSelectionFilters
+        // if ((devicePoolName != null && !devicePoolName.isEmpty()) && deviceSelectionFilters != null && !deviceSelectionFilters.isEmpty()) {
+        //     writeToLog(log, "Both devicePoolName and deviceSelectionFilters cannot be used at the same time. Please remove one of them.");
+        //     return false;
+        // }
+
+        // Max Device Selection should only work when deviceSelection is set
+        if (deviceSelectionFilters != null && !deviceSelectionFilters.isEmpty() && maxDevicesForDeviceFilters == null) {
+            writeToLog(log, "Missing field maxDevicesForDeviceFilters is mandatory when using deviceSelectionFilters.");
+            return false;
+        }
+         // Device Selection should only work when ifDeviceSelectionFilter is true
+        //  if (deviceSelection != null && ifDeviceSelectionFilter == false) {
+        //     writeToLog(log, "ifDeviceSelectionFilter should be set to true when using deviceSelection.");
+        //     return false;
+        // }
+
+        // Max Device Selection should only work when deviceSelection is set
+        if (deviceSelectionFilters == null && maxDevicesForDeviceFilters != null) {
+            writeToLog(log, "maxDevicesForDeviceFilters can only be used with deviceSelectionFilters. Please remove it if you are using devicePoolName.");
+            return false;
+        }
+
         // [Required]: App Artifact
         if (!ifWebApp && (appArtifact == null || appArtifact.isEmpty())) {
             writeToLog(log, "Application Artifact must be set.");

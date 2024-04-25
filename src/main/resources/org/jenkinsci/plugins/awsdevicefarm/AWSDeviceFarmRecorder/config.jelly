@@ -18,14 +18,6 @@
     <f:select style="width:100%" inline="true"/>
   </f:entry>
 
-  <f:entry title="Device Selection" field="deviceSelection" description="[Optional] Add the filters for device selection">
-    <f:textbox default="" />
-  </f:entry>
-
-  <f:entry title="Max Devices For Device Selection Filters" field="maxDevicesForDeviceSelection" description="[Optional] Add the max no of devices to choose that match the filters">
-    <f:textbox default="" />
-  </f:entry>
-
   <f:entry title="Application" field="appArtifact" description="[Required for native and hybrid apps] Pattern to find newly built application. Leave it blank if it is a web application.">
     <f:textbox />
   </f:entry>
