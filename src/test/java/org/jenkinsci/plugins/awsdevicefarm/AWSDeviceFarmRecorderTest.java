@@ -36,14 +36,14 @@ public class AWSDeviceFarmRecorderTest {
         FreeStyleProject p = j.createFreeStyleProject();
         AWSDeviceFarmRecorder rec = new AWSDeviceFarmRecorder(
                 "TestProjectName", "TestDevicePool", null, null,
-                null, null, "APPIUM_JAVA_JUNIT", false, false, null,
+                null, null, "APPIUM_JAVA_JUNIT", false, "AWS Device Farm Results", true, false, null,
                 null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null,
                 null, null, null, null, false, false,
                 null, null, null, null, null, null,
                 false, false, false, 10, false, false,
-                false, false, false, null
+                false, false, false, null, null, null
         );
         p.getPublishersList().add(rec);
 
