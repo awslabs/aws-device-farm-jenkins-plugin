@@ -849,8 +849,9 @@ public class AWSDeviceFarm {
             FilePath artifact = matches[0];
             writeToLog(String.format("Archiving artifact '%s'", artifact.getName()));
 
+
             // Copy file (primary or secondary) to the build artifact directory on the primary node.
-            FilePath localArtifact = new FilePath(artifactsDir, artifact.getName());
+\            FilePath localArtifact = new FilePath(artifactsDir, artifact.getName());
             artifact.copyTo(localArtifact);
             return new File(localArtifact.getRemote());
         } catch (IOException e) {
