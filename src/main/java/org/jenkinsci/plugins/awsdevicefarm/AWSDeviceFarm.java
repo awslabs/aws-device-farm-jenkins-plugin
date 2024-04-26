@@ -822,7 +822,7 @@ public class AWSDeviceFarm {
     }
 
     /**
-     * Gets a local File instance of a glob file pattern, pulling it from a worker node if necessary.
+     * Gets a local File instance of a glob file pattern, pulling it from a secondary node if necessary.
      *
      * @param pattern Glob pattern to find artifacts
      * @return File found by the glob.
@@ -849,7 +849,8 @@ public class AWSDeviceFarm {
             FilePath artifact = matches[0];
             writeToLog(String.format("Archiving artifact '%s'", artifact.getName()));
 
-            // Copy file (main or worker) to the build artifact directory on the main.
+
+            // Copy file (primary or secondary) to the build artifact directory on the primary node.
             FilePath localArtifact = new FilePath(artifactsDir, artifact.getName());
             artifact.copyTo(localArtifact);
             return new File(localArtifact.getRemote());
