@@ -851,7 +851,7 @@ public class AWSDeviceFarm {
 
 
             // Copy file (primary or secondary) to the build artifact directory on the primary node.
-\            FilePath localArtifact = new FilePath(artifactsDir, artifact.getName());
+            FilePath localArtifact = new FilePath(artifactsDir, artifact.getName());
             artifact.copyTo(localArtifact);
             return new File(localArtifact.getRemote());
         } catch (IOException e) {
