@@ -266,6 +266,12 @@
         <f:textbox default="-122.3941"/>
       </f:entry>
     </f:optionalBlock>
+
+    <f:optionalBlock name="deviceLocaleFlag" title="Specify Device Locale" checked="${instance.deviceLocaleFlag}" inline="true">
+      <f:entry title="Device Locale" field="deviceLocale" description="[Optional] Add the device locale." >
+        <f:textbox />
+      </f:entry>
+    </f:optionalBlock>
   </f:section>
 
   <f:section title="Execution Information">
