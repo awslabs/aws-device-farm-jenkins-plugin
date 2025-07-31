@@ -230,6 +230,11 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
     public String deviceSelectionFilters;
     public Integer maxDevicesForDeviceFilters;
 
+    Boolean deviceLocaleFlag;
+    public String deviceLocale;
+    private static final String DEFAULT_DEVICE_LOCALE = "en_US";
+
+
     /**
      * The Device Farm recorder class for running post-build steps on Jenkins.
      *
@@ -286,7 +291,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
      * @param ifVideoRecording             Whether the video would be recorded.
      * @param deviceSelectionFilters       The device selection filter.
      * @param maxDevicesForDeviceFilters The max number of devices to be selected.
-     *
+     * @param deviceLocale                 The locale to be selected on the device
+     * @param deviceLocaleFlag             The flag that indicates if device locale was provided by customer.
      */
     @DataBoundConstructor
     @SuppressWarnings("unused")
@@ -345,7 +351,9 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
                                  Boolean ifSkipAppResigning,
                                  String vpceServiceName,
                                  String deviceSelectionFilters,
-                                 Integer maxDevicesForDeviceFilters) {
+                                 Integer maxDevicesForDeviceFilters,
+                                 Boolean deviceLocaleFlag,
+                                 String deviceLocale) {
 
         this.projectName = projectName;
         this.devicePoolName = devicePoolName;
@@ -403,6 +411,9 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
         this.testToRun = transformTestToRunForWebApp(testToRun);
         this.deviceSelectionFilters = deviceSelectionFilters;
         this.maxDevicesForDeviceFilters = maxDevicesForDeviceFilters;
+        this.deviceLocaleFlag = deviceLocaleFlag;
+        this.deviceLocale = deviceLocale;
+
 
         // This is a hack because I have to get the service icon locally, but it's copy-righted. So I pull it when I need it.
         Path pluginIconPath = Paths.get(System.getenv("HOME"), "plugins", "aws-device-farm", "service-icon.svg").toAbsolutePath();
@@ -697,7 +708,8 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
             TestType testType = TestType.fromValue(testToSchedule.getType());
             writeToLog(log, String.format("Scheduling '%s' run '%s'", testType, deviceFarmRunName));
 
-            ScheduleRunConfiguration configuration = getScheduleRunConfiguration(isRunUnmetered, deviceLocation, radioDetails);
+            ScheduleRunConfiguration configuration = getScheduleRunConfiguration(isRunUnmetered, deviceLocation, radioDetails, deviceLocaleFlag);
+            writeToLog(log, String.format("Using device locale '%s'", deviceLocale));
             configuration.setExtraDataPackageArn(extraDataArn);
 
             // Check if VPCE option is enabled in UI and account has a VPC config
@@ -801,7 +813,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
 
     }
 
-    private ScheduleRunConfiguration getScheduleRunConfiguration(Boolean isRunUnmetered, Boolean deviceLocation, Boolean radioDetails) {
+    private ScheduleRunConfiguration getScheduleRunConfiguration(Boolean isRunUnmetered, Boolean deviceLocation, Boolean radioDetails, Boolean deviceLocaleFlag) {
         ScheduleRunConfiguration configuration = new ScheduleRunConfiguration();
         if (isRunUnmetered != null && isRunUnmetered) {
             configuration.setBillingMethod(BillingMethod.UNMETERED);
@@ -811,13 +823,18 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
 
         // set a bunch of other default values as Device Farm expect these
         configuration.setAuxiliaryApps(new ArrayList<String>());
-        configuration.setLocale("en_US");
 
         Location location = getScheduleRunConfigurationLocation(deviceLocation);
         configuration.setLocation(location);
 
         Radios radio = getScheduleRunConfigurationRadio(radioDetails);
         configuration.setRadios(radio);
+
+        if (deviceLocaleFlag != null && deviceLocaleFlag) {
+            configuration.setLocale(deviceLocale);
+        } else {
+            configuration.setLocale(DEFAULT_DEVICE_LOCALE);
+        }
 
         return configuration;
     }
