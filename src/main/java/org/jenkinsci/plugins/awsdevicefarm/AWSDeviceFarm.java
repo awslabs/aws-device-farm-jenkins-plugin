@@ -20,6 +20,7 @@ import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSCredentialsProviderChain;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
+import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
 import com.amazonaws.services.devicefarm.AWSDeviceFarmClientBuilder;
 import com.amazonaws.services.devicefarm.AWSDeviceFarmClient;
 import com.amazonaws.services.devicefarm.model.AccountSettings;
@@ -106,6 +107,7 @@ public class AWSDeviceFarm {
     private static final String APPIUM_WEB_RUBY_TEST_SPEC = "APPIUM_WEB_RUBY_TEST_SPEC";
     private static final String APPIUM_WEB_NODE_TEST_SPEC = "APPIUM_WEB_NODE_TEST_SPEC";
     private static final String CURATED = "CURATED";
+    private static final String DUAL_STACK_ENDPOINT_TEMPLATE_STRING = "https://devicefarm.%s.api.aws";
     // The max timeout is set to 1 hr as roles provided as input can be chained or unchained.
     // Chained roles have a hard limit of 1 hr. After 1 hr the tokens are refreshed.
     // Requesting a session with timneout higher than 1 hr by default does not allow chained roles to be used
@@ -151,10 +153,13 @@ public class AWSDeviceFarm {
 
         ClientConfiguration clientConfiguration = new ClientConfiguration().withUserAgent("AWS Device Farm - Jenkins v1.0");
         AWSDeviceFarmClientBuilder builder = AWSDeviceFarmClientBuilder.standard();
-        builder.setClientConfiguration(clientConfiguration);
         // Device Farm endpoint is only available in us-west-2 region
-        builder.withRegion(Regions.US_WEST_2);
+        String endpoint = String.format(DUAL_STACK_ENDPOINT_TEMPLATE_STRING, Regions.US_WEST_2.getName());
+        EndpointConfiguration endpointConfig = new EndpointConfiguration(endpoint, Regions.US_WEST_2.getName());
+
+        builder.setClientConfiguration(clientConfiguration);
         builder.setCredentials(credProvider);
+        builder.setEndpointConfiguration(endpointConfig);
         api = builder.build();
         ((AWSDeviceFarmClient) api).setServiceNameIntern("devicefarm");
     }
