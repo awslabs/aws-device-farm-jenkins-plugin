@@ -774,6 +774,7 @@ public class AWSDeviceFarmRecorder extends Recorder implements SimpleBuildStep {
 
             // Set Jenkins build result based on AWS Device Farm test result.
             build.setResult(action.getBuildResult(ignoreRunError));
+            writeToLog(log, String.format("Marking jenkins stage result as: %s", action.getBuildResult(ignoreRunError)));
         } catch (AWSDeviceFarmException e) {
             writeToLog(log, e.getMessage());
             return;
