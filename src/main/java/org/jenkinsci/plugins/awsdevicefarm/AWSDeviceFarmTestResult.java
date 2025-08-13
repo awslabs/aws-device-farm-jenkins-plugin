@@ -79,8 +79,6 @@ public class AWSDeviceFarmTestResult extends TestResult {
             this.errorCount = run.getCounters().getErrored();
             this.skipCount = run.getCounters().getSkipped();
 
-            //this.duration =
-
             try {
                 this.stopCount = run.getCounters().getStopped();
             } catch (NullPointerException e) {
@@ -245,7 +243,7 @@ public class AWSDeviceFarmTestResult extends TestResult {
      */
     public Result getBuildResult(Boolean ignoreRunError) {
         if (ignoreRunError != null && ignoreRunError && ExecutionResult.ERRORED.equals(result)) {
-            if (totalCount == skipCount) {
+            if (skipCount > 0) {
                 result = ExecutionResult.SKIPPED;
             } else if (stopCount > 0) {
                 result = ExecutionResult.STOPPED;
@@ -255,6 +253,11 @@ public class AWSDeviceFarmTestResult extends TestResult {
                 result = ExecutionResult.WARNED;
             } else {
                 result = ExecutionResult.PASSED;
+            }
+        }
+        if (!ExecutionResult.ERRORED.equals(result)) {
+            if (skipCount > 0) {
+                result = ExecutionResult.SKIPPED;
             }
         }
         return resultMap.get(result);
